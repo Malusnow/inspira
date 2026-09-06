@@ -1,0 +1,10 @@
+node_modules
+
+# 构建与生成产物
+apps/web/dist
+apps/extension/build
+apps/extension/.plasmo
+convex/_generated
+
+# 锁文件无需格式化
+pnpm-lock.yaml

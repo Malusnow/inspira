@@ -23,6 +23,7 @@ Archive a completed change in the experimental workflow.
 1. **Select the change**
 
    If a name is provided, use it. Otherwise:
+
    - Infer from conversation context if the user mentioned a change
    - Auto-select if only one active change exists
    - If ambiguous, run `openspec list --json` to get available changes and ask the user to select one
@@ -35,9 +36,11 @@ Archive a completed change in the experimental workflow.
    **Load current archive inputs before the existing archive checks:**
 
    After resolving the selected change and planning root, run:
+
    ```bash
    openspec instructions archive --change "<name>" --json
    ```
+
    Keep the same selected-root flags on this command. This lookup is advisory and
    optional: it only supplies extra prompt inputs, so it must never block archiving.
    If it exits non-zero or returns invalid JSON — for example on an older CLI that
@@ -64,11 +67,13 @@ Archive a completed change in the experimental workflow.
    Run `openspec status --change "<name>" --json` to check artifact completion.
 
    Parse the JSON to understand:
+
    - `schemaName`: The workflow being used
    - `planningHome`, `changeRoot`, `artifactPaths`, and `actionContext`: path and scope context
    - `artifacts`: List of artifacts with their status (`done`, `skipped`, or other)
 
    **If any artifacts are neither `done` nor `skipped`** (skipped artifacts satisfy the requirement - the change declares skip_specs):
+
    - Display warning listing incomplete artifacts
    - Ask the user to confirm they want to proceed
    - Proceed if user confirms
@@ -80,6 +85,7 @@ Archive a completed change in the experimental workflow.
    Count tasks marked with `- [ ]` (incomplete) vs `- [x]` (complete).
 
    **If incomplete tasks found:**
+
    - Display warning showing count of incomplete tasks
    - Ask the user to confirm they want to proceed
    - Proceed if user confirms
@@ -94,15 +100,18 @@ Archive a completed change in the experimental workflow.
    delta specs from other artifacts.
 
    **If delta specs exist:**
+
    - Compare each delta spec with its corresponding main spec at `<planningHome.root>/openspec/specs/<capability-path>/spec.md` (use the store-aware `planningHome.root` from step 2, not a hardcoded repo path)
    - Determine what changes would be applied (adds, modifications, removals, renames)
    - Show a combined summary before prompting
 
    **Prompt options:**
+
    - If changes needed: "Sync now (recommended)", "Archive without syncing"
    - If already synced: "Archive now", "Sync anyway", "Cancel"
 
    Route on the answer:
+
    - "Cancel" — stop, do not archive
    - "Archive without syncing" or "Archive now" — proceed to archive
    - "Sync now" or "Sync anyway" — sync, then verify (below)
@@ -120,6 +129,7 @@ Archive a completed change in the experimental workflow.
    Then run the `openspec-sync-specs` workflow inline (agent-driven intelligent merge) for change '<name>', passing the delta spec analysis and the fetched specs-rule snapshot from above, and wait for it to finish. The inline sync must reuse that snapshot without fetching `specs` instructions again. Do not delegate it to a background task — step 5 would move `changeRoot` out from under a sync that is still reading it, leaving the change archived and the main specs never updated. If your agent can only run it by delegation, delegate synchronously and wait for the result.
 
    Then re-run the comparison from the top of this step against every capability that has a delta spec in `artifactPaths.specs.existingOutputPaths` — not only the ones the sync reports it touched. A successful sync leaves nothing left to apply, so each capability must now read as already synced:
+
    - ADDED requirements present
    - MODIFIED requirements carrying the scenario and description changes named in the delta, with their other scenarios intact
    - REMOVED requirements gone — and where this sync retired a capability (removed its last requirement, leaving `## Requirements` empty), its main spec deleted rather than left empty; a spec the sync deliberately kept and reported is also a match
@@ -130,6 +140,7 @@ Archive a completed change in the experimental workflow.
 5. **Perform the archive**
 
    Create an `archive` directory under `planningHome.changesDir` if it doesn't exist:
+
    ```bash
    mkdir -p "<planningHome.changesDir>/archive"
    ```
@@ -137,6 +148,7 @@ Archive a completed change in the experimental workflow.
    Generate the target name: use the change name as-is when it already starts with a `YYYY-MM-DD-` prefix; otherwise prepend the current date as `YYYY-MM-DD-<change-name>`. Never stack a second date (same rule as `openspec archive`).
 
    **Check if target already exists:**
+
    - If yes: Fail with error, suggest renaming existing archive or using different date
    - If no: Move `changeRoot` to the archive directory
 
@@ -147,6 +159,7 @@ Archive a completed change in the experimental workflow.
 6. **Display summary**
 
    Show archive completion summary including:
+
    - Change name
    - Schema that was used
    - Archive location
@@ -167,6 +180,7 @@ Archive a completed change in the experimental workflow.
 ```
 
 **Guardrails**
+
 - Announce the selected change; prompt for selection when it is ambiguous
 - Use artifact graph (openspec status --json) for completion checking
 - Don't block archive on warnings - just inform and confirm

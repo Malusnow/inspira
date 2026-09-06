@@ -6,7 +6,24 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    dependencies:
+      convex:
+        specifier: ^1.45.0
+        version: 1.45.0(@clerk/clerk-react@5.61.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@clerk/react@6.15.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(bufferutil@4.1.0)(react@19.2.8)(utf-8-validate@6.0.6)
+    devDependencies:
+      '@ianvs/prettier-plugin-sort-imports':
+        specifier: 4.1.1
+        version: 4.1.1(@vue/compiler-sfc@3.3.4)(prettier@3.2.4)
+      '@types/node':
+        specifier: ^24.13.3
+        version: 24.13.3
+      prettier:
+        specifier: 3.2.4
+        version: 3.2.4
+      typescript:
+        specifier: ~6.0.2
+        version: 6.0.3
 
   apps/extension:
     dependencies:
@@ -56,6 +73,9 @@ importers:
       '@clerk/react':
         specifier: ^6.15.1
         version: 6.15.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@inspira/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       convex:
         specifier: ^1.45.0
         version: 1.45.0(@clerk/clerk-react@5.61.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@clerk/react@6.15.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(bufferutil@4.1.0)(react@19.2.8)(utf-8-validate@6.0.6)

@@ -2,15 +2,15 @@
 
 ## 阅读入口
 
-| 任务 | 先读 |
-| --- | --- |
-| 任意任务 | [AGENTS](../AGENTS.md)、当前 OpenSpec change |
-| 产品行为或模块拆分 | [Product](PRODUCT.md) |
-| 架构、后端、数据边界 | [Architecture](ARCHITECTURE.md) |
-| 接口、采集、媒体上传访问 | [Contracts](CONTRACTS.md) |
-| 启动、测试、CI、验收 | [Development](DEVELOPMENT.md) |
-| Web UI | [Design](design/README.md) 和对应原型 |
-| Chrome 插件 | [Contracts](CONTRACTS.md)、[插件规则](../apps/extension/AGENTS.md) |
+| 任务                     | 先读                                                               |
+| ------------------------ | ------------------------------------------------------------------ |
+| 任意任务                 | [AGENTS](../AGENTS.md)、当前 OpenSpec change                       |
+| 产品行为或模块拆分       | [Product](PRODUCT.md)                                              |
+| 架构、后端、数据边界     | [Architecture](ARCHITECTURE.md)                                    |
+| 接口、采集、媒体上传访问 | [Contracts](CONTRACTS.md)                                          |
+| 启动、测试、CI、验收     | [Development](DEVELOPMENT.md)                                      |
+| Web UI                   | [Design](design/README.md) 和对应原型                              |
+| Chrome 插件              | [Contracts](CONTRACTS.md)、[插件规则](../apps/extension/AGENTS.md) |
 
 ## 文档职责
 

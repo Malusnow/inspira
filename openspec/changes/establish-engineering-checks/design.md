@@ -18,11 +18,11 @@ Web 使用 TypeScript 6.0.2、React 19、Vite 8.2.2；插件使用 TypeScript 5.
 
 建议使用显式工作区命令串联，失败即停止，不使用 `--if-present` 跳过目标：
 
-| 根入口 | 实际覆盖 |
-| --- | --- |
+| 根入口           | 实际覆盖                                                               |
+| ---------------- | ---------------------------------------------------------------------- |
 | `pnpm typecheck` | Web 编译器检查、插件编译器检查、contracts 类型检查、根测试配置类型检查 |
-| `pnpm test` | Vitest 非监听执行 contracts 类型正反例，开启真实 typecheck |
-| `pnpm build` | contracts 类型检查、Web Vite 生产构建、插件 Plasmo 生产构建 |
+| `pnpm test`      | Vitest 非监听执行 contracts 类型正反例，开启真实 typecheck             |
+| `pnpm build`     | contracts 类型检查、Web Vite 生产构建、插件 Plasmo 生产构建            |
 
 Web 复用现有项目引用，确保检查源码和 Vite 配置。contracts 新增自身 tsconfig/typecheck，保持源码 exports，不制造无意义 bundle 或 echo build。根工具配置用独立 tsconfig 纳入检查。插件使用本工作区 TS5，不让根工具的 TS6 配置或测试依赖泄漏进插件源码范围。
 

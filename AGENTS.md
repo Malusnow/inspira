@@ -2,15 +2,15 @@
 
 ## 先读什么
 
-| 任务 | 阅读 |
-| --- | --- |
-| 任意任务 | 当前 OpenSpec change、目标目录 `AGENTS.md`、相关源码 |
-| 产品行为、模块顺序 | `docs/PRODUCT.md` |
-| 架构、后端、数据边界 | `docs/ARCHITECTURE.md` |
-| 接口、采集、媒体 | `docs/CONTRACTS.md` |
-| 启动、检查、验收 | `docs/DEVELOPMENT.md` |
-| Web UI | `docs/design/README.md` 和对应原型 |
-| Chrome 插件 | `apps/extension/AGENTS.md`、`docs/CONTRACTS.md` |
+| 任务                 | 阅读                                                 |
+| -------------------- | ---------------------------------------------------- |
+| 任意任务             | 当前 OpenSpec change、目标目录 `AGENTS.md`、相关源码 |
+| 产品行为、模块顺序   | `docs/PRODUCT.md`                                    |
+| 架构、后端、数据边界 | `docs/ARCHITECTURE.md`                               |
+| 接口、采集、媒体     | `docs/CONTRACTS.md`                                  |
+| 启动、检查、验收     | `docs/DEVELOPMENT.md`                                |
+| Web UI               | `docs/design/README.md` 和对应原型                   |
+| Chrome 插件          | `apps/extension/AGENTS.md`、`docs/CONTRACTS.md`      |
 
 小任务只读相关入口，不扫全量文档。
 

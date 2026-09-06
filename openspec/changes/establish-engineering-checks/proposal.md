@@ -24,6 +24,6 @@ Inspira 的 S0 工程检查尚未落实：根 test 是失败占位，独立类�
 
 计划修改根/各工作区 package.json、pnpm-lock.yaml、vitest.config.ts、相关 tsconfig、.github/workflows/ci.yml，必要时补根工具类型配置及 .gitignore 的生成产物规则。
 
-计划新增 contracts 测试配置与 tests/*.test-d.ts；两端类型检查配置按现有版本调整。同步 AGENTS.md、两端局部规则、docs/DEVELOPMENT.md、docs/PRODUCT.md 的 S0 状态。
+计划新增 contracts 测试配置与 tests/\*.test-d.ts；两端类型检查配置按现有版本调整。同步 AGENTS.md、两端局部规则、docs/DEVELOPMENT.md、docs/PRODUCT.md 的 S0 状态。
 
 不新增登录、Note、采集、上传、Schema、运行时字段校验或新权限，不替换框架、不统一两端 React/TypeScript 版本、不搭建发布流程。必要工具依赖变更限于测试与类型配置。仅规划本 change，待用户审阅后另行 apply。

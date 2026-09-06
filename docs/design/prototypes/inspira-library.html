@@ -1,769 +1,981 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inspira — Library</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
-<script async onload="window.lucide?.createIcons()" src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-<style>
-  /* ============================================
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inspira — Library</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&display=swap"
+      rel="stylesheet" />
+    <script
+      async
+      onload="window.lucide?.createIcons()"
+      src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+      /* ============================================
      RESET & BASE
      ============================================ */
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-    background: #F7F6F2;
-    color: #20201E;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #D6D3CE; border-radius: 3px; }
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          "Helvetica Neue",
+          sans-serif;
+        background: #f7f6f2;
+        color: #20201e;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #d6d3ce;
+        border-radius: 3px;
+      }
 
-  /* ============================================
+      /* ============================================
      TOP NAVIGATION (64px, floating, minimal)
      ============================================ */
-  .top-nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 64px;
-    z-index: 200;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 36px;
-    background: rgba(247, 246, 242, 0.92);
-    backdrop-filter: blur(16px) saturate(1.2);
-    -webkit-backdrop-filter: blur(16px) saturate(1.2);
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
-  }
-  .top-nav.hidden {
-    transform: translateY(-100%);
-    opacity: 0;
-    pointer-events: none;
-  }
+      .top-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 64px;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 36px;
+        background: rgba(247, 246, 242, 0.92);
+        backdrop-filter: blur(16px) saturate(1.2);
+        -webkit-backdrop-filter: blur(16px) saturate(1.2);
+        transition:
+          transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+          opacity 0.35s ease;
+      }
+      .top-nav.hidden {
+        transform: translateY(-100%);
+        opacity: 0;
+        pointer-events: none;
+      }
 
-  /* Left: Logo + Menu */
-  .nav-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .nav-logo {
-    font-size: 18px;
-    font-weight: 600;
-    letter-spacing: -0.3px;
-    color: #20201E;
-    text-decoration: none;
-    user-select: none;
-  }
-  .nav-menu-btn {
-    width: 36px; height: 36px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    color: #777570;
-    transition: background 0.2s ease, color 0.2s ease;
-  }
-  .nav-menu-btn:hover { background: rgba(0,0,0,0.04); color: #20201E; }
-  .nav-menu-btn svg { width: 20px; height: 20px; }
+      /* Left: Logo + Menu */
+      .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .nav-logo {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.3px;
+        color: #20201e;
+        text-decoration: none;
+        user-select: none;
+      }
+      .nav-menu-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: #777570;
+        transition:
+          background 0.2s ease,
+          color 0.2s ease;
+      }
+      .nav-menu-btn:hover {
+        background: rgba(0, 0, 0, 0.04);
+        color: #20201e;
+      }
+      .nav-menu-btn svg {
+        width: 20px;
+        height: 20px;
+      }
 
-  /* Center: Search */
-  .nav-center {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-  }
-  .search-trigger {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 480px;
-    height: 46px;
-    padding: 0 18px;
-    border-radius: 14px;
-    background: rgba(0,0,0,0.035);
-    color: #A09B94;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 1.5px solid transparent;
-    user-select: none;
-  }
-  .search-trigger:hover {
-    background: rgba(0,0,0,0.055);
-    color: #777570;
-  }
-  .search-trigger svg { width: 16px; height: 16px; }
-  .search-trigger span { flex: 1; }
-  .search-trigger kbd {
-    font-family: inherit;
-    font-size: 11px;
-    padding: 3px 7px;
-    border-radius: 5px;
-    background: rgba(0,0,0,0.06);
-    color: #A09B94;
-  }
+      /* Center: Search */
+      .nav-center {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+      }
+      .search-trigger {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 480px;
+        height: 46px;
+        padding: 0 18px;
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.035);
+        color: #a09b94;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1.5px solid transparent;
+        user-select: none;
+      }
+      .search-trigger:hover {
+        background: rgba(0, 0, 0, 0.055);
+        color: #777570;
+      }
+      .search-trigger svg {
+        width: 16px;
+        height: 16px;
+      }
+      .search-trigger span {
+        flex: 1;
+      }
+      .search-trigger kbd {
+        font-family: inherit;
+        font-size: 11px;
+        padding: 3px 7px;
+        border-radius: 5px;
+        background: rgba(0, 0, 0, 0.06);
+        color: #a09b94;
+      }
 
-  /* Expanded search */
-  .search-expanded {
-    display: none;
-    align-items: center;
-    gap: 12px;
-    width: 600px;
-    height: 48px;
-    padding: 0 18px;
-    border-radius: 16px;
-    background: #fff;
-    border: 1.5px solid rgba(108, 99, 255, 0.3);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-    transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .search-expanded.active { display: flex; }
-  .search-expanded svg { width: 17px; height: 17px; color: #6C63FF; flex-shrink: 0; }
-  .search-expanded input {
-    flex: 1;
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: 15px;
-    font-family: inherit;
-    color: #20201E;
-  }
-  .search-expanded input::placeholder { color: #A09B94; }
+      /* Expanded search */
+      .search-expanded {
+        display: none;
+        align-items: center;
+        gap: 12px;
+        width: 600px;
+        height: 48px;
+        padding: 0 18px;
+        border-radius: 16px;
+        background: #fff;
+        border: 1.5px solid rgba(108, 99, 255, 0.3);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .search-expanded.active {
+        display: flex;
+      }
+      .search-expanded svg {
+        width: 17px;
+        height: 17px;
+        color: #6c63ff;
+        flex-shrink: 0;
+      }
+      .search-expanded input {
+        flex: 1;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 15px;
+        font-family: inherit;
+        color: #20201e;
+      }
+      .search-expanded input::placeholder {
+        color: #a09b94;
+      }
 
-  /* Right: Actions */
-  .nav-right {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .nav-icon-btn {
-    width: 36px; height: 36px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    color: #777570;
-    transition: background 0.2s ease, color 0.2s ease;
-  }
-  .nav-icon-btn:hover { background: rgba(0,0,0,0.04); color: #20201E; }
-  .nav-icon-btn svg { width: 18px; height: 18px; }
+      /* Right: Actions */
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .nav-icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: #777570;
+        transition:
+          background 0.2s ease,
+          color 0.2s ease;
+      }
+      .nav-icon-btn:hover {
+        background: rgba(0, 0, 0, 0.04);
+        color: #20201e;
+      }
+      .nav-icon-btn svg {
+        width: 18px;
+        height: 18px;
+      }
 
-  .btn-add {
-    width: 38px; height: 38px;
-    border-radius: 50%;
-    background: #6C63FF;
-    color: #fff;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 2px 8px rgba(108, 99, 255, 0.25);
-  }
-  .btn-add:hover {
-    transform: scale(1.06);
-    box-shadow: 0 4px 14px rgba(108, 99, 255, 0.35);
-  }
-  .btn-add svg { width: 18px; height: 18px; }
+      .btn-add {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #6c63ff;
+        color: #fff;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+        box-shadow: 0 2px 8px rgba(108, 99, 255, 0.25);
+      }
+      .btn-add:hover {
+        transform: scale(1.06);
+        box-shadow: 0 4px 14px rgba(108, 99, 255, 0.35);
+      }
+      .btn-add svg {
+        width: 18px;
+        height: 18px;
+      }
 
-  .user-avatar {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #E8E4DC, #D4CFC6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: #777570;
-    cursor: pointer;
-    margin-left: 4px;
-  }
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e8e4dc, #d4cfc6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        color: #777570;
+        cursor: pointer;
+        margin-left: 4px;
+      }
 
-  /* ============================================
+      /* ============================================
      NAVIGATION OVERLAY (Slide from left)
      ============================================ */
-  .nav-overlay {
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    width: 280px;
-    background: #fff;
-    z-index: 300;
-    padding: 24px 0;
-    box-shadow: 4px 0 40px rgba(0,0,0,0.08);
-    transform: translateX(-100%);
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .nav-overlay.active { transform: translateX(0); }
+      .nav-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 280px;
+        background: #fff;
+        z-index: 300;
+        padding: 24px 0;
+        box-shadow: 4px 0 40px rgba(0, 0, 0, 0.08);
+        transform: translateX(-100%);
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .nav-overlay.active {
+        transform: translateX(0);
+      }
 
-  .nav-overlay-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px 20px;
-    margin-bottom: 8px;
-  }
-  .nav-overlay-header .nav-logo { font-size: 20px; }
-  .nav-overlay-close {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    border: none;
-    background: transparent;
-    color: #777570;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .nav-overlay-close:hover { background: rgba(0,0,0,0.04); }
-  .nav-overlay-close svg { width: 18px; height: 18px; }
+      .nav-overlay-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px 20px;
+        margin-bottom: 8px;
+      }
+      .nav-overlay-header .nav-logo {
+        font-size: 20px;
+      }
+      .nav-overlay-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        color: #777570;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .nav-overlay-close:hover {
+        background: rgba(0, 0, 0, 0.04);
+      }
+      .nav-overlay-close svg {
+        width: 18px;
+        height: 18px;
+      }
 
-  .nav-overlay-section { padding: 8px 12px; }
-  .nav-overlay-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #55524E;
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
-    text-decoration: none;
-  }
-  .nav-overlay-item:hover { background: rgba(0,0,0,0.03); color: #20201E; }
-  .nav-overlay-item.active { background: rgba(108, 99, 255, 0.08); color: #6C63FF; }
-  .nav-overlay-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+      .nav-overlay-section {
+        padding: 8px 12px;
+      }
+      .nav-overlay-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #55524e;
+        cursor: pointer;
+        transition:
+          background 0.15s ease,
+          color 0.15s ease;
+        text-decoration: none;
+      }
+      .nav-overlay-item:hover {
+        background: rgba(0, 0, 0, 0.03);
+        color: #20201e;
+      }
+      .nav-overlay-item.active {
+        background: rgba(108, 99, 255, 0.08);
+        color: #6c63ff;
+      }
+      .nav-overlay-item svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
 
-  .nav-overlay-divider {
-    height: 1px;
-    background: #E8E6E1;
-    margin: 12px 16px;
-  }
+      .nav-overlay-divider {
+        height: 1px;
+        background: #e8e6e1;
+        margin: 12px 16px;
+      }
 
-  .nav-overlay-label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #A09B94;
-    padding: 8px 20px 4px;
-  }
+      .nav-overlay-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #a09b94;
+        padding: 8px 20px 4px;
+      }
 
-  .nav-overlay-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.15);
-    z-index: 250;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-  }
-  .nav-overlay-backdrop.active { opacity: 1; pointer-events: auto; }
+      .nav-overlay-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.15);
+        z-index: 250;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      .nav-overlay-backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
 
-  /* ============================================
+      /* ============================================
      VIEW TOGGLE
      ============================================ */
-  .view-toggle {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    padding: 0 40px;
-    margin-top: 88px;
-    margin-bottom: 20px;
-  }
-  .view-btn {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    color: #A09B94;
-    transition: all 0.18s ease;
-  }
-  .view-btn:hover { background: rgba(0,0,0,0.04); color: #20201E; }
-  .view-btn.active { background: rgba(0,0,0,0.06); color: #20201E; }
-  .view-btn svg { width: 16px; height: 16px; }
+      .view-toggle {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 0 40px;
+        margin-top: 88px;
+        margin-bottom: 20px;
+      }
+      .view-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: #a09b94;
+        transition: all 0.18s ease;
+      }
+      .view-btn:hover {
+        background: rgba(0, 0, 0, 0.04);
+        color: #20201e;
+      }
+      .view-btn.active {
+        background: rgba(0, 0, 0, 0.06);
+        color: #20201e;
+      }
+      .view-btn svg {
+        width: 16px;
+        height: 16px;
+      }
 
-  /* ============================================
+      /* ============================================
      MASONRY GRID
      ============================================ */
-  .content-area {
-    padding: 0 40px 60px;
-    max-width: 1440px;
-    margin: 0 auto;
-  }
-  .masonry {
-    columns: 5;
-    column-gap: 20px;
-  }
-  .masonry-item {
-    break-inside: avoid;
-    margin-bottom: 20px;
-    position: relative;
-  }
+      .content-area {
+        padding: 0 40px 60px;
+        max-width: 1440px;
+        margin: 0 auto;
+      }
+      .masonry {
+        columns: 5;
+        column-gap: 20px;
+      }
+      .masonry-item {
+        break-inside: avoid;
+        margin-bottom: 20px;
+        position: relative;
+      }
 
-  /* ============================================
+      /* ============================================
      CARDS — Shared
      ============================================ */
-  .card {
-    border-radius: 12px;
-    overflow: hidden;
-    position: relative;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-  }
-  .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-  }
+      .card {
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+        transition:
+          transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      }
 
-  /* ============================================
+      /* ============================================
      IMAGE CARD
      ============================================ */
-  .card-image {
-    position: relative;
-    overflow: hidden;
-  }
-  .card-image img {
-    width: 100%;
-    display: block;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .card-image:hover img { transform: scale(1.03); }
+      .card-image {
+        position: relative;
+        overflow: hidden;
+      }
+      .card-image img {
+        width: 100%;
+        display: block;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .card-image:hover img {
+        transform: scale(1.03);
+      }
 
-  /* ============================================
+      /* ============================================
      WEB CARD
      ============================================ */
-  .card-web {
-    background: #fff;
-  }
-  .card-web-thumb {
-    width: 100%;
-    aspect-ratio: 16 / 10;
-    overflow: hidden;
-    position: relative;
-  }
-  .card-web-thumb img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .card-web-body {
-    padding: 13px 15px 15px;
-  }
-  .card-web-title {
-    font-size: 13.5px;
-    font-weight: 600;
-    line-height: 1.45;
-    color: #20201E;
-    margin-bottom: 7px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .card-web-meta {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-  .card-web-favicon {
-    width: 14px; height: 14px;
-    border-radius: 3px;
-    background: #E8E6E1;
-    flex-shrink: 0;
-  }
-  .card-web-source {
-    font-size: 11.5px;
-    color: #A09B94;
-  }
-  .card-web-excerpt {
-    font-size: 12.5px;
-    line-height: 1.55;
-    color: #777570;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+      .card-web {
+        background: #fff;
+      }
+      .card-web-thumb {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        overflow: hidden;
+        position: relative;
+      }
+      .card-web-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .card-web-body {
+        padding: 13px 15px 15px;
+      }
+      .card-web-title {
+        font-size: 13.5px;
+        font-weight: 600;
+        line-height: 1.45;
+        color: #20201e;
+        margin-bottom: 7px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .card-web-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .card-web-favicon {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        background: #e8e6e1;
+        flex-shrink: 0;
+      }
+      .card-web-source {
+        font-size: 11.5px;
+        color: #a09b94;
+      }
+      .card-web-excerpt {
+        font-size: 12.5px;
+        line-height: 1.55;
+        color: #777570;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
 
-  /* ============================================
+      /* ============================================
      NOTE CARD
      ============================================ */
-  .card-note {
-    padding: 18px 17px;
-    font-size: 13.5px;
-    line-height: 1.65;
-    color: #20201E;
-  }
-  .card-note time {
-    display: block;
-    margin-top: 12px;
-    font-size: 11.5px;
-    color: #A09B94;
-  }
-  .card-note.beige { background: #F5F0E6; }
-  .card-note.sage { background: #ECEEE9; }
-  .card-note.warm { background: #F0EDE8; }
+      .card-note {
+        padding: 18px 17px;
+        font-size: 13.5px;
+        line-height: 1.65;
+        color: #20201e;
+      }
+      .card-note time {
+        display: block;
+        margin-top: 12px;
+        font-size: 11.5px;
+        color: #a09b94;
+      }
+      .card-note.beige {
+        background: #f5f0e6;
+      }
+      .card-note.sage {
+        background: #eceee9;
+      }
+      .card-note.warm {
+        background: #f0ede8;
+      }
 
-  /* ============================================
+      /* ============================================
      QUOTE CARD
      ============================================ */
-  .card-quote {
-    padding: 22px 18px;
-    background: #FAFAF8;
-  }
-  .card-quote-text {
-    font-size: 15px;
-    line-height: 1.6;
-    font-weight: 500;
-    color: #20201E;
-    margin-bottom: 14px;
-  }
-  .card-quote-source {
-    font-size: 12px;
-    color: #A09B94;
-  }
+      .card-quote {
+        padding: 22px 18px;
+        background: #fafaf8;
+      }
+      .card-quote-text {
+        font-size: 15px;
+        line-height: 1.6;
+        font-weight: 500;
+        color: #20201e;
+        margin-bottom: 14px;
+      }
+      .card-quote-source {
+        font-size: 12px;
+        color: #a09b94;
+      }
 
-  /* ============================================
+      /* ============================================
      VIDEO CARD
      ============================================ */
-  .card-video {
-    position: relative;
-    overflow: hidden;
-  }
-  .card-video img {
-    width: 100%;
-    display: block;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-  }
-  .card-video-play {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.92);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s ease, background 0.2s ease;
-  }
-  .card-video:hover .card-video-play {
-    transform: translate(-50%, -50%) scale(1.08);
-    background: #fff;
-  }
-  .card-video-play svg { width: 16px; height: 16px; color: #20201E; margin-left: 2px; }
-  .card-video-duration {
-    position: absolute;
-    bottom: 10px; right: 10px;
-    padding: 3px 8px;
-    border-radius: 5px;
-    background: rgba(0,0,0,0.65);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.2px;
-  }
-  .card-video-body {
-    padding: 12px 14px 14px;
-    background: #fff;
-  }
-  .card-video-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: #20201E;
-    margin-bottom: 5px;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .card-video-source {
-    font-size: 11.5px;
-    color: #A09B94;
-  }
+      .card-video {
+        position: relative;
+        overflow: hidden;
+      }
+      .card-video img {
+        width: 100%;
+        display: block;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
+      }
+      .card-video-play {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          transform 0.2s ease,
+          background 0.2s ease;
+      }
+      .card-video:hover .card-video-play {
+        transform: translate(-50%, -50%) scale(1.08);
+        background: #fff;
+      }
+      .card-video-play svg {
+        width: 16px;
+        height: 16px;
+        color: #20201e;
+        margin-left: 2px;
+      }
+      .card-video-duration {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        padding: 3px 8px;
+        border-radius: 5px;
+        background: rgba(0, 0, 0, 0.65);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.2px;
+      }
+      .card-video-body {
+        padding: 12px 14px 14px;
+        background: #fff;
+      }
+      .card-video-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #20201e;
+        margin-bottom: 5px;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .card-video-source {
+        font-size: 11.5px;
+        color: #a09b94;
+      }
 
-  /* ============================================
+      /* ============================================
      DEMO STATE CONTROLS
      ============================================ */
-  .demo-controls {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 8px;
-    padding: 8px 14px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    z-index: 500;
-  }
-  .demo-btn {
-    padding: 7px 14px;
-    border-radius: 8px;
-    border: 1px solid #E8E6E1;
-    background: #fff;
-    font-size: 12px;
-    font-weight: 500;
-    color: #55524E;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: inherit;
-  }
-  .demo-btn:hover { background: #F7F6F2; border-color: #D6D3CE; }
-  .demo-btn.active { background: #20201E; color: #fff; border-color: #20201E; }
+      .demo-controls {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 8px;
+        padding: 8px 14px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        z-index: 500;
+      }
+      .demo-btn {
+        padding: 7px 14px;
+        border-radius: 8px;
+        border: 1px solid #e8e6e1;
+        background: #fff;
+        font-size: 12px;
+        font-weight: 500;
+        color: #55524e;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: inherit;
+      }
+      .demo-btn:hover {
+        background: #f7f6f2;
+        border-color: #d6d3ce;
+      }
+      .demo-btn.active {
+        background: #20201e;
+        color: #fff;
+        border-color: #20201e;
+      }
 
-  /* Responsive adjustments */
-  @media (max-width: 1200px) {
-    .masonry { columns: 4; }
-  }
-  @media (max-width: 900px) {
-    .masonry { columns: 3; }
-    .content-area { padding: 0 24px 40px; }
-    .view-toggle { padding: 0 24px; }
-  }
-</style>
-<link rel="stylesheet" href="prototype-shell.css">
-<script defer src="prototype-shell.js"></script>
-</head>
-<body data-page="library">
-
-<div id="prototypeShell"></div>
-<header class="top-nav" id="topNav"><div class="nav-center">
-<button class="search-trigger" id="searchTrigger" onclick="toggleSearch()"><i data-lucide="search"></i><span>搜索灵感、标签或来源…</span><kbd>⌘K</kbd></button>
-<div class="search-expanded" id="searchExpanded"><i data-lucide="search"></i><input aria-label="搜索灵感" placeholder="搜索灵感、标签或来源…"></div>
-</div></header>
-<!-- ============================================
+      /* Responsive adjustments */
+      @media (max-width: 1200px) {
+        .masonry {
+          columns: 4;
+        }
+      }
+      @media (max-width: 900px) {
+        .masonry {
+          columns: 3;
+        }
+        .content-area {
+          padding: 0 24px 40px;
+        }
+        .view-toggle {
+          padding: 0 24px;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="prototype-shell.css" />
+    <script defer src="prototype-shell.js"></script>
+  </head>
+  <body data-page="library">
+    <div id="prototypeShell"></div>
+    <header class="top-nav" id="topNav">
+      <div class="nav-center">
+        <button
+          class="search-trigger"
+          id="searchTrigger"
+          onclick="toggleSearch()">
+          <i data-lucide="search"></i><span>搜索灵感、标签或来源…</span
+          ><kbd>⌘K</kbd>
+        </button>
+        <div class="search-expanded" id="searchExpanded">
+          <i data-lucide="search"></i
+          ><input aria-label="搜索灵感" placeholder="搜索灵感、标签或来源…" />
+        </div>
+      </div>
+    </header>
+    <!-- ============================================
      TAG BAR
      ============================================ -->
-<div class="view-toggle">
-  <button class="view-btn active" title="瀑布流">
-    <i data-lucide="layout-grid"></i>
-  </button>
-  <button class="view-btn" title="紧凑网格">
-    <i data-lucide="grid-3x3"></i>
-  </button>
-</div>
+    <div class="view-toggle">
+      <button class="view-btn active" title="瀑布流">
+        <i data-lucide="layout-grid"></i>
+      </button>
+      <button class="view-btn" title="紧凑网格">
+        <i data-lucide="grid-3x3"></i>
+      </button>
+    </div>
 
-<!-- ============================================
+    <!-- ============================================
      MASONRY CONTENT
      ============================================ -->
-<div class="content-area">
-  <div class="masonry">
-
-    <!-- IMAGE 1: 冰岛黑沙滩 -->
-    <div class="masonry-item">
-      <div class="card card-image">
-        <img src="https://images.unsplash.com/photo-1504893524553-b855bce32c67?w=600&q=80" alt="冰岛黑沙滩" loading="lazy">
-      </div>
-    </div>
-
-    <!-- WEB 1: UI 设计趋势 -->
-    <div class="masonry-item">
-      <div class="card card-web">
-        <div class="card-web-thumb">
-          <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80" alt="UI 设计趋势" loading="lazy">
-        </div>
-        <div class="card-web-body">
-          <div class="card-web-title">2024 年 UI 设计趋势：从复杂到克制</div>
-          <div class="card-web-meta">
-            <div class="card-web-favicon"></div>
-            <span class="card-web-source">refactoringui.com</span>
+    <div class="content-area">
+      <div class="masonry">
+        <!-- IMAGE 1: 冰岛黑沙滩 -->
+        <div class="masonry-item">
+          <div class="card card-image">
+            <img
+              src="https://images.unsplash.com/photo-1504893524553-b855bce32c67?w=600&q=80"
+              alt="冰岛黑沙滩"
+              loading="lazy" />
           </div>
-          <div class="card-web-excerpt">探讨了当下 UI 设计如何从过度装饰回归本质，通过留白、排版和色彩克制来创造更有力量的界面。</div>
         </div>
-      </div>
-    </div>
 
-    <!-- QUOTE 1: Dieter Rams -->
-    <div class="masonry-item">
-      <div class="card card-quote">
-        <div class="card-quote-text">设计不是装饰，而是解决问题的方式。</div>
-        <div class="card-quote-source">— Dieter Rams</div>
-      </div>
-    </div>
-
-    <!-- IMAGE 2: 安藤忠雄 -->
-    <div class="masonry-item">
-      <div class="card card-image">
-        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80" alt="光之教堂" loading="lazy">
-      </div>
-    </div>
-
-    <!-- NOTE 1: 产品评审 -->
-    <div class="masonry-item">
-      <div class="card card-note beige">
-        下周产品评审需要准备：<br>1. 用户调研数据<br>2. 竞品分析报告<br>3. 原型演示与反馈收集
-        <time>2 小时前</time>
-      </div>
-    </div>
-
-    <!-- IMAGE 3: 枯山水 -->
-    <div class="masonry-item">
-      <div class="card card-image">
-        <img src="https://images.unsplash.com/photo-1580192985016-821f5f9571d3?w=600&q=80" alt="枯山水" loading="lazy">
-      </div>
-    </div>
-
-    <!-- VIDEO: 侘寂美学 -->
-    <div class="masonry-item">
-      <div class="card card-video">
-        <img src="https://images.unsplash.com/photo-1528164344705-47542687000d?w=600&q=80" alt="侘寂美学" loading="lazy">
-        <div class="card-video-play"><i data-lucide="play"></i></div>
-        <div class="card-video-duration">12:34</div>
-        <div class="card-video-body">
-          <div class="card-video-title">日本侘寂美学的当代诠释</div>
-          <div class="card-video-source">YouTube</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- NOTE 2: Josef Albers -->
-    <div class="masonry-item">
-      <div class="card card-note sage">
-        颜色不是视觉的附属品，它是信息本身。<br><br>—— Josef Albers
-        <time>昨天</time>
-      </div>
-    </div>
-
-    <!-- IMAGE 4: 产品设计 -->
-    <div class="masonry-item">
-      <div class="card card-image">
-        <img src="https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=600&q=80" alt="产品设计" loading="lazy">
-      </div>
-    </div>
-
-    <!-- WEB 2: React 19 -->
-    <div class="masonry-item">
-      <div class="card card-web">
-        <div class="card-web-thumb">
-          <img src="https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&q=80" alt="React 19" loading="lazy">
-        </div>
-        <div class="card-web-body">
-          <div class="card-web-title">React 19 新特性完全指南</div>
-          <div class="card-web-meta">
-            <div class="card-web-favicon"></div>
-            <span class="card-web-source">react.dev</span>
+        <!-- WEB 1: UI 设计趋势 -->
+        <div class="masonry-item">
+          <div class="card card-web">
+            <div class="card-web-thumb">
+              <img
+                src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80"
+                alt="UI 设计趋势"
+                loading="lazy" />
+            </div>
+            <div class="card-web-body">
+              <div class="card-web-title">
+                2024 年 UI 设计趋势：从复杂到克制
+              </div>
+              <div class="card-web-meta">
+                <div class="card-web-favicon"></div>
+                <span class="card-web-source">refactoringui.com</span>
+              </div>
+              <div class="card-web-excerpt">
+                探讨了当下 UI
+                设计如何从过度装饰回归本质，通过留白、排版和色彩克制来创造更有力量的界面。
+              </div>
+            </div>
           </div>
-          <div class="card-web-excerpt">全面解析 React 19 的 Server Components、Actions、Suspense 改进以及新 Hook 的使用方式。</div>
         </div>
-      </div>
-    </div>
 
-    <!-- QUOTE 2: da Vinci -->
-    <div class="masonry-item">
-      <div class="card card-quote">
-        <div class="card-quote-text">简单是终极的复杂。</div>
-        <div class="card-quote-source">— Leonardo da Vinci</div>
-      </div>
-    </div>
-
-    <!-- IMAGE 5: 建筑摄影 -->
-    <div class="masonry-item">
-      <div class="card card-image">
-        <img src="https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=600&q=80" alt="建筑摄影" loading="lazy">
-      </div>
-    </div>
-
-    <!-- WEB 3: 色彩理论 -->
-    <div class="masonry-item">
-      <div class="card card-web">
-        <div class="card-web-thumb">
-          <img src="https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=600&q=80" alt="色彩理论" loading="lazy">
-        </div>
-        <div class="card-web-body">
-          <div class="card-web-title">色彩理论：超越直觉的系统方法</div>
-          <div class="card-web-meta">
-            <div class="card-web-favicon"></div>
-            <span class="card-web-source">smashingmagazine.com</span>
+        <!-- QUOTE 1: Dieter Rams -->
+        <div class="masonry-item">
+          <div class="card card-quote">
+            <div class="card-quote-text">
+              设计不是装饰，而是解决问题的方式。
+            </div>
+            <div class="card-quote-source">— Dieter Rams</div>
           </div>
-          <div class="card-web-excerpt">从色环关系到对比度计算，建立一套可复用的色彩决策框架。</div>
         </div>
-      </div>
-    </div>
 
-    <!-- NOTE 3: Dieter Rams -->
-    <div class="masonry-item">
-      <div class="card card-note warm">
-        好的设计是尽可能少的设计。<br><br>—— Dieter Rams
-        <time>3 天前</time>
-      </div>
-    </div>
-
-    <!-- WEB 4: 设计系统 -->
-    <div class="masonry-item">
-      <div class="card card-web">
-        <div class="card-web-thumb">
-          <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=600&q=80" alt="设计系统" loading="lazy">
-        </div>
-        <div class="card-web-body">
-          <div class="card-web-title">设计系统构建实战</div>
-          <div class="card-web-meta">
-            <div class="card-web-favicon"></div>
-            <span class="card-web-source">figma.com</span>
+        <!-- IMAGE 2: 安藤忠雄 -->
+        <div class="masonry-item">
+          <div class="card card-image">
+            <img
+              src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80"
+              alt="光之教堂"
+              loading="lazy" />
           </div>
-          <div class="card-web-excerpt">从零开始搭建可扩展的设计系统，涵盖 Token、组件库和文档站点。</div>
+        </div>
+
+        <!-- NOTE 1: 产品评审 -->
+        <div class="masonry-item">
+          <div class="card card-note beige">
+            下周产品评审需要准备：<br />1. 用户调研数据<br />2. 竞品分析报告<br />3.
+            原型演示与反馈收集
+            <time>2 小时前</time>
+          </div>
+        </div>
+
+        <!-- IMAGE 3: 枯山水 -->
+        <div class="masonry-item">
+          <div class="card card-image">
+            <img
+              src="https://images.unsplash.com/photo-1580192985016-821f5f9571d3?w=600&q=80"
+              alt="枯山水"
+              loading="lazy" />
+          </div>
+        </div>
+
+        <!-- VIDEO: 侘寂美学 -->
+        <div class="masonry-item">
+          <div class="card card-video">
+            <img
+              src="https://images.unsplash.com/photo-1528164344705-47542687000d?w=600&q=80"
+              alt="侘寂美学"
+              loading="lazy" />
+            <div class="card-video-play"><i data-lucide="play"></i></div>
+            <div class="card-video-duration">12:34</div>
+            <div class="card-video-body">
+              <div class="card-video-title">日本侘寂美学的当代诠释</div>
+              <div class="card-video-source">YouTube</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NOTE 2: Josef Albers -->
+        <div class="masonry-item">
+          <div class="card card-note sage">
+            颜色不是视觉的附属品，它是信息本身。<br /><br />—— Josef Albers
+            <time>昨天</time>
+          </div>
+        </div>
+
+        <!-- IMAGE 4: 产品设计 -->
+        <div class="masonry-item">
+          <div class="card card-image">
+            <img
+              src="https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=600&q=80"
+              alt="产品设计"
+              loading="lazy" />
+          </div>
+        </div>
+
+        <!-- WEB 2: React 19 -->
+        <div class="masonry-item">
+          <div class="card card-web">
+            <div class="card-web-thumb">
+              <img
+                src="https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&q=80"
+                alt="React 19"
+                loading="lazy" />
+            </div>
+            <div class="card-web-body">
+              <div class="card-web-title">React 19 新特性完全指南</div>
+              <div class="card-web-meta">
+                <div class="card-web-favicon"></div>
+                <span class="card-web-source">react.dev</span>
+              </div>
+              <div class="card-web-excerpt">
+                全面解析 React 19 的 Server Components、Actions、Suspense
+                改进以及新 Hook 的使用方式。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUOTE 2: da Vinci -->
+        <div class="masonry-item">
+          <div class="card card-quote">
+            <div class="card-quote-text">简单是终极的复杂。</div>
+            <div class="card-quote-source">— Leonardo da Vinci</div>
+          </div>
+        </div>
+
+        <!-- IMAGE 5: 建筑摄影 -->
+        <div class="masonry-item">
+          <div class="card card-image">
+            <img
+              src="https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=600&q=80"
+              alt="建筑摄影"
+              loading="lazy" />
+          </div>
+        </div>
+
+        <!-- WEB 3: 色彩理论 -->
+        <div class="masonry-item">
+          <div class="card card-web">
+            <div class="card-web-thumb">
+              <img
+                src="https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=600&q=80"
+                alt="色彩理论"
+                loading="lazy" />
+            </div>
+            <div class="card-web-body">
+              <div class="card-web-title">色彩理论：超越直觉的系统方法</div>
+              <div class="card-web-meta">
+                <div class="card-web-favicon"></div>
+                <span class="card-web-source">smashingmagazine.com</span>
+              </div>
+              <div class="card-web-excerpt">
+                从色环关系到对比度计算，建立一套可复用的色彩决策框架。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NOTE 3: Dieter Rams -->
+        <div class="masonry-item">
+          <div class="card card-note warm">
+            好的设计是尽可能少的设计。<br /><br />—— Dieter Rams
+            <time>3 天前</time>
+          </div>
+        </div>
+
+        <!-- WEB 4: 设计系统 -->
+        <div class="masonry-item">
+          <div class="card card-web">
+            <div class="card-web-thumb">
+              <img
+                src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=600&q=80"
+                alt="设计系统"
+                loading="lazy" />
+            </div>
+            <div class="card-web-body">
+              <div class="card-web-title">设计系统构建实战</div>
+              <div class="card-web-meta">
+                <div class="card-web-favicon"></div>
+                <span class="card-web-source">figma.com</span>
+              </div>
+              <div class="card-web-excerpt">
+                从零开始搭建可扩展的设计系统，涵盖 Token、组件库和文档站点。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Extra Image: 材质 -->
+        <div class="masonry-item">
+          <div class="card card-image">
+            <img
+              src="https://images.unsplash.com/photo-1615529182904-14819c35db37?w=600&q=80"
+              alt="材质纹理"
+              loading="lazy" />
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Extra Image: 材质 -->
-    <div class="masonry-item">
-      <div class="card card-image">
-        <img src="https://images.unsplash.com/photo-1615529182904-14819c35db37?w=600&q=80" alt="材质纹理" loading="lazy">
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script>
-function toggleSearch() {
- document.getElementById('searchTrigger').hidden=true;
- document.getElementById('searchExpanded').classList.add('active');
- document.querySelector('.search-expanded input').focus();
-}
-document.addEventListener('keydown',e=>{
- if(document.querySelector('dialog[open]'))return;
- if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();toggleSearch();}
- if(e.key==='Escape'){
- document.getElementById('searchTrigger').hidden=false;
- document.getElementById('searchExpanded').classList.remove('active');
- }
-});
-document.querySelectorAll('.view-btn').forEach((button,index)=>button.onclick=()=>{
- document.querySelectorAll('.view-btn').forEach(b=>b.classList.toggle('active',b===button));
- document.querySelector('.masonry').classList.toggle('compact',index===1);
-});
-</script>
-</body></html>
+    <script>
+      function toggleSearch() {
+        document.getElementById("searchTrigger").hidden = true
+        document.getElementById("searchExpanded").classList.add("active")
+        document.querySelector(".search-expanded input").focus()
+      }
+      document.addEventListener("keydown", (e) => {
+        if (document.querySelector("dialog[open]")) return
+        if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+          e.preventDefault()
+          toggleSearch()
+        }
+        if (e.key === "Escape") {
+          document.getElementById("searchTrigger").hidden = false
+          document.getElementById("searchExpanded").classList.remove("active")
+        }
+      })
+      document.querySelectorAll(".view-btn").forEach(
+        (button, index) =>
+          (button.onclick = () => {
+            document
+              .querySelectorAll(".view-btn")
+              .forEach((b) => b.classList.toggle("active", b === button))
+            document
+              .querySelector(".masonry")
+              .classList.toggle("compact", index === 1)
+          })
+      )
+    </script>
+  </body>
+</html>

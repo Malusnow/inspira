@@ -1,13 +1,144 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Inspira — Workspaces</title><script async onload="window.lucide?.createIcons()" src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><link rel="stylesheet" href="prototype-shell.css"><script defer src="prototype-shell.js"></script>
-<style>*{margin:0} .workspace-tile{font:inherit}</style></head>
-<body data-page="workspaces"><div id="prototypeShell"></div><main class="workspace-main"><button class="workspace-return" id="workspaceReturn" hidden>← 所有工作区</button><div class="workspace-heading"><div><h1 id="workspaceTitle">Workspaces</h1><p id="workspaceDescription">给相关的灵感，一个共同的空间。</p></div><button class="workspace-create" id="createWorkspace">＋ 创建工作区</button></div><div class="workspace-grid" id="workspaceGrid"></div><div class="workspace-flow" id="workspaceFlow" hidden></div></main>
-<dialog class="prototype-small-dialog" id="workspaceDialog"><form class="prototype-dialog-form"><h2>创建工作区</h2><input aria-label="工作区名称" placeholder="工作区名称" required maxlength="60"><button type="submit">创建</button><button type="button" onclick="document.getElementById('workspaceDialog').close()">取消</button></form></dialog>
-<script>
-const workspaces=[{name:'建筑与空间',image:'photo-1600585154340-be6161a56a0c',note:'光线、材质与留白，让空间自然呼吸。'},{name:'色彩实验',image:'photo-1557682250-33bd709cbe85',note:'保留那些意想不到的色彩组合。'},{name:'下一个想法'}];
-const grid=document.getElementById('workspaceGrid'),flow=document.getElementById('workspaceFlow');
-function renderWorkspaces(){grid.replaceChildren();workspaces.forEach(workspace=>{const tile=document.createElement('button');tile.className='workspace-tile';const cover=document.createElement('div');cover.className='workspace-cover';if(workspace.image){const img=document.createElement('img');img.src=`https://images.unsplash.com/${workspace.image}?w=800&q=80`;img.alt=workspace.name;cover.append(img);}else{cover.classList.add('empty');cover.textContent='Empty space';}tile.append(cover,document.createTextNode(workspace.name));const count=document.createElement('small');count.textContent=workspace.image?'2 条灵感':'还没有灵感';tile.append(count);tile.onclick=()=>openWorkspace(workspace);grid.append(tile);});}
-function openWorkspace(workspace){grid.hidden=true;flow.hidden=false;document.getElementById('workspaceReturn').hidden=false;document.getElementById('createWorkspace').hidden=true;document.getElementById('workspaceTitle').textContent=workspace.name;document.getElementById('workspaceDescription').textContent=workspace.image?'留在这个主题里，继续发现。':'这个空间还很安静。保存灵感时，可以将它放进这里。';flow.replaceChildren();if(workspace.image){const card=document.createElement('div');card.className='card';const img=document.createElement('img');img.src=`https://images.unsplash.com/${workspace.image}?w=1000&q=80`;img.alt=workspace.name;card.append(img);const note=document.createElement('div');note.className='card text-card';note.textContent=workspace.note;flow.append(card,note);window.bindPrototypeCards(flow);}}
-document.getElementById('workspaceReturn').onclick=()=>{grid.hidden=false;flow.hidden=true;document.getElementById('workspaceReturn').hidden=true;document.getElementById('createWorkspace').hidden=false;document.getElementById('workspaceTitle').textContent='Workspaces';document.getElementById('workspaceDescription').textContent='给相关的灵感，一个共同的空间。';};
-const modal=document.getElementById('workspaceDialog');document.getElementById('createWorkspace').onclick=()=>modal.showModal();modal.querySelector('form').onsubmit=e=>{e.preventDefault();const input=modal.querySelector('input');if(!input.value.trim())return;workspaces.push({name:input.value.trim()});renderWorkspaces();input.value='';modal.close();};renderWorkspaces();
-</script></body></html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inspira — Workspaces</title>
+    <script
+      async
+      onload="window.lucide?.createIcons()"
+      src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <link rel="stylesheet" href="prototype-shell.css" />
+    <script defer src="prototype-shell.js"></script>
+    <style>
+      * {
+        margin: 0;
+      }
+      .workspace-tile {
+        font: inherit;
+      }
+    </style>
+  </head>
+  <body data-page="workspaces">
+    <div id="prototypeShell"></div>
+    <main class="workspace-main">
+      <button class="workspace-return" id="workspaceReturn" hidden>
+        ← 所有工作区
+      </button>
+      <div class="workspace-heading">
+        <div>
+          <h1 id="workspaceTitle">Workspaces</h1>
+          <p id="workspaceDescription">给相关的灵感，一个共同的空间。</p>
+        </div>
+        <button class="workspace-create" id="createWorkspace">
+          ＋ 创建工作区
+        </button>
+      </div>
+      <div class="workspace-grid" id="workspaceGrid"></div>
+      <div class="workspace-flow" id="workspaceFlow" hidden></div>
+    </main>
+    <dialog class="prototype-small-dialog" id="workspaceDialog">
+      <form class="prototype-dialog-form">
+        <h2>创建工作区</h2>
+        <input
+          aria-label="工作区名称"
+          placeholder="工作区名称"
+          required
+          maxlength="60" /><button type="submit">创建</button
+        ><button
+          type="button"
+          onclick="document.getElementById('workspaceDialog').close()">
+          取消
+        </button>
+      </form>
+    </dialog>
+    <script>
+      const workspaces = [
+        {
+          name: "建筑与空间",
+          image: "photo-1600585154340-be6161a56a0c",
+          note: "光线、材质与留白，让空间自然呼吸。"
+        },
+        {
+          name: "色彩实验",
+          image: "photo-1557682250-33bd709cbe85",
+          note: "保留那些意想不到的色彩组合。"
+        },
+        { name: "下一个想法" }
+      ]
+      const grid = document.getElementById("workspaceGrid"),
+        flow = document.getElementById("workspaceFlow")
+      function renderWorkspaces() {
+        grid.replaceChildren()
+        workspaces.forEach((workspace) => {
+          const tile = document.createElement("button")
+          tile.className = "workspace-tile"
+          const cover = document.createElement("div")
+          cover.className = "workspace-cover"
+          if (workspace.image) {
+            const img = document.createElement("img")
+            img.src = `https://images.unsplash.com/${workspace.image}?w=800&q=80`
+            img.alt = workspace.name
+            cover.append(img)
+          } else {
+            cover.classList.add("empty")
+            cover.textContent = "Empty space"
+          }
+          tile.append(cover, document.createTextNode(workspace.name))
+          const count = document.createElement("small")
+          count.textContent = workspace.image ? "2 条灵感" : "还没有灵感"
+          tile.append(count)
+          tile.onclick = () => openWorkspace(workspace)
+          grid.append(tile)
+        })
+      }
+      function openWorkspace(workspace) {
+        grid.hidden = true
+        flow.hidden = false
+        document.getElementById("workspaceReturn").hidden = false
+        document.getElementById("createWorkspace").hidden = true
+        document.getElementById("workspaceTitle").textContent = workspace.name
+        document.getElementById("workspaceDescription").textContent =
+          workspace.image
+            ? "留在这个主题里，继续发现。"
+            : "这个空间还很安静。保存灵感时，可以将它放进这里。"
+        flow.replaceChildren()
+        if (workspace.image) {
+          const card = document.createElement("div")
+          card.className = "card"
+          const img = document.createElement("img")
+          img.src = `https://images.unsplash.com/${workspace.image}?w=1000&q=80`
+          img.alt = workspace.name
+          card.append(img)
+          const note = document.createElement("div")
+          note.className = "card text-card"
+          note.textContent = workspace.note
+          flow.append(card, note)
+          window.bindPrototypeCards(flow)
+        }
+      }
+      document.getElementById("workspaceReturn").onclick = () => {
+        grid.hidden = false
+        flow.hidden = true
+        document.getElementById("workspaceReturn").hidden = true
+        document.getElementById("createWorkspace").hidden = false
+        document.getElementById("workspaceTitle").textContent = "Workspaces"
+        document.getElementById("workspaceDescription").textContent =
+          "给相关的灵感，一个共同的空间。"
+      }
+      const modal = document.getElementById("workspaceDialog")
+      document.getElementById("createWorkspace").onclick = () =>
+        modal.showModal()
+      modal.querySelector("form").onsubmit = (e) => {
+        e.preventDefault()
+        const input = modal.querySelector("input")
+        if (!input.value.trim()) return
+        workspaces.push({ name: input.value.trim() })
+        renderWorkspaces()
+        input.value = ""
+        modal.close()
+      }
+      renderWorkspaces()
+    </script>
+  </body>
+</html>

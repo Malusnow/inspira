@@ -4,22 +4,22 @@
 
 ## 可追溯原型值
 
-| 角色 | 原型值 | 来源与定位 |
-| --- | --- | --- |
-| 浅色页面背景 | #F7F6F2 | [Library](prototypes/inspira-library.html) body；Insights 同值 |
-| 浅色正文 | #20201E | Library body |
-| 次级文字 | #777570 | Library .nav-menu-btn |
-| 弱化文字 | #A09B94 | Library .search-trigger |
-| 浅色输入背景 | #EDECE8 | [Insights](prototypes/inspira-insights-settings.html) .search-box |
-| 强调主色 | #6C63FF | Insights .btn-add |
-| 深色背景/正文 | #0E0E0E / #E5E4E0 | [Serendipity](prototypes/inspira-serendipity.html) body |
-| 字体栈 | Inter，系统 sans-serif 回退 | Library / Serendipity body |
-| 顶栏高度 | 64px | Library .top-nav |
-| 页面横向间距 | 36px（Library），40px（Insights） | 两原型 .top-nav；存在差异，不能宣称统一值 |
-| 按钮圆角/搜索圆角 | 10px / 14px | Library .nav-menu-btn / .search-trigger |
-| 标签字号 | 22px / 16px / 13px | Serendipity .tag-node.size-l/m/s，静态演示 |
-| 标签间距 | padding 8px 16px | Serendipity .tag-node |
-| 标签明度 | 浅文字 alpha .5/.4/.25 | Serendipity 大/中/小词；低对比需重新验证 |
+| 角色              | 原型值                            | 来源与定位                                                        |
+| ----------------- | --------------------------------- | ----------------------------------------------------------------- |
+| 浅色页面背景      | #F7F6F2                           | [Library](prototypes/inspira-library.html) body；Insights 同值    |
+| 浅色正文          | #20201E                           | Library body                                                      |
+| 次级文字          | #777570                           | Library .nav-menu-btn                                             |
+| 弱化文字          | #A09B94                           | Library .search-trigger                                           |
+| 浅色输入背景      | #EDECE8                           | [Insights](prototypes/inspira-insights-settings.html) .search-box |
+| 强调主色          | #6C63FF                           | Insights .btn-add                                                 |
+| 深色背景/正文     | #0E0E0E / #E5E4E0                 | [Serendipity](prototypes/inspira-serendipity.html) body           |
+| 字体栈            | Inter，系统 sans-serif 回退       | Library / Serendipity body                                        |
+| 顶栏高度          | 64px                              | Library .top-nav                                                  |
+| 页面横向间距      | 36px（Library），40px（Insights） | 两原型 .top-nav；存在差异，不能宣称统一值                         |
+| 按钮圆角/搜索圆角 | 10px / 14px                       | Library .nav-menu-btn / .search-trigger                           |
+| 标签字号          | 22px / 16px / 13px                | Serendipity .tag-node.size-l/m/s，静态演示                        |
+| 标签间距          | padding 8px 16px                  | Serendipity .tag-node                                             |
+| 标签明度          | 浅文字 alpha .5/.4/.25            | Serendipity 大/中/小词；低对比需重新验证                          |
 
 ## 建议映射
 
