@@ -1,0 +1,101 @@
+# Inspira Product
+
+> 状态：产品基线。本文只记录已确认范围、待确认问题和实现顺序；功能是否完成以代码、测试和当前 OpenSpec change 为准。
+
+## 产品定位
+
+Inspira 是私人灵感收集与再发现工具。用户可以保存网页、图片、选中文字，或在 Web 创建笔记、上传图片和视频；之后通过卡片流、搜索、标签、工作区、Insights 和 Serendipity 找回内容。
+
+首版原则：
+
+- 保存优先：首次保存不强制填写标签、工作区或备注。
+- 数据私有：所有内容、工作区、标签聚合、搜索、统计和媒体访问都按当前登录用户隔离。
+- 标签轻量：tags 是用户输入的字符串数组，不做预建标签 ID。
+- 单工作区：一条内容最多属于一个工作区，也可以不归类。
+- 主动重复保存创建新内容；同一次请求重试不能重复创建。
+- 删除前确认；确认后直接删除，不提供恢复入口。
+
+首版不做：收藏、旧内容回顾、AI 标签/摘要/OCR/语义搜索、多人协作、公开分享、复杂富文本、Firefox/Safari 和移动原生应用。
+
+## 产品模块
+
+| 模块 | 首版职责 | 不属于本模块 |
+| --- | --- | --- |
+| Identity | Clerk 登录、退出、会话过期处理、用户隔离 | 自建密码系统 |
+| Library | Everything 卡片流、内容详情、创建/编辑/删除 | Insights、Serendipity |
+| Content Types | page、image、quote、note、video 五类内容字段与校验 | AI 生成字段 |
+| Workspaces | 工作区列表、创建、内容归类、专题流 | 多工作区归属 |
+| Tags | 字符串标签输入、展示、聚合 | tagId 预建模型 |
+| Search | 搜索本人内容，包含标签 | 语义搜索 |
+| Extension Capture | 插件保存网页、图片、选中文字 | 视频上传 |
+| Media | 图片/视频上传、绑定、短时访问、播放 | 自动转码，除非后续确认 |
+| Insights | 365 天热力图、数量、构成、趋势 | 收藏统计、旧内容回顾 |
+| Serendipity | 按标签频度生成词云，点击标签查看相关灵感 | 随机旧内容回顾 |
+| Preferences | 浅/深主题、自定义主色、默认视图 | 自动提取图片色 |
+
+## 页面与交互
+
+| 页面/入口 | 行为 |
+| --- | --- |
+| Landing | 产品价值、插件操作演示、Chrome 下载与登录/注册入口；不放未确认发布地址 |
+| Everything | 本人全部灵感卡片流、搜索、视图切换 |
+| Workspaces | 工作区总览和单个工作区卡片流 |
+| Insights | 热力图、摘要、类型构成和趋势 |
+| Settings | 主题、主色、默认视图、账户与插件状态 |
+| Serendipity | 标签词云，点击标签进入相关灵感 |
+| Chrome 插件 | 点击图标保存当前网页；右键图片保存 Image；右键选中文字保存 Quote |
+
+导航已确认：Library 使用固定窄侧栏，Inspira 横向放在侧栏顶部，包含 Library、Insights、浅/深切换和 Settings。Workspaces 与 Serendipity 从右上角图标进入。Insights/Settings 进入后使用独立页面布局并提供返回。
+
+详情已确认：点击卡片在当前流上打开浮层；左侧展示图片/视频或内容主体，右侧展示 Tags 和 Notes。图片直接可见，视频点击播放。
+
+## 内容与媒体规则
+
+内容类型：
+
+- Page：URL、标题、来源域名，可选封面和摘要。
+- Image：上传文件或图片 URL；网页采集保留来源 URL；可选标题、备注。
+- Quote：选中文字、来源 URL、页面标题。
+- Note：正文、可选标题。
+- Video：上传文件或视频链接；标题、来源、备注等适用信息。
+
+共同字段：owner、type、title/content 等类型字段、tags、可选 workspaceId、创建/更新时间。
+
+上传限制已确认：图片 JPG/PNG/WebP/GIF 单张不超过 20MB；视频 MP4 H.264/AAC 单个不超过 200MB 且不超过 10 分钟；首版暂不自动转码。
+
+媒体访问已确认：登录并通过所有权校验后签发短时地址；详情内直接看图或点击播放，过期后重新授权。
+
+## 待确认问题
+
+这些问题只阻塞相关模块，不阻塞无关编码：
+
+| ID | 问题 | 阻塞 |
+| --- | --- | --- |
+| D01b | 内容删除后的媒体清理延迟、重试和额度回收时机 | Media 删除清理 |
+| D03b | 每用户总存储额度 | Media 上传 |
+| D03c | 是否自动生成视频封面 | Video 卡片展示 |
+| D04 | 右键图片是否转存优先，失败后是否允许外链降级 | 图片采集 |
+| D05 | 插件登录入口、返回路径、是否自动恢复待保存请求 | 插件未登录流程 |
+| D06 | 标签空白、大小写、同条重复规则；词频统计口径 | Tags、Search、Serendipity |
+| D07 | Serendipity 排序、过多标签处理、内容浮现规则 | Serendipity |
+| D08 | 删除工作区后内容归属；标签全局重命名 | Workspaces、Tags |
+| D09 | 搜索字段、筛选、排序；统计时区和删除计数口径 | Search、Insights |
+| D10 | 生产域名、商店地址、隐私地址、偏好跨端同步范围 | 发布、Settings |
+
+## 实现顺序
+
+每个阶段建议单独建一个 OpenSpec change。只实现本阶段范围，完成后同步任务状态和验证结果。
+
+| 顺序 | Change 建议名 | 交付模块 | 主要任务 | 进入条件 | 验收重点 |
+| --- | --- | --- | --- | --- | --- |
+| S0 | `establish-engineering-checks` | 工程检查 | 接通根 typecheck、test、build、CI；补真实契约测试 | 已有脚本现状清楚 | 检查失败能真实失败，不允许空测试通过 |
+| S1 | `implement-note-core` | Identity、Library、Note | Clerk 接入；后端用户隔离；创建 Note；Everything 展示；详情浮层 | S0；Note 字段定稿 | A/B 用户隔离，创建后可见，详情可打开 |
+| S2 | `implement-web-content-crud` | Library、Content Types | Page/Image/Quote/Video 元数据模型；编辑；直接删除确认 | S1；删除行为已确认 | 五类内容基础 CRUD，无收藏和恢复入口 |
+| S3 | `implement-workspaces-tags` | Workspaces、Tags | 工作区创建/列表/专题流；内容归类；标签输入展示 | S2；D06/D08 已确认 | 单工作区、字符串 tags、所有权校验 |
+| S4 | `implement-search-views` | Search、Library Views | 搜索字段、标签匹配、视图切换、空/错/加载状态 | S3；D09 搜索口径确认 | 本人内容搜索，标签可命中，状态完整 |
+| S5 | `implement-extension-page-capture` | Extension Capture | 插件登录衔接；点击保存网页；同请求重试；Web 同步 | S1；D05、T01/T02 | 主动两次生成两条，同请求重试只一条 |
+| S6 | `implement-extension-quote-image` | Extension Capture、Image | 右键选文保存 Quote；右键图片保存 Image；受限来源反馈 | S5；D04、T03 | 成功/失败/未登录反馈，不伪装保存成功 |
+| S7 | `implement-media-upload` | Media、Video | 上传授权；完成核验；短时访问；图片预览；视频播放；失败/取消 | S1；D01b/D03b/D03c、T04 | 超限拒绝，跨用户不可访问，详情可看/播 |
+| S8 | `implement-insights-serendipity-settings` | Insights、Serendipity、Preferences | 统计图表；词云频度布局；主题与主色；设置持久化 | S4；D06/D07/D09/D10、T05 | 统计口径正确，词云频度三维表达，主题一致 |
+
+如果需要更小切片，S8 可拆为 `implement-insights`、`implement-serendipity`、`implement-preferences`。

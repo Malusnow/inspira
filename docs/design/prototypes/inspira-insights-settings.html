@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspira — Insights &amp; Settings</title>
+<script async onload="window.lucide?.createIcons()" src="https://unpkg.com/lucide@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:#F7F6F2;
+    color:#20201E;
+    min-height:100vh;
+  }
+
+  /* ===== TOP NAV ===== */
+  .top-nav{
+    display:flex;align-items:center;justify-content:space-between;
+    height:64px;padding:0 40px;
+    position:sticky;top:0;z-index:100;
+    background:#F7F6F2;
+  }
+  .nav-left{display:flex;align-items:center;gap:14px}
+  .menu-btn{
+    width:36px;height:36px;border-radius:10px;border:none;
+    background:transparent;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    color:#20201E;transition:background .15s;
+  }
+  .menu-btn:hover{background:rgba(0,0,0,.04)}
+  .logo{font-size:17px;font-weight:600;letter-spacing:-.3px;color:#20201E}
+  .nav-center{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center}
+  .search-box{
+    display:flex;align-items:center;gap:10px;
+    width:480px;height:46px;padding:0 18px;
+    border-radius:14px;background:#EDECE8;
+    border:1.5px solid transparent;
+    transition:all .2s ease;cursor:pointer;
+  }
+  .search-box:hover{background:#E5E4E0}
+  .search-box svg{width:17px;height:17px;color:#A09B94;flex-shrink:0}
+  .search-box span{color:#A09B94;font-size:14px}
+  .search-box .kbd{margin-left:auto;font-size:11px;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.06);color:#A09B94}
+  .nav-right{display:flex;align-items:center;gap:8px}
+  .nav-icon-btn{
+    width:36px;height:36px;border-radius:50%;border:none;
+    background:transparent;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    color:#777570;transition:all .15s;
+  }
+  .nav-icon-btn:hover{background:rgba(0,0,0,.04);color:#20201E}
+  .nav-icon-btn svg{width:18px;height:18px}
+  .btn-add{
+    width:38px;height:38px;border-radius:50%;border:none;
+    background:#6C63FF;color:#fff;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .15s,box-shadow .15s;
+    box-shadow:0 2px 8px rgba(108,99,255,.25);
+  }
+  .btn-add:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(108,99,255,.35)}
+  .btn-add svg{width:20px;height:20px}
+  .user-avatar{
+    width:32px;height:32px;border-radius:50%;
+    background:#D4D1CC;display:flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:600;color:#fff;
+  }
+
+  /* ===== PAGE HEADER ===== */
+  .page-header{padding:32px 40px 24px;max-width:1200px}
+  .page-title{font-size:24px;font-weight:600;margin-bottom:6px}
+  .page-subtitle{font-size:14px;color:#777570}
+
+  /* ===== SECTION ===== */
+  .section{padding:0 40px 40px;max-width:1200px}
+  .section + .section{padding-top:40px;border-top:1px solid #E5E4E0}
+
+  /* ===== STAT CARDS ===== */
+  .stat-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+  }
+  .stat-card{
+    background:#fff;border-radius:12px;
+    padding:20px;
+    transition:transform .2s ease,box-shadow .2s ease;
+  }
+  .stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.04)}
+  .stat-label{font-size:12.5px;color:#777570;margin-bottom:8px}
+  .stat-value{font-size:28px;font-weight:600;margin-bottom:4px}
+  .stat-change{font-size:12.5px;color:#5BA88C}
+  .stat-change.negative{color:#E87A3D}
+
+  /* ===== HEATMAP ===== */
+  .heatmap-wrap{background:#fff;border-radius:12px;padding:24px}
+  .heatmap-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:20px;
+  }
+  .heatmap-title{font-size:15px;font-weight:600}
+  .heatmap-legend{
+    display:flex;align-items:center;gap:6px;
+    font-size:12px;color:#A09B94;
+  }
+  .legend-swatch{
+    width:12px;height:12px;border-radius:2px;
+  }
+  .heatmap-grid{
+    display:flex;gap:3px;
+    overflow-x:auto;
+    padding-bottom:8px;
+  }
+  .heatmap-col{
+    display:flex;flex-direction:column;gap:3px;
+  }
+  .heatmap-cell{
+    width:14px;height:14px;border-radius:2px;
+    cursor:pointer;transition:transform .1s;
+    position:relative;
+  }
+  .heatmap-cell:hover{transform:scale(1.2);z-index:2}
+  .heatmap-cell.l0{background:#F0EFFE}
+  .heatmap-cell.l1{background:#D4CFFC}
+  .heatmap-cell.l2{background:#A89DFA}
+  .heatmap-cell.l3{background:#8B7EF7}
+  .heatmap-cell.l4{background:#6C63FF}
+  .heatmap-tooltip{
+    position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+    background:#20201E;color:#fff;font-size:11px;
+    padding:4px 10px;border-radius:6px;
+    white-space:nowrap;pointer-events:none;
+    opacity:0;transition:opacity .15s;
+  }
+  .heatmap-cell:hover .heatmap-tooltip{opacity:1}
+
+  /* ===== TWO COLUMN ===== */
+  .two-col{
+    display:grid;grid-template-columns:1fr 1fr;gap:16px;
+    margin-top:16px;
+  }
+  .panel-card{
+    background:#fff;border-radius:12px;padding:24px;
+  }
+  .panel-title{font-size:15px;font-weight:600;margin-bottom:16px}
+
+  /* Type breakdown */
+  .type-list{display:flex;flex-direction:column;gap:12px}
+  .type-row{
+    display:flex;align-items:center;gap:12px;
+  }
+  .type-bar-bg{
+    flex:1;height:8px;border-radius:4px;
+    background:#F7F6F2;overflow:hidden;
+  }
+  .type-bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+  .type-name{font-size:13px;color:#777570;min-width:50px}
+  .type-pct{font-size:13px;font-weight:500;min-width:36px;text-align:right}
+
+  /* Tag ranking */
+  .tag-rank-list{display:flex;flex-direction:column;gap:10px}
+  .tag-rank-item{
+    display:flex;align-items:center;gap:12px;
+    padding:8px 12px;border-radius:8px;
+    transition:background .15s;cursor:pointer;
+  }
+  .tag-rank-item:hover{background:#F7F6F2}
+  .tag-rank-num{
+    width:22px;height:22px;border-radius:50%;
+    background:#F7F6F2;display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:600;color:#A09B94;
+  }
+  .tag-rank-name{flex:1;font-size:13.5px}
+  .tag-rank-count{font-size:13px;color:#A09B94}
+
+  /* ===== ON THIS DAY ===== */
+  .on-this-day{
+    display:flex;gap:16px;
+    margin-top:12px;
+  }
+  .on-this-card{
+    flex:1;background:#fff;border-radius:12px;
+    overflow:hidden;transition:transform .2s;
+    cursor:pointer;
+  }
+  .on-this-card:hover{transform:translateY(-3px)}
+  .on-this-card img{width:100%;height:140px;object-fit:cover;display:block}
+  .on-this-info{padding:12px 14px}
+  .on-this-title{font-size:13px;font-weight:500;margin-bottom:4px}
+  .on-this-meta{font-size:12px;color:#A09B94}
+
+  /* ===== SETTINGS ===== */
+  .settings-grid{
+    display:grid;grid-template-columns:220px 1fr;
+    gap:32px;max-width:900px;
+  }
+  .settings-nav{
+    display:flex;flex-direction:column;gap:4px;
+    position:sticky;top:88px;align-self:start;
+  }
+  .settings-nav-item{
+    padding:9px 14px;border-radius:8px;
+    font-size:14px;color:#777570;
+    cursor:pointer;transition:all .15s;
+    border:none;background:transparent;
+    font-family:inherit;text-align:left;
+  }
+  .settings-nav-item:hover{background:#F0EFEC;color:#20201E}
+  .settings-nav-item.active{background:rgba(108,99,255,.08);color:#6C63FF;font-weight:500}
+
+  .settings-group{
+    background:#fff;border-radius:12px;padding:24px;
+    margin-bottom:16px;
+  }
+  .settings-group-title{
+    font-size:15px;font-weight:600;margin-bottom:20px;
+  }
+
+  .theme-options{
+    display:flex;gap:12px;margin-bottom:24px;
+  }
+  .theme-option{
+    flex:1;padding:16px;border-radius:10px;
+    border:1.5px solid #E5E4E0;background:#fff;
+    cursor:pointer;text-align:center;
+    transition:all .2s;
+  }
+  .theme-option:hover{border-color:#D4D1CC}
+  .theme-option.active{border-color:#6C63FF;background:rgba(108,99,255,.03)}
+  .theme-option svg{width:24px;height:24px;margin-bottom:8px;color:#777570}
+  .theme-option.active svg{color:#6C63FF}
+  .theme-option-label{font-size:13px;font-weight:500}
+  .theme-option.active .theme-option-label{color:#6C63FF}
+
+  .color-picker-row{
+    display:flex;align-items:center;gap:16px;
+    margin-bottom:20px;
+  }
+  .color-preview{
+    width:44px;height:44px;border-radius:10px;
+    background:#6C63FF;flex-shrink:0;
+    border:2px solid #E5E4E0;
+  }
+  .color-input{
+    width:140px;height:44px;
+    padding:0 14px;border-radius:10px;
+    border:1.5px solid #E5E4E0;
+    font-size:14px;font-family:inherit;
+    color:#20201E;letter-spacing:.5px;
+  }
+  .color-input:focus{outline:none;border-color:rgba(108,99,255,.4)}
+
+  .color-scale{
+    display:flex;gap:4px;margin-bottom:24px;
+  }
+  .color-swatch{
+    flex:1;height:36px;border-radius:6px;
+  }
+
+  .component-preview{
+    padding:20px;border-radius:10px;
+    background:#F7F6F2;
+    display:flex;align-items:center;gap:16px;
+    flex-wrap:wrap;
+  }
+  .preview-btn{
+    padding:10px 20px;border-radius:10px;
+    border:none;background:#6C63FF;color:#fff;
+    font-size:14px;font-family:inherit;cursor:pointer;
+    font-weight:500;
+  }
+  .preview-tag{
+    padding:5px 12px;border-radius:8px;
+    background:rgba(108,99,255,.08);
+    color:#6C63FF;font-size:12.5px;font-weight:500;
+  }
+  .preview-check{
+    display:flex;align-items:center;gap:8px;
+    font-size:14px;
+  }
+  .check-circle{
+    width:20px;height:20px;border-radius:50%;
+    background:#6C63FF;display:flex;align-items:center;justify-content:center;
+  }
+  .check-circle svg{width:12px;height:12px;color:#fff}
+
+  .form-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 0;border-bottom:1px solid #F0EFEC;
+  }
+  .form-row:last-child{border-bottom:none}
+  .form-row-label{font-size:14px}
+  .form-row-value{font-size:14px;color:#777570}
+
+  .select-small{
+    padding:6px 28px 6px 12px;
+    border-radius:8px;border:1.5px solid #E5E4E0;
+    background:#fff;font-size:13px;font-family:inherit;
+    color:#20201E;cursor:pointer;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23777570' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 8px center;
+  }
+
+  .account-status{
+    display:flex;align-items:center;gap:8px;
+  }
+  .status-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:#5BA88C;
+  }
+
+  .logout-btn{
+    padding:8px 16px;border-radius:8px;
+    border:none;background:transparent;
+    color:#E87A3D;font-size:14px;font-family:inherit;
+    cursor:pointer;transition:background .15s;
+  }
+  .logout-btn:hover{background:rgba(232,122,61,.06)}
+
+  .page-divider{
+    height:1px;background:#E5E4E0;
+    margin:0 40px;
+  }
+</style>
+<link rel="stylesheet" href="prototype-shell.css">
+<script defer src="prototype-shell.js"></script>
+</head>
+<body data-page="standalone">
+
+<!-- ===================== TOP NAV ===================== -->
+<div id="prototypeShell"></div>
+<main id="insightsPage">
+<!-- ===================== INSIGHTS PAGE ===================== -->
+<div class="page-header">
+  <div class="page-title">Insights</div>
+  <div class="page-subtitle">看看你的灵感空间在如何生长。</div>
+</div>
+
+<div class="section">
+  <!-- Stat Cards -->
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">灵感总数</div>
+      <div class="stat-value">128</div>
+      <div class="stat-change">+12 本月</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">本周新增</div>
+      <div class="stat-value">12</div>
+      <div class="stat-change">+3 上周</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">活跃天数</div>
+      <div class="stat-value">28</div>
+      <div class="stat-change">/ 30 天</div>
+    </div>
+
+  </div>
+
+  <!-- Heatmap -->
+  <div class="heatmap-wrap" style="margin-top:16px">
+    <div class="heatmap-header">
+      <div class="heatmap-title">最近 365 天</div>
+      <div class="heatmap-legend">
+        <span>少</span>
+        <div class="legend-swatch" style="background:#F0EFFE"></div>
+        <div class="legend-swatch" style="background:#D4CFFC"></div>
+        <div class="legend-swatch" style="background:#A89DFA"></div>
+        <div class="legend-swatch" style="background:#8B7EF7"></div>
+        <div class="legend-swatch" style="background:#6C63FF"></div>
+        <span>多</span>
+      </div>
+    </div>
+    <div class="heatmap-grid" id="heatmap"></div>
+  </div>
+
+  <!-- Two Column: Type Breakdown + Top Tags -->
+  <div class="two-col">
+    <div class="panel-card">
+      <div class="panel-title">内容类型</div>
+      <div class="type-list">
+        <div class="type-row">
+          <span class="type-name">Image</span>
+          <div class="type-bar-bg"><div class="type-bar-fill" style="width:45%;background:#6C63FF"></div></div>
+          <span class="type-pct">45%</span>
+        </div>
+        <div class="type-row">
+          <span class="type-name">Web</span>
+          <div class="type-bar-bg"><div class="type-bar-fill" style="width:25%;background:#8B7EF7"></div></div>
+          <span class="type-pct">25%</span>
+        </div>
+        <div class="type-row">
+          <span class="type-name">Note</span>
+          <div class="type-bar-bg"><div class="type-bar-fill" style="width:15%;background:#A89DFA"></div></div>
+          <span class="type-pct">15%</span>
+        </div>
+        <div class="type-row">
+          <span class="type-name">Quote</span>
+          <div class="type-bar-bg"><div class="type-bar-fill" style="width:10%;background:#D4CFFC"></div></div>
+          <span class="type-pct">10%</span>
+        </div>
+        <div class="type-row">
+          <span class="type-name">Video</span>
+          <div class="type-bar-bg"><div class="type-bar-fill" style="width:5%;background:#F0EFFE"></div></div>
+          <span class="type-pct">5%</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel-card">
+      <div class="panel-title">最活跃的标签</div>
+      <div class="tag-rank-list">
+        <div class="tag-rank-item">
+          <div class="tag-rank-num">1</div>
+          <span class="tag-rank-name"># UI 设计</span>
+          <span class="tag-rank-count">28 条</span>
+        </div>
+        <div class="tag-rank-item">
+          <div class="tag-rank-num">2</div>
+          <span class="tag-rank-name"># 摄影</span>
+          <span class="tag-rank-count">22 条</span>
+        </div>
+        <div class="tag-rank-item">
+          <div class="tag-rank-num">3</div>
+          <span class="tag-rank-name"># 前端开发</span>
+          <span class="tag-rank-count">18 条</span>
+        </div>
+        <div class="tag-rank-item">
+          <div class="tag-rank-num">4</div>
+          <span class="tag-rank-name"># 配色</span>
+          <span class="tag-rank-count">15 条</span>
+        </div>
+        <div class="tag-rank-item">
+          <div class="tag-rank-num">5</div>
+          <span class="tag-rank-name"># 产品灵感</span>
+          <span class="tag-rank-count">12 条</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</main>
+<main id="settingsPage" hidden>
+
+<!-- ===================== SETTINGS PAGE ===================== -->
+<div class="page-header">
+  <div class="page-title">Settings</div>
+  <div class="page-subtitle">自定义你的 Inspira 体验。</div>
+</div>
+
+<div class="section" style="padding-bottom:80px">
+  <div class="settings-grid">
+    <!-- Settings Nav -->
+    <div class="settings-nav">
+      <button class="settings-nav-item active">外观</button>
+      <button class="settings-nav-item">偏好</button>
+      <button class="settings-nav-item">账户</button>
+    </div>
+
+    <!-- Settings Content -->
+    <div>
+      <!-- Appearance -->
+      <div class="settings-group">
+        <div class="settings-group-title">外观</div>
+        <div class="theme-options">
+          <div class="theme-option active">
+            <i data-lucide="sun"></i>
+            <div class="theme-option-label">浅色</div>
+          </div>
+          <div class="theme-option">
+            <i data-lucide="moon"></i>
+            <div class="theme-option-label">深色</div>
+          </div>
+          <div class="theme-option">
+            <i data-lucide="monitor"></i>
+            <div class="theme-option-label">跟随系统</div>
+          </div>
+        </div>
+
+        <div style="font-size:12.5px;color:#777570;margin-bottom:10px">自定义主色</div>
+        <div class="color-picker-row">
+          <div class="color-preview"></div>
+          <input type="text" class="color-input" value="#6C63FF">
+        </div>
+
+        <div class="color-scale">
+          <div class="color-swatch" style="background:#F0EFFE"></div>
+          <div class="color-swatch" style="background:#E4E0FD"></div>
+          <div class="color-swatch" style="background:#D4CFFC"></div>
+          <div class="color-swatch" style="background:#C4BCFB"></div>
+          <div class="color-swatch" style="background:#B4A9F9"></div>
+          <div class="color-swatch" style="background:#A49AF8"></div>
+          <div class="color-swatch" style="background:#9489F6"></div>
+          <div class="color-swatch" style="background:#8B7EF7"></div>
+          <div class="color-swatch" style="background:#7D71F5"></div>
+          <div class="color-swatch" style="background:#6C63FF"></div>
+        </div>
+
+        <div style="font-size:12.5px;color:#777570;margin-bottom:10px">组件预览</div>
+        <div class="component-preview">
+          <button class="preview-btn">主按钮</button>
+          <span class="preview-tag">标签样式</span>
+          <div class="preview-check">
+            <div class="check-circle"><i data-lucide="check"></i></div>
+            <span>选中状态</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preferences -->
+      <div class="settings-group">
+        <div class="settings-group-title">偏好</div>
+        <div class="form-row">
+          <span class="form-row-label">默认卡片视图</span>
+          <select class="select-small">
+            <option selected>瀑布流</option>
+            <option>紧凑网格</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">每周起始日</span>
+          <select class="select-small">
+            <option selected>周一</option>
+            <option>周日</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Account -->
+      <div class="settings-group">
+        <div class="settings-group-title">账户</div>
+        <div class="form-row">
+          <span class="form-row-label">邮箱</span>
+          <span class="form-row-value">user@example.com</span>
+        </div>
+        <div class="form-row">
+          <span class="form-row-label">浏览器插件</span>
+          <div class="account-status">
+            <div class="status-dot"></div>
+            <span style="font-size:14px;color:#5BA88C">已连接</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <span></span>
+          <button class="logout-btn">退出登录</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+<script>
+// Generate heatmap
+const heatmap=document.getElementById('heatmap');
+const levels=['l0','l1','l2','l3','l4'];
+const weights=[0.55,0.2,0.12,0.08,0.05];
+for(let w=0;w<53;w++){
+  const col=document.createElement('div');
+  col.className='heatmap-col';
+  for(let d=0;d<7;d++){
+    const cell=document.createElement('div');
+    cell.className='heatmap-cell';
+    const r=Math.random();
+    let cum=0,lv=0;
+    for(let i=0;i<weights.length;i++){cum+=weights[i];if(r<cum){lv=i;break}}
+    cell.classList.add(levels[lv]);
+    const count=lv===0?0:lv===1?1:lv===2?3:lv===3?5:8;
+    cell.innerHTML='<div class="heatmap-tooltip">'+count+' 条灵感</div>';
+    col.appendChild(cell);
+  }
+  heatmap.appendChild(col);
+}
+window.lucide?.createIcons();
+</script>
+</body>
+</html>
