@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+/*
+ * Inspira design tokens — single source for later primary-color / theme switching.
+ *
+ * keep in sync with docs/design/tokens.md. A future theme system maps a chosen
+ * primary (default #6c63ff, see docs/design/prototypes) through a generated scale
+ * into these SEMANTIC variables. Components never hardcode brand hex: they style
+ * through TDesign (theme="primary") or these tokens, so switching the primary in
+ * one place rethemes the app.
+ *
+ * Neutral values below follow docs/design/tokens.md "primary-agnostic" neutrals
+ * (light theme). Dark theme is a transition default; swap later via @media below.
+ */
+
+@theme {
+  /* Surfaces */
+  --color-canvas: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f7f7f8;
+  --color-raised: #ffffff;
+
+  /* Text */
+  --color-ink-strong: #111827;
+  --color-ink: #4b5563;
+  --color-ink-muted: #6b7280;
+
+  /* Lines & fills */
+  --color-line: #e5e7eb;
+  --color-line-strong: #d1d5db;
+
+  /* Brand / primary (default, retheme me later) */
+  --color-brand: #6c63ff;
+  --color-brand-hover: #5b52e8;
+  --color-brand-soft: #f0effe;
+  --color-brand-line: #c7c0ff;
+  --color-brand-muted: #8b7ef7;
+
+  /* Status */
+  --color-danger: #d5484f;
+  --color-danger-soft: #fee;
+  --color-success: #2f9e6e;
+  --color-success-soft: #e7f6ef;
+
+  /* Elevation */
+  --shadow-card:
+    0 1px 2px rgb(0 0 0 / 0.04),
+    0 10px 24px rgb(0 0 0 / 0.08);
+}
+
+/*
+ * Transitional dark default. Keep the same SEMANTIC variable names so utilities
+ * and TDesign both re-resolve; no component needs to change.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-canvas: #16181d;
+    --color-surface: #1f232b;
+    --color-surface-hover: #262b34;
+    --color-raised: #262b34;
+
+    --color-ink-strong: #f2f5f7;
+    --color-ink: #c6cdd6;
+    --color-ink-muted: #8b93a0;
+
+    --color-line: #2e3440;
+    --color-line-strong: #3a4250;
+
+    --color-brand: #a09bff;
+    --color-brand-hover: #b8b3ff;
+    --color-brand-soft: #2a2a55;
+    --color-brand-line: #4a44b0;
+    --color-brand-muted: #8b84e0;
+
+    --color-danger: #ff8a8f;
+    --color-danger-soft: #4a2a2c;
+    --color-success: #4cc38d;
+    --color-success-soft: #1f4032;
+  }
+}
+
+/*
+ * Mirror the brand token into TDesign so that <Button theme="primary"> etc.
+ * re-theme with the same primary color source (theme slice can point this at a
+ * user-chosen primary later).
+ */
+:root {
+  --td-brand-color: var(--color-brand);
+  --td-brand-color-hover: var(--color-brand-hover);
+  --td-brand-color-active: var(--color-brand-hover);
+  --td-brand-color-focus: var(--color-brand-line);
+  --td-brand-color-light: var(--color-brand-soft);
+}
+
+/* Base */
+
+:root {
+  color: var(--color-ink);
+  background: var(--color-canvas);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}

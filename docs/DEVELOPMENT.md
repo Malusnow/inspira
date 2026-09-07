@@ -8,7 +8,7 @@
 
 | 路径                 | 作用                                                           |
 | -------------------- | -------------------------------------------------------------- |
-| `apps/web`           | React / TypeScript / Vite / TDesign / Clerk / Convex / ECharts |
+| `apps/web`           | React / TypeScript / Vite / TDesign / Clerk / Convex / ECharts / Tailwind |
 | `apps/extension`     | Plasmo / React / TypeScript / Chrome MV3 / Clerk Extension SDK |
 | `packages/contracts` | Web、插件、后端共享类型与校验                                  |
 | `convex`             | Convex 后端最小 S1 Note Schema、鉴权配置和函数                 |

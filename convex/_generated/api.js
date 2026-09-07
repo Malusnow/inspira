@@ -1,28 +1,23 @@
-const functionName = Symbol.for("functionName")
+/* eslint-disable */
+/**
+ * Generated `api` utility.
+ *
+ * THIS CODE IS AUTOMATICALLY GENERATED.
+ *
+ * To regenerate, run `npx convex dev`.
+ * @module
+ */
 
-function createApi(pathParts = []) {
-  return new Proxy(
-    {},
-    {
-      get(_, prop) {
-        if (typeof prop === "string") {
-          return createApi([...pathParts, prop])
-        }
+import { anyApi, componentsGeneric } from "convex/server";
 
-        if (prop === functionName) {
-          const path = pathParts.slice(0, -1).join("/")
-          const exportName = pathParts[pathParts.length - 1]
-          return exportName === "default" ? path : `${path}:${exportName}`
-        }
-
-        if (prop === Symbol.toStringTag) {
-          return "FunctionReference"
-        }
-
-        return undefined
-      },
-    },
-  )
-}
-
-export const api = createApi()
+/**
+ * A utility for referencing Convex functions in your app's API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
+export const api = anyApi;
+export const internal = anyApi;
+export const components = componentsGeneric();

@@ -17,7 +17,7 @@
 ## 固定边界
 
 - pnpm monorepo：`apps/web`、`apps/extension`、`packages/contracts`，目标后端为 Convex。
-- Web 技术栈：React、TypeScript、Vite、TDesign、Clerk、Convex、ECharts。
+- Web 技术栈：React、TypeScript、Vite、TDesign、Clerk、Convex、ECharts、Tailwind CSS。
 - 插件技术栈：Plasmo、React、TypeScript、Chrome MV3、Clerk Extension SDK。
 - 共享只放数据契约、校验和消息类型；不共享页面组件。
 - 不顺带升级技术栈、抽包、多浏览器、AI、协作或复杂富文本。

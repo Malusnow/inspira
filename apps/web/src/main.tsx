@@ -6,7 +6,7 @@ import { createRoot } from "react-dom/client"
 
 import App from "./App.tsx"
 
-import "./index.css"
+import "./styles/index.css"
 
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 const convexUrl = import.meta.env.VITE_CONVEX_URL
@@ -25,13 +25,18 @@ const app = (() => {
   }
 
   return (
-    <main className="setup-screen">
-      <section className="setup-panel">
-        <p className="eyebrow">Inspira</p>
-        <h1>Configuration required</h1>
-        <p>
-          Set <code>VITE_CLERK_PUBLISHABLE_KEY</code> and{" "}
-          <code>VITE_CONVEX_URL</code> before opening the private library.
+    <main className="grid min-h-svh place-items-center bg-canvas px-6 text-ink">
+      <section className="flex w-full max-w-md flex-col items-start gap-3 rounded-lg border border-line bg-surface p-6">
+        <p className="text-sm font-bold uppercase tracking-[0.12em] text-brand">
+          Inspira
+        </p>
+        <h1 className="text-2xl font-semibold text-ink-strong">
+          Configuration required
+        </h1>
+        <p className="text-ink-muted">
+          Set <code className="text-ink-strong">VITE_CLERK_PUBLISHABLE_KEY</code> and{" "}
+          <code className="text-ink-strong">VITE_CONVEX_URL</code> before opening
+          the private library.
         </p>
       </section>
     </main>

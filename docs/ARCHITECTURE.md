@@ -6,7 +6,7 @@
 
 | 位置               | 当前事实                                                | 目标职责                                        |
 | ------------------ | ------------------------------------------------------- | ----------------------------------------------- |
-| apps/web           | React/Vite 示例，依赖含 TDesign、Clerk、Convex、ECharts | 页面路由、交互状态、本人内容实时视图            |
+| apps/web           | React/Vite 示例，依赖含 TDesign、Clerk、Convex、ECharts、Tailwind | 页面路由、交互状态、本人内容实时视图            |
 | apps/extension     | Plasmo Popup 示例，依赖 Clerk 扩展 SDK                  | Chrome MV3 保存入口、认证衔接、后台消息         |
 | packages/contracts | 五种类型和 CreateInspirationInput；没有运行时校验       | 两端类型、校验、消息与采集协议                  |
 | convex/            | 尚未建立                                                | 身份鉴权、Schema、Query/Mutation、必要的 Action |

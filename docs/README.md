@@ -9,7 +9,7 @@
 | 架构、后端、数据边界     | [Architecture](ARCHITECTURE.md)                                    |
 | 接口、采集、媒体上传访问 | [Contracts](CONTRACTS.md)                                          |
 | 启动、测试、CI、验收     | [Development](DEVELOPMENT.md)                                      |
-| Web UI                   | [Design](design/README.md) 和对应原型                              |
+| Web UI               | [Design](design/README.md) 和对应原型、[Web 代码组织](../apps/web/CONVENTIONS.md) |
 | Chrome 插件              | [Contracts](CONTRACTS.md)、[插件规则](../apps/extension/AGENTS.md) |
 
 ## 文档职责
