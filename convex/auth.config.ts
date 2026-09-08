@@ -1,3 +1,5 @@
+import "node:process";
+
 export default {
   providers: [
     {

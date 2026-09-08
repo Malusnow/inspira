@@ -11,10 +11,11 @@ apps/web/src/
   assets/     # 图片、SVG、字体等静态资源（不是 CSS）
   components/ # 无业务语义、可跨模块复用的展示组件；只依赖 TDesign/Tailwind/自身样式，不 import features/*
   features/   # 按产品模块垂直组织（目录一一对应产品模块）
-                library/      内容卡片流、详情浮层、创建/编辑/删除
+                all/          全部内容卡片流、详情浮层、视图切换
+                notes/        Web Note 写作层、基础创建体验
                 workspaces/   工作区总览与单区专题流
                 insights/     统计（ECharts）、趋势（依 PRODUCT/Insights）
-                serendipity/  标签词云与点击钻取
+                explore/      标签词云与点击钻取等再发现体验
                 settings/     主题/主色/默认视图/账户与插件状态
   hooks/      # 跨模块复用的自定义 hooks（数据查询、认证护栏、媒体地址申请等）
   lib/        # 纯函数/数据访问层：Convex 客户端 api、格式化、运行时复用、路由辅助（无 JSX 或仅极薄封装）
@@ -34,7 +35,7 @@ apps/web/src/
 | 图片/SVG/字体                              | `src/assets/`                             |
 | 内容分片数据契约、跨端校验                 | `packages/contracts`（参考 ARCHITECTURE） |
 
-示例：新增"卡片视图切换"改动 → 页面逻辑与视图组件入 `features/library`；若其中某个无业务语义的小组件被多个模块复用 → 提炼到 `components/`。
+示例：新增"卡片视图切换"改动 → 页面逻辑与视图组件入 `features/all`；若其中某个无业务语义的小组件被多个模块复用 → 提炼到 `components/`。
 
 ## 2. 组件化与低耦合
 

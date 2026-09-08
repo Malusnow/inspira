@@ -1,9 +1,8 @@
 import { useUser } from "@clerk/react"
 
-import { LandingPage } from "./features/landing/LandingPage"
-import { EverythingPage } from "./features/library/EverythingPage"
+import { AppRoutes } from "./app/AppRoutes"
 import { LoadingPage } from "./components/Loading"
-
+import { LandingPage } from "./features/landing/LandingPage"
 
 export default function App() {
   const { isLoaded, isSignedIn } = useUser()
@@ -12,5 +11,9 @@ export default function App() {
     return <LoadingPage />
   }
 
-  return isSignedIn ? <EverythingPage /> : <LandingPage />
+  if (!isSignedIn) {
+    return <LandingPage />
+  }
+
+  return <AppRoutes />
 }

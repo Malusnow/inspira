@@ -35,7 +35,7 @@ Web / Extension -> Clerk session token
 Web / Extension -> authenticated backend -> owner-scoped Query / Mutation
 Mutation -> private content -> Web reactive query -> cards
 Client -> upload authorization -> storage -> finalize validation -> MediaAsset
-Selected tag -> owner-scoped frequency/content query -> Serendipity
+Selected tag -> owner-scoped frequency/content query -> Explore
 ```
 
 Web 创建与插件采集进入同一内容域。插件 Popup 负责反馈和补充；Service Worker 负责右键菜单、路由和后台保存；Content Script 只读取必要页面信息。

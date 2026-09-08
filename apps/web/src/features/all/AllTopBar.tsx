@@ -1,13 +1,13 @@
 import { SearchIcon, ViewListIcon, ViewModuleIcon } from "tdesign-icons-react"
 import type React from "react"
 
-export type LibraryViewMode = "masonry" | "compact"
+export type AllViewMode = "masonry" | "compact"
 
-export interface LibraryTopBarProps {
+export interface AllTopBarProps {
   query: string
-  viewMode: LibraryViewMode
+  viewMode: AllViewMode
   onQueryChange: (query: string) => void
-  onViewModeChange: (viewMode: LibraryViewMode) => void
+  onViewModeChange: (viewMode: AllViewMode) => void
 }
 
 interface ViewButtonProps {
@@ -31,12 +31,12 @@ function ViewButton({ active, label, onClick, children }: ViewButtonProps) {
   )
 }
 
-export function LibraryTopBar({
+export function AllTopBar({
   query,
   viewMode,
   onQueryChange,
   onViewModeChange
-}: LibraryTopBarProps) {
+}: AllTopBarProps) {
   return (
     <>
       <header className="fixed left-0 right-[430px] top-0 z-20 hidden h-[84px] items-center bg-canvas px-8 lg:left-16 lg:flex">

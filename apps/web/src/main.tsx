@@ -36,7 +36,7 @@ const app = (() => {
         <p className="text-ink-muted">
           Set <code className="text-ink-strong">VITE_CLERK_PUBLISHABLE_KEY</code> and{" "}
           <code className="text-ink-strong">VITE_CONVEX_URL</code> before opening
-          the private library.
+          the private collection.
         </p>
       </section>
     </main>

@@ -1,21 +1,59 @@
 import type { NoteInspiration } from "@inspira/contracts"
+import { useEffect, useRef, useState } from "react"
 
-import type { LibraryViewMode } from "./LibraryTopBar"
+import type { AllViewMode } from "./AllTopBar"
 import { NoteCard } from "./NoteCard"
 
 export interface NoteListProps {
   /** undefined → still loading; an array → loaded Note rows for the owner. */
   notes: NoteInspiration[] | undefined
-  viewMode: LibraryViewMode
+  viewMode: AllViewMode
+  onEditNote: (note: NoteInspiration) => void
   /** Opens the detail floating layer for the selected Note card. */
   onOpenNote: (note: NoteInspiration) => void
 }
 
 export function NoteList({
   notes,
+  onEditNote,
   viewMode,
   onOpenNote
 }: NoteListProps) {
+  const previousNoteIds = useRef<Set<string> | undefined>(undefined)
+  const [freshNoteIds, setFreshNoteIds] = useState<Set<string>>(() => new Set())
+
+  useEffect(() => {
+    if (!notes) return
+
+    const nextIds = new Set(notes.map((note) => note.id))
+    const previousIds = previousNoteIds.current
+    previousNoteIds.current = nextIds
+
+    if (!previousIds) return
+
+    const newIds = notes
+      .map((note) => note.id)
+      .filter((noteId) => !previousIds.has(noteId))
+
+    if (newIds.length === 0) return
+
+    setFreshNoteIds((currentIds) => {
+      const nextFreshIds = new Set(currentIds)
+      newIds.forEach((noteId) => nextFreshIds.add(noteId))
+      return nextFreshIds
+    })
+
+    const timeoutId = window.setTimeout(() => {
+      setFreshNoteIds((currentIds) => {
+        const nextFreshIds = new Set(currentIds)
+        newIds.forEach((noteId) => nextFreshIds.delete(noteId))
+        return nextFreshIds
+      })
+    }, 900)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [notes])
+
   if (!notes || notes.length === 0) {
     return (
       <div className="mx-5 flex min-h-[320px] items-center justify-center p-6 text-center sm:mx-8 lg:mx-10">
@@ -38,6 +76,8 @@ export function NoteList({
           key={note.id}
           note={note}
           compact={viewMode === "compact"}
+          isFresh={freshNoteIds.has(note.id)}
+          onEdit={onEditNote}
           onOpen={onOpenNote}
         />
       ))}

@@ -1,52 +1,45 @@
 import type { NoteInspiration } from "@inspira/contracts"
 import { useConvexAuth, useMutation, useQuery } from "convex/react"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Drawer } from "tdesign-react"
+import { useOutletContext } from "react-router-dom"
 
 import { api } from "../../../../../convex/_generated/api"
-import { CreateNoteForm } from "./CreateNoteForm"
-import { EverythingErrorBoundary } from "./EverythingErrorBoundary"
-import { LibraryTopBar, type LibraryViewMode } from "./LibraryTopBar"
+import type { AppShellOutletContext } from "../../app/AppShell"
+import { AllErrorBoundary } from "./AllErrorBoundary"
+import { AllTopBar, type AllViewMode } from "./AllTopBar"
 import { NoteDetailDialog } from "./NoteDetailDialog"
 import { NoteList } from "./NoteList"
-import { LibraryShell } from "./Sidebar"
 
 /**
- * Signed-in Everything (Library) surface. UI follows the prototype's narrow
+ * Signed-in All surface. UI follows the prototype's narrow
  * rail, top search field, view toggle, masonry cards, and floating detail layer
  * while data remains scoped to the authenticated owner's Notes.
  */
-export function EverythingPage() {
+export function AllPage() {
   const [selectedNote, setSelectedNote] = useState<NoteInspiration | null>(null)
-  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const { openNoteOverlay } = useOutletContext<AppShellOutletContext>()
 
   return (
-    <EverythingErrorBoundary>
-      <LibraryShell onCreateNote={() => setIsCreateOpen(true)}>
-        <section className="mx-auto w-full max-w-[1800px]">
-          <EverythingContent onOpenNote={setSelectedNote} />
-        </section>
-      </LibraryShell>
-
-      <Drawer
-        visible={isCreateOpen}
-        header="New note"
-        footer={false}
-        size="min(440px, 100vw)"
-        onClose={() => setIsCreateOpen(false)}>
-        <CreateNoteForm onCreated={() => setIsCreateOpen(false)} />
-      </Drawer>
+    <AllErrorBoundary>
+      <section className="mx-auto w-full max-w-[1800px]">
+        <AllContent
+          onEditNote={openNoteOverlay}
+          onOpenNote={setSelectedNote}
+        />
+      </section>
       <NoteDetailDialog
         note={selectedNote}
         onClose={() => setSelectedNote(null)}
       />
-    </EverythingErrorBoundary>
+    </AllErrorBoundary>
   )
 }
 
-function EverythingContent({
+function AllContent({
+  onEditNote,
   onOpenNote
 }: {
+  onEditNote: (note: NoteInspiration) => void
   onOpenNote: (note: NoteInspiration) => void
 }) {
   const { isAuthenticated, isLoading } = useConvexAuth()
@@ -56,7 +49,7 @@ function EverythingContent({
     isAuthenticated ? {} : "skip"
   ) as NoteInspiration[] | undefined
   const [query, setQuery] = useState("")
-  const [viewMode, setViewMode] = useState<LibraryViewMode>("masonry")
+  const [viewMode, setViewMode] = useState<AllViewMode>("masonry")
   const didRequestStarterNotes = useRef(false)
 
   useEffect(() => {
@@ -90,7 +83,7 @@ function EverythingContent({
 
   return (
     <>
-      <LibraryTopBar
+      <AllTopBar
         query={query}
         viewMode={viewMode}
         onQueryChange={setQuery}
@@ -99,6 +92,7 @@ function EverythingContent({
       <NoteList
         notes={visibleNotes}
         viewMode={viewMode}
+        onEditNote={onEditNote}
         onOpenNote={onOpenNote}
       />
     </>

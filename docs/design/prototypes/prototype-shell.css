@@ -152,7 +152,7 @@ body:not([data-page="standalone"]) {
   font-size: 12px;
   color: var(--muted);
 }
-body[data-page="library"] .top-nav {
+body[data-page="all"] .top-nav {
   left: var(--rail);
   height: 84px;
   right: 230px;
@@ -162,7 +162,7 @@ body[data-page="library"] .top-nav {
   justify-content: flex-start;
   z-index: 200;
 }
-body[data-page="library"] .nav-center {
+body[data-page="all"] .nav-center {
   position: static;
   transform: none;
   width: 100%;
@@ -295,7 +295,7 @@ body[data-page="standalone"] .page-header {
   padding-bottom: 28px;
 }
 .workspace-heading h1,
-.serendipity-title {
+.explore-title {
   font-family: Georgia, serif;
   font-size: 48px;
   font-weight: 400;
@@ -388,12 +388,12 @@ body[data-page="standalone"] .page-header {
   color: var(--muted);
   margin-bottom: 22px;
 }
-body[data-page="serendipity"] .tag-constellation,
-body[data-page="serendipity"] .card-constellation {
+body[data-page="explore"] .tag-constellation,
+body[data-page="explore"] .card-constellation {
   left: var(--rail);
   top: 150px;
 }
-.serendipity-title {
+.explore-title {
   position: fixed;
   top: 95px;
   left: calc(var(--rail) + 48px);
@@ -633,7 +633,7 @@ body[data-page="serendipity"] .card-constellation {
   .prototype-avatar {
     display: none;
   }
-  body[data-page="library"] .top-nav {
+  body[data-page="all"] .top-nav {
     top: 64px;
     right: 0;
     padding: 0 18px;
@@ -717,7 +717,7 @@ body[data-page="serendipity"] .card-constellation {
   body[data-page="standalone"] .page-title {
     font-size: 42px;
   }
-  .serendipity-title {
+  .explore-title {
     left: 98px;
     font-size: 30px;
   }

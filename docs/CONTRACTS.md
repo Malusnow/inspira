@@ -37,9 +37,13 @@ Web Note 不走插件采集请求。客户端提交：
 
 客户端不得提交可信 `owner` 或 `userId`。服务端从已验证会话获得 owner，并将 Note 保存为 `Inspiration` 的 `type: "note"`。成功创建返回新 Note 的 ID；无登录返回 `UNAUTHENTICATED`，字段不合法返回 `INVALID_INPUT`，均不得创建内容。
 
-Everything 的 S1 查询只返回当前登录用户自己的 Note，按最新创建在前展示。详情查询必须再次验证 owner；跨用户 ID 返回空结果或授权错误，不能返回标题、正文或 tags。
+Web 编辑层可使用块编辑器提供基础排版体验；S1 提交给服务端的仍是 `content` 字符串，不提交可信富文本 JSON 结构。
 
-首次进入 Library 时，Web 可请求服务端为当前 owner 初始化一组默认 Note 卡片。初始化只在该 owner 没有现有 Note 且未记录过初始化标记时写入；服务端仍从已验证会话确定 owner，不接受客户端提交 owner。初始化内容写入后就是该用户自己的 Note 数据，后续按普通 Note 查询和展示。
+更新 Web Note 时，客户端必须提交目标 `id` 与完整新内容。服务端必须重新读取目标 Note 并验证 owner；跨用户或不存在的 ID 不得修改内容。
+
+All 的 S1 查询只返回当前登录用户自己的 Note，按最新创建在前展示。详情查询必须再次验证 owner；跨用户 ID 返回空结果或授权错误，不能返回标题、正文或 tags。
+
+首次进入 All 时，Web 可请求服务端为当前 owner 初始化一组默认 Note 卡片。初始化只在该 owner 没有现有 Note 且未记录过初始化标记时写入；服务端仍从已验证会话确定 owner，不接受客户端提交 owner。初始化内容写入后就是该用户自己的 Note 数据，后续按普通 Note 查询和展示。
 
 ## 采集请求
 

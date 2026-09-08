@@ -1,5 +1,5 @@
 /**
- * Pure helpers for the Everything (note) library surface.
+ * Pure helpers for the All note surface.
  *
  * Kept free of Convex / React so they can be unit-tested and reused without
  * coupling to components.

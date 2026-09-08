@@ -3,27 +3,27 @@ import { Alert, Button } from "tdesign-react"
 
 import { toErrorMessage } from "./noteFormat"
 
-export interface EverythingErrorBoundaryProps {
+export interface AllErrorBoundaryProps {
   children: ReactNode
 }
 
-interface EverythingErrorBoundaryState {
+interface AllErrorBoundaryState {
   error: string | null
 }
 
 /**
  * Surfaces owner-scoped query / render failures as a visible error state without
  * implying other modules. Serves the "Load failure is visible" requirement: if
- * the Everything query throws (e.g. request timed out), an error panel shows
+ * the All query throws (e.g. request timed out), an error panel shows
  * instead of raw crash or another user's data. Retry re-subscribes the query.
  */
-export class EverythingErrorBoundary extends Component<
-  EverythingErrorBoundaryProps,
-  EverythingErrorBoundaryState
+export class AllErrorBoundary extends Component<
+  AllErrorBoundaryProps,
+  AllErrorBoundaryState
 > {
-  state: EverythingErrorBoundaryState = { error: null }
+  state: AllErrorBoundaryState = { error: null }
 
-  static getDerivedStateFromError(error: unknown): EverythingErrorBoundaryState {
+  static getDerivedStateFromError(error: unknown): AllErrorBoundaryState {
     return { error: toErrorMessage(error) }
   }
 

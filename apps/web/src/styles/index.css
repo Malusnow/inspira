@@ -36,11 +36,13 @@
   --color-brand-line: #c7c0ff;
   --color-brand-muted: #8b7ef7;
 
-  /* Library note card tones */
+  /* All note card tones */
   --color-note-paper: #ffffff;
   --color-note-sage: #eef4f1;
   --color-note-warm: #f2f4f7;
   --color-note-blue: #eef3f8;
+  --color-note-highlight: #fff4a8;
+  --color-note-code: #e2e7ef;
 
   /* Status */
   --color-danger: #d5484f;
@@ -82,6 +84,8 @@
     --color-note-sage: #293532;
     --color-note-warm: #35312d;
     --color-note-blue: #27343a;
+    --color-note-highlight: #62582a;
+    --color-note-code: #26313f;
 
     --color-danger: #ff8a8f;
     --color-danger-soft: #4a2a2c;
@@ -123,4 +127,198 @@ body {
   min-width: 320px;
   background: var(--color-canvas);
   color: var(--color-ink);
+}
+
+@keyframes page-transition-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.page-transition {
+  animation: page-transition-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes note-card-fresh-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.note-card-fresh {
+  animation: note-card-fresh-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.inspiration-overlay {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-brand-line) 30%, white) 0%,
+      color-mix(in srgb, var(--color-brand-soft) 58%, white) 36%,
+      color-mix(in srgb, var(--color-canvas) 82%, white) 100%
+    ),
+    var(--color-canvas);
+}
+
+@property --inspiration-hole {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+@keyframes inspiration-surface-in {
+  from {
+    --inspiration-hole: 66%;
+    opacity: 0.72;
+    filter: blur(10px);
+    transform: scale(0.985);
+  }
+  to {
+    --inspiration-hole: 0%;
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+@keyframes inspiration-surface-out {
+  from {
+    --inspiration-hole: 0%;
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+  to {
+    --inspiration-hole: 66%;
+    opacity: 0.46;
+    filter: blur(9px);
+    transform: scale(0.985);
+  }
+}
+
+.inspiration-surface {
+  background: transparent;
+  will-change: mask-image, opacity, transform, filter;
+}
+
+.inspiration-surface[data-state="entering"] {
+  -webkit-mask-image: radial-gradient(
+    ellipse 88% 76% at 50% 50%,
+    transparent 0 var(--inspiration-hole),
+    #000 calc(var(--inspiration-hole) + 1.4%)
+  );
+  mask-image: radial-gradient(
+    ellipse 88% 76% at 50% 50%,
+    transparent 0 var(--inspiration-hole),
+    #000 calc(var(--inspiration-hole) + 1.4%)
+  );
+  animation: inspiration-surface-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.inspiration-surface[data-state="leaving"] {
+  -webkit-mask-image: radial-gradient(
+    ellipse 88% 76% at 50% 50%,
+    transparent 0 var(--inspiration-hole),
+    #000 calc(var(--inspiration-hole) + 1.4%)
+  );
+  mask-image: radial-gradient(
+    ellipse 88% 76% at 50% 50%,
+    transparent 0 var(--inspiration-hole),
+    #000 calc(var(--inspiration-hole) + 1.4%)
+  );
+  animation: inspiration-surface-out 520ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.inspiration-control {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition:
+    opacity 520ms ease,
+    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 520ms ease;
+}
+
+.inspiration-control:hover {
+  box-shadow: 0 20px 48px rgb(37 43 53 / 0.2);
+  transform: translate3d(0, -3px, 0) scale(1.035);
+}
+
+.inspiration-control:active {
+  transform: translate3d(0, 0, 0) scale(0.98);
+}
+
+.inspiration-control--hidden-up {
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(0, -6px, 0) scale(0.98);
+}
+
+.inspiration-control--hidden-down {
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(0, 10px, 0) scale(0.98);
+}
+
+.inspiration-editor .bn-container {
+  background: transparent;
+}
+
+.inspiration-editor .bn-editor {
+  background: transparent;
+  min-height: 56svh;
+  padding-inline: 0;
+  color: var(--color-ink-strong);
+  font-size: 20px;
+  line-height: 1.58;
+}
+
+.inspiration-editor .bn-block-content {
+  max-width: none;
+  padding-block: 2px;
+}
+
+.inspiration-editor [data-content-type="heading"] {
+  --level: 2.15em;
+  padding-top: 12px;
+}
+
+.inspiration-editor [data-content-type="heading"][data-level="2"] {
+  --level: 1.6em;
+}
+
+.inspiration-editor [data-content-type="heading"][data-level="3"] {
+  --level: 1.22em;
+}
+
+.inspiration-editor .bn-block-content[data-content-type="codeBlock"] {
+  border: 1px solid rgb(185 198 215 / 0.55);
+  border-radius: 6px;
+  background: rgb(238 242 248 / 0.78);
+  color: #293445;
+}
+
+.inspiration-editor .bn-block-content[data-content-type="codeBlock"] > pre {
+  padding: 16px 18px;
+}
+
+.inspiration-editor
+  .bn-block-content[data-content-type="codeBlock"]
+  > div
+  > select {
+  color: #62708a;
+}
+
+.inspiration-editor .bn-suggestion-menu {
+  border: 1px solid var(--color-line);
+  box-shadow: 0 18px 60px rgb(37 43 53 / 0.16);
 }

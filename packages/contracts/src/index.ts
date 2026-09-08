@@ -22,6 +22,10 @@ export interface CreateNoteInput {
   workspaceId?: string
 }
 
+export interface UpdateNoteInput extends CreateNoteInput {
+  id: string
+}
+
 export interface NoteInspiration {
   id: string
   type: "note"

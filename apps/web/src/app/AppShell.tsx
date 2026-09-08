@@ -1,6 +1,7 @@
 import { UserButton } from "@clerk/react"
-import type React from "react"
-import { useState } from "react"
+import type { NoteInspiration } from "@inspira/contracts"
+import { lazy, Suspense, useState, type ReactNode } from "react"
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom"
 import {
   AddIcon,
   ChartIcon,
@@ -8,13 +9,18 @@ import {
   SettingIcon
 } from "tdesign-icons-react"
 
-export interface LibraryShellProps {
-  children: React.ReactNode
-  onCreateNote: () => void
+const InspirationOverlay = lazy(() =>
+  import("../features/notes/InspirationOverlay").then((module) => ({
+    default: module.InspirationOverlay
+  }))
+)
+
+export interface AppShellOutletContext {
+  openNoteOverlay: (note?: NoteInspiration) => void
 }
 
 interface RailActionProps {
-  icon: React.ReactNode
+  icon: ReactNode
   label: string
   active?: boolean
 }
@@ -33,15 +39,19 @@ function RailAction({ icon, label, active = false }: RailActionProps) {
 }
 
 const contentTabs = [
-  { label: "All", width: 46 },
-  { label: "Workspace", width: 142 },
-  { label: "Explore", width: 104 }
+  { label: "All", path: "/all", width: 46 },
+  { label: "Workspace", path: "/workspace", width: 142 },
+  { label: "Explore", path: "/explore", width: 104 }
 ] as const
 
 const CONTENT_TAB_GAP = 38
 
 function ContentTabs() {
-  const [activeIndex, setActiveIndex] = useState(0)
+  const location = useLocation()
+  const activeIndex = Math.max(
+    contentTabs.findIndex((tab) => location.pathname.startsWith(tab.path)),
+    0
+  )
   const underlineLeft = contentTabs
     .slice(0, activeIndex)
     .reduce((total, tab) => total + tab.width + CONTENT_TAB_GAP, 0)
@@ -52,17 +62,16 @@ function ContentTabs() {
       className="relative flex h-14 items-start"
       style={{ gap: CONTENT_TAB_GAP }}>
       {contentTabs.map((tab, index) => (
-        <button
+        <NavLink
           key={tab.label}
-          type="button"
+          to={tab.path}
           title={tab.label}
           aria-label={tab.label}
           aria-current={index === activeIndex ? "page" : undefined}
-          onClick={() => setActiveIndex(index)}
-          className="h-11 border-0 bg-transparent p-0 font-serif text-[30px] font-normal italic leading-11 tracking-normal text-ink-muted transition-colors hover:text-brand aria-current:text-ink-strong"
+          className="h-11 p-0 font-serif text-[30px] font-normal italic leading-11 tracking-normal text-ink-muted no-underline transition-colors hover:text-brand aria-current:text-ink-strong"
           style={{ width: tab.width }}>
           {tab.label}
-        </button>
+        </NavLink>
       ))}
       <span
         aria-hidden="true"
@@ -76,19 +85,33 @@ function ContentTabs() {
   )
 }
 
-export function LibraryShell({ children, onCreateNote }: LibraryShellProps) {
+export function AppShell() {
+  const location = useLocation()
+  const [isOverlayVisible, setOverlayVisible] = useState(false)
+  const [overlayNote, setOverlayNote] = useState<NoteInspiration | undefined>()
+
+  function openNoteOverlay(note?: NoteInspiration) {
+    setOverlayNote(note)
+    setOverlayVisible(true)
+  }
+
+  function closeNoteOverlay() {
+    setOverlayVisible(false)
+    setOverlayNote(undefined)
+  }
+
   return (
     <main className="min-h-svh bg-canvas text-ink">
       <aside
         aria-label="Primary"
         className="fixed inset-y-0 left-0 z-30 hidden w-16 flex-col items-center border-r border-line bg-canvas px-2 py-7 lg:flex">
-        <a
-          href="/"
-          title="Everything"
+        <Link
+          to="/all"
+          title="All"
           aria-label="Inspira"
           className="mt-16 origin-center -rotate-90 whitespace-nowrap font-serif text-[28px] font-medium italic tracking-normal text-ink-strong no-underline transition-colors hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4">
           Inspira
-        </a>
+        </Link>
         <div className="mt-auto flex flex-col gap-2.5">
           <RailAction icon={<ChartIcon />} label="Insights" />
           <RailAction icon={<MoonIcon />} label="Theme" />
@@ -102,9 +125,9 @@ export function LibraryShell({ children, onCreateNote }: LibraryShellProps) {
         <ContentTabs />
         <button
           type="button"
-          title="Add note"
-          aria-label="Add note"
-          onClick={onCreateNote}
+          title="New inspiration"
+          aria-label="New inspiration"
+          onClick={() => openNoteOverlay()}
           className="grid size-9.5 place-items-center rounded-full border-0 bg-brand text-canvas shadow-[0_2px_8px_rgb(108_99_255_/_0.25)] transition hover:scale-105 hover:bg-brand-hover">
           <AddIcon />
         </button>
@@ -113,7 +136,21 @@ export function LibraryShell({ children, onCreateNote }: LibraryShellProps) {
         </span>
       </nav>
 
-      <div className="lg:pl-16">{children}</div>
+      <div className="lg:pl-16">
+        <div key={location.pathname} className="page-transition">
+          <Outlet context={{ openNoteOverlay } satisfies AppShellOutletContext} />
+        </div>
+      </div>
+
+      {isOverlayVisible ? (
+        <Suspense fallback={null}>
+          <InspirationOverlay
+            note={overlayNote}
+            visible={isOverlayVisible}
+            onDismiss={closeNoteOverlay}
+          />
+        </Suspense>
+      ) : null}
     </main>
   )
 }
