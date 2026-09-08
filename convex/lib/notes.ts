@@ -3,6 +3,7 @@ import { ConvexError, v } from "convex/values"
 import type { Doc } from "../_generated/dataModel"
 import {
   NOTE_CONTENT_MAX_LENGTH,
+  NOTE_NOTES_MAX_LENGTH,
   NOTE_TAG_MAX_COUNT,
   NOTE_TAG_MAX_LENGTH,
   NOTE_TITLE_MAX_LENGTH,
@@ -14,6 +15,7 @@ import {
 export const createArgs = {
   title: v.optional(v.string()),
   content: v.string(),
+  notes: v.optional(v.string()),
   tags: v.optional(v.array(v.string())),
   workspaceId: v.optional(v.string())
 }
@@ -21,6 +23,10 @@ export const createArgs = {
 export const updateArgs = {
   id: v.id("inspirations"),
   ...createArgs
+}
+
+export const removeArgs = {
+  id: v.id("inspirations")
 }
 
 export const STARTER_NOTES_VERSION = 1
@@ -114,6 +120,7 @@ export function cleanCreate(args: CreateNoteInput) {
   return {
     title: cleanText(args.title, NOTE_TITLE_MAX_LENGTH),
     content,
+    notes: cleanText(args.notes, NOTE_NOTES_MAX_LENGTH),
     tags: cleanTags(args.tags),
     workspaceId: cleanText(args.workspaceId, 128)
   }
@@ -129,6 +136,7 @@ export function toNote(doc: Doc<"inspirations">): NoteInspiration {
     type: "note",
     title: doc.title,
     content: doc.content,
+    notes: doc.notes,
     tags: doc.tags,
     workspaceId: doc.workspaceId,
     createdAt: doc.createdAt,

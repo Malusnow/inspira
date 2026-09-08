@@ -20,11 +20,11 @@ The system SHALL require a valid logged-in user before any Note creation, Everyt
 
 ### Requirement: Create Note for current owner
 
-The system SHALL allow a logged-in user to create a Note with required body content, optional title, optional string tags, and no required workspace.
+The system SHALL allow a logged-in user to create a Note with required body content, optional title, optional notes, optional string tags, and no required workspace.
 
 #### Scenario: Successful Note creation
 
-- **WHEN** a logged-in user submits valid Note content with optional title and tags
+- **WHEN** a logged-in user submits valid Note content with optional title, notes, and tags
 - **THEN** the system stores a new Note owned by that user and reports success with the created Note identifier
 
 #### Scenario: Empty Note content is rejected
@@ -63,7 +63,7 @@ The system SHALL let a logged-in user open a Note detail floating layer from a N
 #### Scenario: Open Note detail
 
 - **WHEN** a logged-in user selects a Note card from their Everything list
-- **THEN** a detail floating layer opens over the current list and displays that Note's title, body, tags, created time, and updated time
+- **THEN** a detail floating layer opens over the current list and displays that Note's body on the left, with title, tags, notes, created time, and updated time available in the right-side detail controls
 
 #### Scenario: Close Note detail
 

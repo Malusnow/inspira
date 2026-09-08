@@ -6,6 +6,7 @@ import {
   cleanCreate,
   cleanUpdate,
   createArgs,
+  removeArgs,
   STARTER_NOTES_VERSION,
   starters,
   toNote,
@@ -24,6 +25,7 @@ export const create = mutation({
       type: "note",
       title: note.title,
       content: note.content,
+      notes: note.notes,
       tags: note.tags,
       workspaceId: note.workspaceId,
       createdAt: now,
@@ -51,10 +53,30 @@ export const update = mutation({
     await ctx.db.patch(args.id, {
       title: note.title,
       content: note.content,
+      notes: note.notes,
       tags: note.tags,
       workspaceId: note.workspaceId,
       updatedAt: now
     })
+
+    return args.id
+  }
+})
+
+export const remove = mutation({
+  args: removeArgs,
+  handler: async (ctx, args) => {
+    const ownerId = await requireOwner(ctx)
+    const existingNote = await ctx.db.get(args.id)
+
+    if (!existingNote || existingNote.ownerId !== ownerId) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Note is not available."
+      })
+    }
+
+    await ctx.db.delete(args.id)
 
     return args.id
   }

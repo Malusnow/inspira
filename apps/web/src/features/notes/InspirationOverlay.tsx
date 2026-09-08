@@ -1,6 +1,7 @@
 import type { NoteInspiration } from "@inspira/contracts"
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { useEscapeKey } from "../../hooks/useEscapeKey"
 import { NoteComposer } from "./NoteComposer"
 
 export interface InspirationOverlayProps {
@@ -99,19 +100,7 @@ export function InspirationOverlay({
     }
   }, [visible])
 
-  useEffect(() => {
-    if (!visible) return
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        requestDismiss()
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
-
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [requestDismiss, visible])
+  useEscapeKey(visible, () => requestDismiss())
 
   if (!visible) return null
 

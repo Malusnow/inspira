@@ -1,9 +1,8 @@
 import type { NoteInspiration } from "@inspira/contracts"
-import { Tag } from "tdesign-react"
 import { Edit2Icon } from "tdesign-icons-react"
 
 import { formatRelativeTimestamp } from "./noteFormat"
-import { NoteCardPreview } from "./NoteCardPreview"
+import { NoteCardPreview } from "./NotePreview"
 import { buildNotePreview } from "./notePreview"
 
 export interface NoteCardProps {
@@ -37,19 +36,6 @@ export function NoteCard({
         <span className="mt-4 text-[11.5px] text-ink-muted">
           {formatRelativeTimestamp(note.createdAt)}
         </span>
-        {note.tags.length > 0 ? (
-          <span className="mt-auto flex flex-wrap gap-1.5 pt-4">
-            {note.tags.map((tag) => (
-              <Tag
-                key={tag}
-                size="small"
-                variant="light"
-                className="max-w-full text-ink-muted">
-                {tag}
-              </Tag>
-            ))}
-          </span>
-        ) : null}
       </button>
 
       <button

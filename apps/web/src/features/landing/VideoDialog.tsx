@@ -1,16 +1,15 @@
 import { CloseIcon, PlayCircleIcon } from "tdesign-icons-react"
 
+import { useEscapeKey } from "../../hooks/useEscapeKey"
+
 export function VideoDialog({ onClose }: { onClose: () => void }) {
+  useEscapeKey(true, () => onClose())
+
   return (
     <div
       className="fixed inset-0 z-[400] grid place-items-center bg-black/50 p-5 sm:p-10"
       onClick={(event) => {
         if (event.target === event.currentTarget) {
-          onClose()
-        }
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
           onClose()
         }
       }}

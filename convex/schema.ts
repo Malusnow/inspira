@@ -7,6 +7,7 @@ export default defineSchema({
     type: v.literal("note"),
     title: v.optional(v.string()),
     content: v.string(),
+    notes: v.optional(v.string()),
     tags: v.array(v.string()),
     workspaceId: v.optional(v.string()),
     createdAt: v.number(),

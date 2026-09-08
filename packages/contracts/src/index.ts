@@ -2,6 +2,7 @@ export type InspirationType = "page" | "image" | "quote" | "note" | "video"
 
 export const NOTE_TITLE_MAX_LENGTH = 120
 export const NOTE_CONTENT_MAX_LENGTH = 10000
+export const NOTE_NOTES_MAX_LENGTH = 5000
 export const NOTE_TAG_MAX_COUNT = 12
 export const NOTE_TAG_MAX_LENGTH = 40
 
@@ -18,6 +19,7 @@ export interface CreateInspirationInput {
 export interface CreateNoteInput {
   title?: string
   content: string
+  notes?: string
   tags?: string[]
   workspaceId?: string
 }
@@ -31,6 +33,7 @@ export interface NoteInspiration {
   type: "note"
   title?: string
   content: string
+  notes?: string
   tags: string[]
   workspaceId?: string
   createdAt: number

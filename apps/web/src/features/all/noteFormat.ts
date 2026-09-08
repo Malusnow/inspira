@@ -30,6 +30,17 @@ export function formatRelativeTimestamp(value: number) {
   }).format(value)
 }
 
+export function formatDetailTimestamp(value: number) {
+  const diff = Date.now() - value
+  const day = 24 * 60 * 60 * 1000
+
+  if (diff >= 0 && diff < day) {
+    return formatRelativeTimestamp(value)
+  }
+
+  return formatTimestamp(value)
+}
+
 export function getNoteTone(id: string) {
   const tones = [
     "bg-note-paper",

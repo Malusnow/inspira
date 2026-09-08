@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react"
 
 import type { AllViewMode } from "./AllTopBar"
 import { NoteCard } from "./NoteCard"
+import { Loading } from "tdesign-react"
 
 export interface NoteListProps {
   /** undefined → still loading; an array → loaded Note rows for the owner. */
@@ -54,7 +55,14 @@ export function NoteList({
     return () => window.clearTimeout(timeoutId)
   }, [notes])
 
-  if (!notes || notes.length === 0) {
+  if (notes === undefined) {
+    return (
+      <div className="mx-5 flex min-h-[320px] items-center justify-center p-6 text-center sm:mx-8 lg:mx-10">
+        <Loading text="加载中" />
+      </div>
+    );
+  }
+  if (notes.length === 0) {
     return (
       <div className="mx-5 flex min-h-[320px] items-center justify-center p-6 text-center sm:mx-8 lg:mx-10">
         <p className="select-none text-sm font-normal text-ink-muted/60">

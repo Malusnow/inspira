@@ -7,7 +7,7 @@ import { api } from "../../../../../convex/_generated/api"
 import type { AppShellOutletContext } from "../../app/AppShell"
 import { AllErrorBoundary } from "./AllErrorBoundary"
 import { AllTopBar, type AllViewMode } from "./AllTopBar"
-import { NoteDetailDialog } from "./NoteDetailDialog"
+import { NoteDetailDialog } from "./NoteDetail"
 import { NoteList } from "./NoteList"
 
 /**
@@ -29,6 +29,8 @@ export function AllPage() {
       </section>
       <NoteDetailDialog
         note={selectedNote}
+        onNoteChange={setSelectedNote}
+        onDelete={() => setSelectedNote(null)}
         onClose={() => setSelectedNote(null)}
       />
     </AllErrorBoundary>
@@ -71,6 +73,7 @@ function AllContent({
       const haystack = [
         note.title ?? "",
         note.content,
+        note.notes ?? "",
         ...note.tags
       ].join(" ")
 

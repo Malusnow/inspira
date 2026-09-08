@@ -99,6 +99,7 @@ export function NoteComposer({
 
     const payload: {
       content: string
+      notes?: string
       tags: string[]
       title?: string
       workspaceId?: string
@@ -108,6 +109,7 @@ export function NoteComposer({
     }
 
     if (note?.title) payload.title = note.title
+    if (note?.notes) payload.notes = note.notes
     if (note?.workspaceId) payload.workspaceId = note.workspaceId
 
     onFinish()

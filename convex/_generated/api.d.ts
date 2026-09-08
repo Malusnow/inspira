@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as lib_auth from "../lib/auth.js";
+import type * as lib_notes from "../lib/notes.js";
 import type * as notes from "../notes.js";
 
 import type {
@@ -17,6 +19,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "lib/auth": typeof lib_auth;
+  "lib/notes": typeof lib_notes;
   notes: typeof notes;
 }>;
 

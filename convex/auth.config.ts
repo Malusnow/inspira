@@ -1,4 +1,4 @@
-import "node:process";
+/// <reference types="node" />
 
 export default {
   providers: [
