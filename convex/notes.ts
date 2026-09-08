@@ -18,6 +18,31 @@ const noteArgs = {
   workspaceId: v.optional(v.string())
 }
 
+const STARTER_NOTES_VERSION = 1
+const starterNotes: Array<Pick<NoteInspiration, "title" | "content" | "tags">> = [
+  {
+    title: "产品评审准备",
+    content:
+      "下周产品评审需要准备：\n1. 用户调研数据\n2. 竞品分析报告\n3. 原型演示与反馈收集",
+    tags: ["product", "review"]
+  },
+  {
+    title: "颜色是信息本身",
+    content: "颜色不是视觉的附属品，它是信息本身。\n\n-- Josef Albers",
+    tags: ["color", "design"]
+  },
+  {
+    title: "尽可能少的设计",
+    content: "好的设计是尽可能少的设计。\n\n-- Dieter Rams",
+    tags: ["design", "quote"]
+  },
+  {
+    title: "简单与复杂",
+    content: "简单是终极的复杂。\n\n-- Leonardo da Vinci",
+    tags: ["quote", "thinking"]
+  }
+]
+
 async function requireOwnerId(ctx: {
   auth: {
     getUserIdentity: () => Promise<{ subject: string } | null>
@@ -133,6 +158,74 @@ export const create = mutation({
       createdAt: now,
       updatedAt: now
     })
+  }
+})
+
+export const seedStarterNotes = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const ownerId = await requireOwnerId(ctx)
+    const existingInitialization = await ctx.db
+      .query("userInitializations")
+      .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
+      .first()
+
+    if (existingInitialization?.starterNotesSeededAt) {
+      return { created: false, count: 0 }
+    }
+
+    const existingNote = await ctx.db
+      .query("inspirations")
+      .withIndex("by_owner_createdAt", (q) => q.eq("ownerId", ownerId))
+      .first()
+
+    if (existingNote) {
+      const now = Date.now()
+
+      if (existingInitialization) {
+        await ctx.db.patch(existingInitialization._id, {
+          starterNotesSeededAt: now,
+          starterNotesVersion: STARTER_NOTES_VERSION
+        })
+      } else {
+        await ctx.db.insert("userInitializations", {
+          ownerId,
+          starterNotesSeededAt: now,
+          starterNotesVersion: STARTER_NOTES_VERSION
+        })
+      }
+
+      return { created: false, count: 0 }
+    }
+
+    const now = Date.now()
+
+    for (const [index, note] of starterNotes.entries()) {
+      await ctx.db.insert("inspirations", {
+        ownerId,
+        type: "note",
+        title: note.title,
+        content: note.content,
+        tags: note.tags,
+        createdAt: now - index * 60 * 1000,
+        updatedAt: now - index * 60 * 1000
+      })
+    }
+
+    if (existingInitialization) {
+      await ctx.db.patch(existingInitialization._id, {
+        starterNotesSeededAt: now,
+        starterNotesVersion: STARTER_NOTES_VERSION
+      })
+    } else {
+      await ctx.db.insert("userInitializations", {
+        ownerId,
+        starterNotesSeededAt: now,
+        starterNotesVersion: STARTER_NOTES_VERSION
+      })
+    }
+
+    return { created: true, count: starterNotes.length }
   }
 })
 

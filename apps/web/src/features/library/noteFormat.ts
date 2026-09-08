@@ -12,6 +12,39 @@ export function formatTimestamp(value: number) {
   }).format(value)
 }
 
+export function formatRelativeTimestamp(value: number) {
+  const diff = Date.now() - value
+  const minute = 60 * 1000
+  const hour = 60 * minute
+  const day = 24 * hour
+
+  if (diff < minute) return "Just now"
+  if (diff < hour) return `${Math.floor(diff / minute)} min ago`
+  if (diff < day) return `${Math.floor(diff / hour)} hr ago`
+  if (diff < 2 * day) return "Yesterday"
+  if (diff < 7 * day) return `${Math.floor(diff / day)} days ago`
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric"
+  }).format(value)
+}
+
+export function getNoteTone(id: string) {
+  const tones = [
+    "bg-note-paper",
+    "bg-note-sage",
+    "bg-note-warm",
+    "bg-note-blue"
+  ]
+  const index = Array.from(id).reduce(
+    (total, character) => total + character.charCodeAt(0),
+    0
+  )
+
+  return tones[index % tones.length]
+}
+
 /**
  * Parse a comma-/space-separated tag text input into a de-duplicated, trimmed,
  * non-empty tag array (matches backend NOTE tag normalization).

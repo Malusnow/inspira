@@ -39,6 +39,8 @@ Web Note 不走插件采集请求。客户端提交：
 
 Everything 的 S1 查询只返回当前登录用户自己的 Note，按最新创建在前展示。详情查询必须再次验证 owner；跨用户 ID 返回空结果或授权错误，不能返回标题、正文或 tags。
 
+首次进入 Library 时，Web 可请求服务端为当前 owner 初始化一组默认 Note 卡片。初始化只在该 owner 没有现有 Note 且未记录过初始化标记时写入；服务端仍从已验证会话确定 owner，不接受客户端提交 owner。初始化内容写入后就是该用户自己的 Note 数据，后续按普通 Note 查询和展示。
+
 ## 采集请求
 
 插件只采集 `page`、`image`、`quote`。Web Note 与 Video 上传不走采集请求。

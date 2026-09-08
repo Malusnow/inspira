@@ -11,5 +11,10 @@ export default defineSchema({
     workspaceId: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number()
-  }).index("by_owner_createdAt", ["ownerId", "createdAt"])
+  }).index("by_owner_createdAt", ["ownerId", "createdAt"]),
+  userInitializations: defineTable({
+    ownerId: v.string(),
+    starterNotesSeededAt: v.optional(v.number()),
+    starterNotesVersion: v.optional(v.number())
+  }).index("by_owner", ["ownerId"])
 })

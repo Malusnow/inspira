@@ -72,8 +72,8 @@ export function CreateNoteForm({ onCreated }: CreateNoteFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-3.5 pb-6 border-b border-line">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      className="flex flex-col gap-3.5">
+      <div className="grid grid-cols-1 gap-3">
         <Input
           label="Title"
           placeholder="Optional"
@@ -92,7 +92,7 @@ export function CreateNoteForm({ onCreated }: CreateNoteFormProps) {
         placeholder="Write a note"
         value={content}
         maxlength={NOTE_CONTENT_MAX_LENGTH}
-        autosize={{ minRows: 5, maxRows: 12 }}
+        autosize={{ minRows: 8, maxRows: 16 }}
         onChange={(value) => setContent(String(value))}
       />
       {error ? <Alert theme="error" message={error} /> : null}
