@@ -6,7 +6,7 @@ import { useOutletContext } from "react-router-dom"
 import { api } from "../../../../../convex/_generated/api"
 import type { AppShellOutletContext } from "../../app/AppShell"
 import { AllErrorBoundary } from "./AllErrorBoundary"
-import { AllTopBar, type AllViewMode } from "./AllTopBar"
+import { AllTopBar, type AllColumnCount } from "./AllTopBar"
 import { NoteDetailDialog } from "./NoteDetail"
 import { NoteList } from "./NoteList"
 
@@ -51,7 +51,7 @@ function AllContent({
     isAuthenticated ? {} : "skip"
   ) as NoteInspiration[] | undefined
   const [query, setQuery] = useState("")
-  const [viewMode, setViewMode] = useState<AllViewMode>("masonry")
+  const [columnCount, setColumnCount] = useState<AllColumnCount>(4)
   const didRequestStarterNotes = useRef(false)
 
   useEffect(() => {
@@ -88,13 +88,13 @@ function AllContent({
     <>
       <AllTopBar
         query={query}
-        viewMode={viewMode}
+        columnCount={columnCount}
         onQueryChange={setQuery}
-        onViewModeChange={setViewMode}
+        onColumnCountChange={setColumnCount}
       />
       <NoteList
         notes={visibleNotes}
-        viewMode={viewMode}
+        columnCount={columnCount}
         onEditNote={onEditNote}
         onOpenNote={onOpenNote}
       />

@@ -1,41 +1,56 @@
-import { SearchIcon, ViewListIcon, ViewModuleIcon } from "tdesign-icons-react"
-import type React from "react"
+import { SearchIcon } from "tdesign-icons-react"
 
-export type AllViewMode = "masonry" | "compact"
+export type AllColumnCount = 4 | 5
 
 export interface AllTopBarProps {
   query: string
-  viewMode: AllViewMode
+  columnCount: AllColumnCount
   onQueryChange: (query: string) => void
-  onViewModeChange: (viewMode: AllViewMode) => void
+  onColumnCountChange: (columnCount: AllColumnCount) => void
 }
 
-interface ViewButtonProps {
+interface DensityButtonProps {
   active: boolean
-  label: string
+  columnCount: AllColumnCount
   onClick: () => void
-  children: React.ReactNode
 }
 
-function ViewButton({ active, label, onClick, children }: ViewButtonProps) {
+function DensityButton({ active, columnCount, onClick }: DensityButtonProps) {
+  const iconSize = columnCount === 4 ? 5 : 3
+  const iconCount = columnCount === 4 ? 4 : 9
+
   return (
     <button
       type="button"
-      title={label}
-      aria-label={label}
+      title={`${columnCount} columns`}
+      aria-label={`${columnCount} columns`}
       aria-pressed={active}
       onClick={onClick}
-      className="grid size-8 place-items-center rounded-lg border-0 bg-transparent text-ink-muted transition hover:bg-surface-hover hover:text-ink-strong aria-pressed:bg-surface-hover aria-pressed:text-ink-strong">
-      {children}
+      className="grid size-9 place-items-center rounded-xl border-0 bg-transparent text-ink-muted/45 transition hover:bg-surface-hover hover:text-ink-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand aria-pressed:bg-surface-hover aria-pressed:text-ink-strong aria-pressed:shadow-sm">
+      <span
+        aria-hidden="true"
+        className="grid size-[21px] place-content-center"
+        style={{
+          gap: columnCount === 4 ? 4 : 2.5,
+          gridTemplateColumns: `repeat(${columnCount === 4 ? 2 : 3}, ${iconSize}px)`
+        }}>
+        {Array.from({ length: iconCount }).map((_, index) => (
+          <span
+            key={index}
+            className="rounded-[1.5px] bg-current"
+            style={{ width: iconSize, height: iconSize }}
+          />
+        ))}
+      </span>
     </button>
   )
 }
 
 export function AllTopBar({
   query,
-  viewMode,
+  columnCount,
   onQueryChange,
-  onViewModeChange
+  onColumnCountChange
 }: AllTopBarProps) {
   return (
     <>
@@ -53,19 +68,19 @@ export function AllTopBar({
       </header>
 
       <div className="px-5 pb-5 pt-[92px] sm:px-8 lg:px-10 lg:pt-[108px]">
-        <div className="flex items-center gap-0.5">
-          <ViewButton
-            label="Masonry view"
-            active={viewMode === "masonry"}
-            onClick={() => onViewModeChange("masonry")}>
-            <ViewModuleIcon />
-          </ViewButton>
-          <ViewButton
-            label="Compact grid"
-            active={viewMode === "compact"}
-            onClick={() => onViewModeChange("compact")}>
-            <ViewListIcon />
-          </ViewButton>
+        <div className="flex items-center">
+          <div className="flex items-center gap-1 rounded-2xl bg-surface/90 p-1 shadow-[0_8px_24px_rgb(37_43_53_/_0.06)]">
+            <DensityButton
+              active={columnCount === 4}
+              columnCount={4}
+              onClick={() => onColumnCountChange(4)}
+            />
+            <DensityButton
+              active={columnCount === 5}
+              columnCount={5}
+              onClick={() => onColumnCountChange(5)}
+            />
+          </div>
           <label className="ml-3 flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl bg-surface-hover px-3 text-sm text-ink-muted lg:hidden">
             <SearchIcon className="size-4 shrink-0" />
             <input

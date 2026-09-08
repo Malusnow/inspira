@@ -7,7 +7,6 @@ import { buildNotePreview } from "./notePreview"
 
 export interface NoteCardProps {
   note: NoteInspiration
-  compact?: boolean
   isFresh?: boolean
   onEdit: (note: NoteInspiration) => void
   onOpen: (note: NoteInspiration) => void
@@ -15,7 +14,6 @@ export interface NoteCardProps {
 
 export function NoteCard({
   note,
-  compact = false,
   isFresh = false,
   onEdit,
   onOpen
@@ -24,14 +22,14 @@ export function NoteCard({
 
   return (
     <article
-      className={`note-card group relative mb-5 inline-flex w-full break-inside-avoid overflow-hidden rounded-xl bg-surface text-ink-strong shadow-none transition hover:-translate-y-0.5 hover:shadow-card focus-within:shadow-card ${
-        compact ? "min-h-[190px]" : "min-h-[210px]"
-      } ${isFresh ? "note-card-fresh" : ""}`}>
+      className={`note-card group relative flex w-full overflow-hidden rounded-xl bg-surface text-ink-strong shadow-none transition hover:-translate-y-0.5 hover:shadow-card focus-within:shadow-card ${
+        isFresh ? "note-card-fresh" : ""
+      }`}>
       <button
         type="button"
         onClick={() => onOpen(note)}
-        className="flex min-h-full w-full cursor-pointer flex-col border-0 bg-transparent p-[18px] text-start text-ink-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2">
-        <NoteCardPreview compact={compact} preview={preview} />
+        className="flex w-full cursor-pointer flex-col border-0 bg-transparent p-[18px] text-start text-ink-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2">
+        <NoteCardPreview preview={preview} />
 
         <span className="mt-4 text-[11.5px] text-ink-muted">
           {formatRelativeTimestamp(note.createdAt)}

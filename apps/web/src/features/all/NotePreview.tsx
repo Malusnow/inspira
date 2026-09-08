@@ -2,7 +2,6 @@ import type { NotePreview, NotePreviewBlock } from "./notePreview"
 
 export interface NoteCardPreviewProps {
   preview: NotePreview
-  compact?: boolean
 }
 
 function PreviewBlock({ block }: { block: NotePreviewBlock }) {
@@ -58,26 +57,17 @@ function PreviewBlock({ block }: { block: NotePreviewBlock }) {
   }
 }
 
-export function NoteCardPreview({
-  preview,
-  compact = false
-}: NoteCardPreviewProps) {
+export function NoteCardPreview({ preview }: NoteCardPreviewProps) {
   return (
     <div className="flex min-w-0 flex-1 flex-col">
       {preview.title ? (
-        <strong
-          className={`break-words font-semibold leading-snug text-ink-strong ${
-            compact ? "text-[16px]" : "text-[19px]"
-          }`}>
+        <strong className="line-clamp-2 break-words text-[19px] font-semibold leading-snug text-ink-strong">
           {preview.title}
         </strong>
       ) : null}
 
       {preview.blocks.length > 0 ? (
-        <div
-          className={`mt-3 flex min-w-0 flex-col gap-2.5 overflow-hidden ${
-            compact ? "max-h-[160px]" : "max-h-[260px]"
-          }`}>
+        <div className="mt-3 flex max-h-[220px] min-w-0 flex-col gap-2.5 overflow-hidden">
           {preview.blocks.map((block, index) => (
             <PreviewBlock key={`${block.kind}-${index}`} block={block} />
           ))}
