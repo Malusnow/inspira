@@ -94,6 +94,75 @@
   }
 }
 
+:root[theme-mode="light"] {
+  color-scheme: light;
+
+  --color-canvas: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-surface-hover: #eceff3;
+  --color-raised: #ffffff;
+
+  --color-ink-strong: #252b35;
+  --color-ink: #4f5a69;
+  --color-ink-muted: #748094;
+
+  --color-line: #e3e7ed;
+  --color-line-strong: #cfd6df;
+
+  --color-brand: #6c63ff;
+  --color-brand-hover: #5b52e8;
+  --color-brand-soft: #f0effe;
+  --color-brand-line: #c7c0ff;
+  --color-brand-muted: #8b7ef7;
+
+  --color-note-paper: #ffffff;
+  --color-note-sage: #eef4f1;
+  --color-note-warm: #f2f4f7;
+  --color-note-blue: #eef3f8;
+  --color-note-highlight: #fff4a8;
+  --color-note-code: #e2e7ef;
+
+  --color-danger: #d5484f;
+  --color-danger-soft: #fee;
+  --color-success: #2f9e6e;
+  --color-success-soft: #e7f6ef;
+}
+
+:root.dark,
+:root[theme-mode="dark"] {
+  color-scheme: dark;
+
+  --color-canvas: #171818;
+  --color-surface: #242626;
+  --color-surface-hover: #303331;
+  --color-raised: #303331;
+
+  --color-ink-strong: #eeeae3;
+  --color-ink: #d4d0c9;
+  --color-ink-muted: #aaa9a4;
+
+  --color-line: #383b39;
+  --color-line-strong: #464a47;
+
+  --color-brand: #a09bff;
+  --color-brand-hover: #b8b3ff;
+  --color-brand-soft: #2a2a55;
+  --color-brand-line: #4a44b0;
+  --color-brand-muted: #8b84e0;
+
+  --color-note-paper: #303331;
+  --color-note-sage: #293532;
+  --color-note-warm: #35312d;
+  --color-note-blue: #27343a;
+  --color-note-highlight: #62582a;
+  --color-note-code: #26313f;
+
+  --color-danger: #ff8a8f;
+  --color-danger-soft: #4a2a2c;
+  --color-success: #4cc38d;
+  --color-success-soft: #1f4032;
+}
+
 /*
  * Mirror the brand token into TDesign so that <Button theme="primary"> etc.
  * re-theme with the same primary color source (theme slice can point this at a

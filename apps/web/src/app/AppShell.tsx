@@ -1,12 +1,13 @@
 import { UserButton } from "@clerk/react"
 import type { NoteInspiration } from "@inspira/contracts"
-import { lazy, Suspense, useState, type ReactNode } from "react"
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react"
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom"
 import {
   AddIcon,
   ChartIcon,
   MoonIcon,
-  SettingIcon
+  SettingIcon,
+  SunnyIcon
 } from "tdesign-icons-react"
 
 const InspirationOverlay = lazy(() =>
@@ -23,19 +24,48 @@ interface RailActionProps {
   icon: ReactNode
   label: string
   active?: boolean
+  pressed?: boolean
+  onClick?: () => void
 }
 
-function RailAction({ icon, label, active = false }: RailActionProps) {
+function RailAction({
+  icon,
+  label,
+  active = false,
+  pressed,
+  onClick
+}: RailActionProps) {
   return (
     <button
       type="button"
       title={label}
       aria-label={label}
       aria-current={active ? "page" : undefined}
+      aria-pressed={pressed}
+      onClick={onClick}
       className="grid size-12 place-items-center rounded-xl border-0 bg-transparent text-[22px] text-ink-muted transition hover:bg-surface-hover hover:text-brand aria-current:bg-brand-soft aria-current:text-brand">
       {icon}
     </button>
   )
+}
+
+type ThemeMode = "light" | "dark"
+
+const THEME_STORAGE_KEY = "inspira-theme-mode"
+
+function getInitialThemeMode(): ThemeMode {
+  if (typeof window === "undefined") {
+    return "light"
+  }
+
+  const storedMode = window.localStorage.getItem(THEME_STORAGE_KEY)
+  if (storedMode === "light" || storedMode === "dark") {
+    return storedMode
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light"
 }
 
 const contentTabs = [
@@ -87,8 +117,19 @@ function ContentTabs() {
 
 export function AppShell() {
   const location = useLocation()
+  const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode)
   const [isOverlayVisible, setOverlayVisible] = useState(false)
   const [overlayNote, setOverlayNote] = useState<NoteInspiration | undefined>()
+  const isDarkTheme = themeMode === "dark"
+
+  useEffect(() => {
+    const root = document.documentElement
+
+    root.setAttribute("theme-mode", themeMode)
+    root.dataset.theme = themeMode
+    root.classList.toggle("dark", isDarkTheme)
+    window.localStorage.setItem(THEME_STORAGE_KEY, themeMode)
+  }, [isDarkTheme, themeMode])
 
   function openNoteOverlay(note?: NoteInspiration) {
     setOverlayNote(note)
@@ -98,6 +139,12 @@ export function AppShell() {
   function closeNoteOverlay() {
     setOverlayVisible(false)
     setOverlayNote(undefined)
+  }
+
+  function toggleThemeMode() {
+    setThemeMode((currentMode) =>
+      currentMode === "dark" ? "light" : "dark"
+    )
   }
 
   return (
@@ -114,7 +161,12 @@ export function AppShell() {
         </Link>
         <div className="mt-auto flex flex-col gap-2.5">
           <RailAction icon={<ChartIcon />} label="Insights" />
-          <RailAction icon={<MoonIcon />} label="Theme" />
+          <RailAction
+            icon={isDarkTheme ? <SunnyIcon /> : <MoonIcon />}
+            label={isDarkTheme ? "Switch to light theme" : "Switch to dark theme"}
+            pressed={isDarkTheme}
+            onClick={toggleThemeMode}
+          />
           <RailAction icon={<SettingIcon />} label="Settings" />
         </div>
       </aside>
