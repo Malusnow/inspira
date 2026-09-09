@@ -1,3 +1,5 @@
 node_modules
 openspec
+.agents/skills/.openspec-target
+.agents/skills/openspec-*/
 .env.local
