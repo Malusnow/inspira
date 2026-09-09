@@ -15,7 +15,7 @@ import { api } from "../../../../../convex/_generated/api"
 import type { Id } from "../../../../../convex/_generated/dataModel"
 import { ConfirmDialog } from "../../components/ConfirmDialog"
 import { useEscapeKey } from "../../hooks/useEscapeKey"
-import { formatDetailTimestamp, getNoteTone } from "./noteFormat"
+import { formatDetailTimestamp } from "./noteFormat"
 import { NoteCardPreview } from "./NotePreview"
 import { buildNotePreview } from "./notePreview"
 
@@ -273,7 +273,7 @@ function NoteDetailContent({
   return (
     <div className="grid h-full min-h-svh gap-0 text-start lg:grid-cols-[minmax(0,1fr)_320px]">
       <article
-        className={`${getNoteTone(note.id)} flex min-h-[420px] items-center justify-center overflow-auto px-6 py-20 sm:px-10 lg:px-14`}>
+        className="flex min-h-[420px] items-center justify-center overflow-auto bg-canvas px-6 py-20 sm:px-10 lg:px-14">
         <div className="w-full max-w-130">
           <NoteCardPreview preview={preview} />
         </div>

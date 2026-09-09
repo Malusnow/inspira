@@ -114,6 +114,7 @@ export function InspirationOverlay({
         className="inspiration-surface relative z-10 h-full overflow-y-auto">
         <NoteComposer
           controlsVisible={controlsVisible}
+          surfaceState={surfaceState}
           note={note}
           onDismiss={requestDismiss}
           onFinish={requestDismiss}
