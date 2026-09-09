@@ -209,6 +209,11 @@ body {
   }
 }
 
+/* 外层裁剪容器：让入场位移(translateY)在内层发生，不撑出 body 滚动条 */
+.page-transition-clip {
+  overflow: clip;
+}
+
 .page-transition {
   animation: page-transition-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }

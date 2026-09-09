@@ -72,9 +72,9 @@ function RailLink({ icon, label, to, active }: RailLinkProps) {
 }
 
 const contentTabs = [
-  { label: "All", path: "/all", width: 46 },
-  { label: "Workspace", path: "/workspace", width: 142 },
-  { label: "Explore", path: "/explore", width: 104 }
+  { label: "All", path: "/all" },
+  { label: "Workspace", path: "/workspace" },
+  { label: "Explore", path: "/explore" }
 ] as const
 
 const CONTENT_TAB_GAP = 38
@@ -85,15 +85,9 @@ function ContentTabs() {
     contentTabs.findIndex((tab) => location.pathname.startsWith(tab.path)),
     0
   )
-  const underlineLeft = contentTabs
-    .slice(0, activeIndex)
-    .reduce((total, tab) => total + tab.width + CONTENT_TAB_GAP, 0)
-  const activeTab = contentTabs[activeIndex]
 
   return (
-    <div
-      className="relative flex h-14 items-start"
-      style={{ gap: CONTENT_TAB_GAP }}>
+    <div className="flex h-14 items-start" style={{ gap: CONTENT_TAB_GAP }}>
       {contentTabs.map((tab, index) => (
         <NavLink
           key={tab.label}
@@ -101,19 +95,16 @@ function ContentTabs() {
           title={tab.label}
           aria-label={tab.label}
           aria-current={index === activeIndex ? "page" : undefined}
-          className="h-11 p-0 font-serif text-[30px] font-normal italic leading-11 tracking-normal text-ink-muted no-underline transition-colors hover:text-brand aria-current:text-ink-strong"
-          style={{ width: tab.width }}>
+          className="relative h-11 p-0 font-serif text-[30px] font-normal italic leading-11 tracking-normal text-ink-muted no-underline transition-colors hover:text-brand aria-current:text-ink-strong">
           {tab.label}
+          {index === activeIndex ? (
+            <span
+              aria-hidden="true"
+              className="absolute inset-x-0 bottom-[-6px] h-2 rounded-full bg-brand"
+            />
+          ) : null}
         </NavLink>
       ))}
-      <span
-        aria-hidden="true"
-        className="absolute bottom-0 h-2 rounded-full bg-brand transition-[left,width] duration-300 ease-out"
-        style={{
-          left: underlineLeft,
-          width: activeTab.width
-        }}
-      />
     </div>
   )
 }
@@ -190,8 +181,10 @@ export function AppShell() {
       )}
 
       <div className="lg:pl-16">
-        <div key={location.pathname} className="page-transition">
-          <Outlet context={{ openNoteOverlay } satisfies AppShellOutletContext} />
+        <div key={location.pathname} className="page-transition-clip">
+          <div className="page-transition">
+            <Outlet context={{ openNoteOverlay } satisfies AppShellOutletContext} />
+          </div>
         </div>
       </div>
 
