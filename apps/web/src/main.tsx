@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client"
 
 import App from "./App.tsx"
 
+import "tdesign-react/es/style/index.css"
 import "./styles/index.css"
 
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY

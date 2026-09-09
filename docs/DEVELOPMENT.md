@@ -26,6 +26,7 @@ pnpm install --frozen-lockfile
 | Web 开发 | `pnpm --filter web dev`                | 需要 Web Clerk/Convex 环境变量才可使用登录后的 Note 流程 |
 | Web lint | `pnpm --filter web lint`               | 当前可用                                                 |
 | Web 构建 | `pnpm --filter web build`              | 当前可用，但不代表业务验收                               |
+| Web 测试 | `pnpm --filter web test`               | 当前用于纯函数/组件单元测试                              |
 | Web 预览 | `pnpm --filter web preview`            | 需先构建                                                 |
 | 插件开发 | `pnpm --filter apps-extension dev`     | 当前可用，业务采集未接通                                 |
 | 插件构建 | `pnpm --filter apps-extension build`   | 当前可用                                                 |
