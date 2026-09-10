@@ -122,7 +122,10 @@ export function cleanCreate(args: CreateNoteInput) {
     content,
     notes: cleanText(args.notes, NOTE_NOTES_MAX_LENGTH),
     tags: cleanTags(args.tags),
-    workspaceId: cleanText(args.workspaceId, 128)
+    // workspaceId is an opaque Convex id: never trim/limit it here. Existence and
+    // ownership are validated against the DB in the handler via
+    // `resolveOwnedWorkspaceId`.
+    workspaceId: args.workspaceId
   }
 }
 

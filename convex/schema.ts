@@ -12,7 +12,22 @@ export default defineSchema({
     workspaceId: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number()
-  }).index("by_owner_createdAt", ["ownerId", "createdAt"]),
+  })
+    .index("by_owner_createdAt", ["ownerId", "createdAt"])
+    .index("by_owner_workspace_createdAt", [
+      "ownerId",
+      "workspaceId",
+      "createdAt"
+    ]),
+  workspaces: defineTable({
+    ownerId: v.string(),
+    name: v.string(),
+    nameKey: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number()
+  })
+    .index("by_owner_createdAt", ["ownerId", "createdAt"])
+    .index("by_owner_nameKey", ["ownerId", "nameKey"]),
   userInitializations: defineTable({
     ownerId: v.string(),
     starterNotesSeededAt: v.optional(v.number()),

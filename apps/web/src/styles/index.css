@@ -233,6 +233,125 @@ body {
   animation: note-card-fresh-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes workspace-create-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes workspace-create-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.045);
+  }
+}
+
+/*
+ * Create-workspace circle. The ring is a gradient built purely from the brand
+ * scale tokens (no hardcoded hex) so a future primary-color swap rethemes it.
+ */
+.workspace-create-ring {
+  background: conic-gradient(
+    from 210deg,
+    var(--color-brand-soft),
+    var(--color-brand-line),
+    var(--color-brand),
+    var(--color-brand-muted),
+    var(--color-brand-soft)
+  );
+  box-shadow: 0 10px 26px rgb(37 43 53 / 0.08);
+}
+
+.workspace-create-inner {
+  background: color-mix(
+    in srgb,
+    var(--color-surface) 88%,
+    var(--color-brand-soft) 12%
+  );
+}
+
+/* Hover sweeps the ring; focus instead breathes it and adds a halo. */
+.workspace-create:hover .workspace-create-ring {
+  animation: workspace-create-spin 2.4s linear infinite;
+}
+
+.workspace-create:hover .workspace-create-inner {
+  background: color-mix(
+    in srgb,
+    var(--color-surface) 76%,
+    var(--color-brand-soft) 24%
+  );
+  color: var(--color-brand);
+}
+
+.workspace-create:focus-visible .workspace-create-ring {
+  animation: workspace-create-breathe 1.6s ease-in-out infinite;
+  box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--color-brand) 18%, transparent),
+    0 14px 32px rgb(37 43 53 / 0.12);
+}
+
+.workspace-create:focus-visible .workspace-create-inner {
+  background: color-mix(
+    in srgb,
+    var(--color-surface) 80%,
+    var(--color-brand-soft) 20%
+  );
+  color: var(--color-brand);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-create:hover .workspace-create-ring,
+  .workspace-create:focus-visible .workspace-create-ring {
+    animation: none;
+  }
+}
+
+/*
+ * Empty-workspace placeholder. Same ring family as the create circle, but the
+ * brand scale is mixed toward the surface so it reads as "nothing here yet"
+ * instead of "click me".
+ */
+.workspace-empty-ring {
+  background: conic-gradient(
+    from 210deg,
+    var(--color-brand-soft),
+    color-mix(in srgb, var(--color-brand-line) 70%, var(--color-surface)),
+    color-mix(in srgb, var(--color-brand) 50%, var(--color-surface)),
+    color-mix(in srgb, var(--color-brand-muted) 55%, var(--color-surface)),
+    var(--color-brand-soft)
+  );
+  box-shadow: 0 10px 26px rgb(37 43 53 / 0.06);
+}
+
+.workspace-empty-inner {
+  background: color-mix(
+    in srgb,
+    var(--color-surface) 94%,
+    var(--color-brand-soft) 6%
+  );
+}
+
+@keyframes workspace-menu-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -4px, 0) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* Portaled to the pointer, so the pop-in grows out of the click point. */
+.workspace-context-menu {
+  transform-origin: top left;
+  animation: workspace-menu-in 150ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 .t-loading__text {
   margin-left: 8px;
 }

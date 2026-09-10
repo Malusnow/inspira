@@ -12,25 +12,34 @@ import {
   toNote,
   updateArgs
 } from "./lib/notes"
+import { resolveOwnedWorkspaceId, touchWorkspace } from "./lib/workspaces"
 
 export const create = mutation({
   args: createArgs,
   handler: async (ctx, args) => {
     const ownerId = await requireOwner(ctx)
     const note = cleanCreate(args)
+    const workspaceId = await resolveOwnedWorkspaceId(
+      ctx,
+      ownerId,
+      note.workspaceId
+    )
     const now = Date.now()
-
-    return await ctx.db.insert("inspirations", {
+    const noteId = await ctx.db.insert("inspirations", {
       ownerId,
       type: "note",
       title: note.title,
       content: note.content,
       notes: note.notes,
       tags: note.tags,
-      workspaceId: note.workspaceId,
+      workspaceId,
       createdAt: now,
       updatedAt: now
     })
+
+    await touchWorkspace(ctx, workspaceId)
+
+    return noteId
   }
 })
 
@@ -48,6 +57,14 @@ export const update = mutation({
     }
 
     const note = cleanUpdate(args)
+    const workspaceId = await resolveOwnedWorkspaceId(
+      ctx,
+      ownerId,
+      note.workspaceId
+    )
+    const previousWorkspaceId = existingNote.workspaceId
+      ? ctx.db.normalizeId("workspaces", existingNote.workspaceId)
+      : undefined
     const now = Date.now()
 
     await ctx.db.patch(args.id, {
@@ -55,9 +72,14 @@ export const update = mutation({
       content: note.content,
       notes: note.notes,
       tags: note.tags,
-      workspaceId: note.workspaceId,
+      workspaceId,
       updatedAt: now
     })
+
+    if (previousWorkspaceId !== workspaceId) {
+      await touchWorkspace(ctx, workspaceId)
+      await touchWorkspace(ctx, previousWorkspaceId ?? undefined)
+    }
 
     return args.id
   }
@@ -77,6 +99,14 @@ export const remove = mutation({
     }
 
     await ctx.db.delete(args.id)
+
+    await touchWorkspace(
+      ctx,
+      existingNote.workspaceId
+        ? ctx.db.normalizeId("workspaces", existingNote.workspaceId) ??
+            undefined
+        : undefined
+    )
 
     return args.id
   }

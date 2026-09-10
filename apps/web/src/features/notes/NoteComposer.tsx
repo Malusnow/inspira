@@ -2,12 +2,12 @@ import "@blocknote/core/fonts/inter.css"
 import "@blocknote/mantine/style.css"
 
 import type { Block, PartialBlock } from "@blocknote/core"
+import { BlockNoteView } from "@blocknote/mantine"
 import {
   getDefaultReactSlashMenuItems,
   SuggestionMenuController,
   useCreateBlockNote
 } from "@blocknote/react"
-import { BlockNoteView } from "@blocknote/mantine"
 import {
   NOTE_CONTENT_MAX_LENGTH,
   type NoteInspiration
@@ -18,7 +18,7 @@ import { createPortal } from "react-dom"
 import { CloseIcon } from "tdesign-icons-react"
 
 import { api } from "../../../../../convex/_generated/api"
-import type { Id } from "../../../../../convex/_generated/dataModel"
+import { toInspirationId } from "../../lib/convexIds"
 
 type Editor = ReturnType<typeof useCreateBlockNote>
 
@@ -71,7 +71,10 @@ function serializeDocumentToMarkdown(editor: Editor) {
     .join("\n\n")
 }
 
-function parseMarkdownPreservingBlankParagraphs(editor: Editor, markdown: string) {
+function parseMarkdownPreservingBlankParagraphs(
+  editor: Editor,
+  markdown: string
+) {
   const blocks: PartialBlock[] = []
   const lines = markdown.split(/\r?\n/)
   let pendingLines: string[] = []
@@ -148,10 +151,15 @@ export function NoteComposer({
     if (!note?.content) return
 
     try {
-      const blocks = parseMarkdownPreservingBlankParagraphs(editor, note.content)
+      const blocks = parseMarkdownPreservingBlankParagraphs(
+        editor,
+        note.content
+      )
       editor.replaceBlocks(
         editor.document,
-        blocks.length > 0 ? blocks : [{ type: "paragraph", content: note.content }]
+        blocks.length > 0
+          ? blocks
+          : [{ type: "paragraph", content: note.content }]
       )
     } catch {
       editor.replaceBlocks(editor.document, [
@@ -200,7 +208,7 @@ export function NoteComposer({
     try {
       if (note) {
         await updateNoteMutation({
-          id: note.id as Id<"inspirations">,
+          id: toInspirationId(note.id),
           ...payload
         })
       } else {

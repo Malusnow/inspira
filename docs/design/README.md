@@ -12,7 +12,7 @@
 | [卡片详情](prototypes/inspira-detail.html)                       | 直接打开 All 卡片详情浮层                    | 共用 All 的详情状态，右侧仅 Tags / Notes；编辑仅在当前页面有效                  |
 | [Insights / Settings](prototypes/inspira-insights-settings.html) | 热力图、构成、趋势、外观设置                 | 通过 #insights / #settings 独立展示；已移除收藏统计和旧内容回顾，不添加替代指标 |
 | [Explore](prototypes/inspira-explore.html)                   | 标签星群 → 内容浮现 → 详情                   | 标签字号/坐标是静态演示，必须由频度驱动；动画参数只是参考                   |
-| [Plugin](prototypes/inspira-plugin.html)                         | Popup 状态、补充信息、登录参考               | 不把演示登录链路、权限和上传方式当作已通过 SDK 验证                             |
+| [Plugin](prototypes/inspira-plugin.html)                         | Popup 五态、右上角位置、统一 tag/notes 补充               | 不把演示登录链路、权限和上传方式当作已通过 SDK 验证                             |
 
 ## 导航与详情
 
@@ -41,7 +41,7 @@ C06 已确认频度越高越大、颜色越强调、越靠近中心。浅色下�
 | 媒体详情/上传      | 加载/上传进度 | 没有媒体时不造假预览      | 不可读/不支持/上传失败      | 看图、点击播放   |
 | Insights           | 统计加载      | 无统计内容                | 请求失败                    | 按确认口径显示   |
 | Explore            | 频度/内容加载 | 无标签/该标签无内容       | 查询失败                    | 词云与选中内容   |
-| 插件               | 保存中        | 无可保存信息/受限页面提示 | 未登录、失败分类            | 成功及可选补充   |
+| 插件               | 保存中        | 受限页面不伪装成功 | 未登录与失败共用统一 UI     | 成功后可补 tags/notes |
 
 这些是验收方向，具体文案、重试按钮及状态转换由对应 change 确定。删除确认已确认，确认后的直接删除不提供恢复入口。
 

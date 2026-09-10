@@ -7,25 +7,24 @@ import {
   type NoteInspiration
 } from "@inspira/contracts"
 import { useMutation } from "convex/react"
-import { useMemo, useState } from "react"
-import { Drawer, MessagePlugin, Tag } from "tdesign-react"
-import { CloseIcon, DeleteIcon } from "tdesign-icons-react"
+import { useMemo, useRef, useState } from "react"
+import { Drawer, Tag } from "tdesign-react"
+import { CloseIcon, DeleteIcon, FolderAddIcon } from "tdesign-icons-react"
 
 import { api } from "../../../../../convex/_generated/api"
-import type { Id } from "../../../../../convex/_generated/dataModel"
 import { ConfirmDialog } from "../../components/ConfirmDialog"
 import { useEscapeKey } from "../../hooks/useEscapeKey"
+import { toInspirationId } from "../../lib/convexIds"
+import { WorkspacePickerPopover } from "../workspaces/WorkspacePickerPopover"
+import { useNoteWorkspaceAssignment } from "../workspaces/useNoteWorkspaceAssignment"
 import { formatDetailTimestamp } from "./noteFormat"
 import { NoteDetailBody } from "./NotePreview"
 import { buildNotePreview } from "./notePreview"
+import { useNoteDeletion } from "./useNoteDeletion"
 
 export interface NoteDetailDialogProps {
   /** Selected Note to show, or null/undefined to keep the layer closed. */
   note: NoteInspiration | null
-  /** Keeps the open detail in sync after inline edits. */
-  onNoteChange: (note: NoteInspiration) => void
-  /** Closes the detail after the selected Note is deleted. */
-  onDelete: () => void
   /** Closes the detail floating layer; focus returns to the triggering card. */
   onClose: () => void
 }
@@ -36,12 +35,7 @@ function cleanTags(tags: string[]) {
   ).slice(0, NOTE_TAG_MAX_COUNT)
 }
 
-export function NoteDetailDialog({
-  note,
-  onNoteChange,
-  onDelete,
-  onClose
-}: NoteDetailDialogProps) {
+export function NoteDetailDialog({ note, onClose }: NoteDetailDialogProps) {
   useEscapeKey(Boolean(note), () => onClose())
 
   return (
@@ -64,12 +58,7 @@ export function NoteDetailDialog({
       destroyOnClose
       onClose={onClose}>
       {note ? (
-        <NoteDetailContent
-          key={note.id}
-          note={note}
-          onNoteChange={onNoteChange}
-          onDelete={onDelete}
-        />
+        <NoteDetailContent key={note.id} note={note} onClose={onClose} />
       ) : null}
     </Drawer>
   )
@@ -156,23 +145,36 @@ function DetailTags({
 
 function NoteDetailContent({
   note,
-  onNoteChange,
-  onDelete
+  onClose
 }: {
   note: NoteInspiration
-  onNoteChange: (note: NoteInspiration) => void
-  onDelete: () => void
+  onClose: () => void
 }) {
   const updateNote = useMutation(api.notes.update)
-  const removeNote = useMutation(api.notes.remove)
   const [title, setTitle] = useState(note.title ?? "")
   const [mindNotes, setMindNotes] = useState(note.notes ?? "")
   const [tags, setTags] = useState<string[]>(note.tags)
   const [tagDraft, setTagDraft] = useState("")
   const [isTagInputOpen, setIsTagInputOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+  const addToWorkspaceButtonRef = useRef<HTMLButtonElement>(null)
+  // The anchor and the note it belongs to travel together, so the picker can
+  // never end up in an "anchor without a note" state.
+  const {
+    pending: pendingAssignment,
+    workspaces,
+    isAssigning,
+    requestAssignment,
+    closePicker,
+    assign
+  } = useNoteWorkspaceAssignment()
+  const {
+    pendingNote,
+    isDeleting,
+    requestDelete,
+    cancel: cancelDelete,
+    confirm: confirmDelete
+  } = useNoteDeletion({ onDeleted: onClose })
   const detailPreview = buildNotePreview(note, { includeAllBlocks: true })
 
   const canAddTag = useMemo(() => {
@@ -208,20 +210,15 @@ function NoteDetailContent({
     setIsSaving(true)
 
     try {
+      // The reactive query is the source of truth for the selected Note, so
+      // there is no local copy to patch back into the parent here.
       await updateNote({
-        id: note.id as Id<"inspirations">,
+        id: toInspirationId(note.id),
         title: nextTitle || undefined,
         content: note.content.slice(0, NOTE_CONTENT_MAX_LENGTH),
         notes: nextNotes || undefined,
         tags: nextTags,
         workspaceId: note.workspaceId
-      })
-
-      onNoteChange({
-        ...note,
-        title: nextTitle || undefined,
-        notes: nextNotes || undefined,
-        tags: nextTags
       })
     } catch (error) {
       console.error("Failed to update note detail", error)
@@ -245,29 +242,6 @@ function NoteDetailContent({
 
     setTags(nextTags)
     void handleSave({ tags: nextTags })
-  }
-
-  async function handleDelete() {
-    if (isDeleting) return
-
-    setIsDeleting(true)
-
-    try {
-      await removeNote({ id: note.id as Id<"inspirations"> })
-      setIsDeleteConfirmOpen(false)
-      onDelete()
-      void MessagePlugin.success({
-        content: "该灵感已删除",
-        placement: "bottom-right"
-      })
-    } catch (error) {
-      console.error("Failed to delete note", error)
-      void MessagePlugin.error({
-        content: "删除失败，请稍后再试",
-        placement: "bottom-right"
-      })
-      setIsDeleting(false)
-    }
   }
 
   return (
@@ -325,26 +299,58 @@ function NoteDetailContent({
           />
         </section>
 
-        <div className="mt-12 flex justify-end">
+        <div className="mt-12 flex items-center justify-end gap-3">
+          <button
+            ref={addToWorkspaceButtonRef}
+            type="button"
+            aria-label="移动到工作区"
+            title="移动到工作区"
+            disabled={isAssigning}
+            onClick={() => {
+              const bounds =
+                addToWorkspaceButtonRef.current?.getBoundingClientRect()
+
+              if (!bounds) return
+
+              requestAssignment(note, { x: bounds.left, y: bounds.bottom + 8 })
+            }}
+            className="inline-flex min-h-10 items-center gap-2 rounded-full border-0 bg-surface-hover px-4 text-sm font-medium text-ink-muted transition duration-200 hover:-translate-y-0.5 hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-default disabled:opacity-60 disabled:hover:translate-y-0">
+            <FolderAddIcon className="size-4" />
+            移动到工作区
+          </button>
           <button
             type="button"
             aria-label="Delete card"
             title="Delete card"
             disabled={isDeleting}
-            onClick={() => setIsDeleteConfirmOpen(true)}
+            onClick={() => requestDelete(note)}
             className="grid size-10 place-items-center rounded-full border-0 bg-surface-hover text-lg text-ink-muted transition duration-200 hover:-translate-y-0.5 hover:bg-danger-soft hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-default disabled:opacity-60 disabled:hover:translate-y-0">
             <DeleteIcon />
           </button>
         </div>
 
         <ConfirmDialog
-          visible={isDeleteConfirmOpen}
+          visible={pendingNote !== null}
           isLoading={isDeleting}
-          onCancel={() => {
-            if (!isDeleting) setIsDeleteConfirmOpen(false)
-          }}
-          onConfirm={() => void handleDelete()}
+          title="删除这条灵感？"
+          description="删除后不可恢复"
+          confirmText="删除"
+          cancelText="取消"
+          intent="danger"
+          onCancel={cancelDelete}
+          onConfirm={() => void confirmDelete()}
         />
+
+        {pendingAssignment ? (
+          <WorkspacePickerPopover
+            anchor={pendingAssignment.anchor}
+            workspaces={workspaces}
+            currentWorkspaceId={pendingAssignment.note.workspaceId}
+            isAdding={isAssigning}
+            onClose={closePicker}
+            onSelect={(workspaceId) => void assign(workspaceId)}
+          />
+        ) : null}
       </aside>
     </div>
   )

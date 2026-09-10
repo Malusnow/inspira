@@ -1,4 +1,4 @@
-import { SearchIcon } from "tdesign-icons-react"
+import { SearchField } from "../../components/SearchField"
 
 export type AllColumnCount = 4 | 5
 
@@ -53,46 +53,28 @@ export function AllTopBar({
   onColumnCountChange
 }: AllTopBarProps) {
   return (
-    <>
-      <header className="fixed left-0 right-[430px] top-0 z-20 hidden h-[84px] items-center bg-canvas px-8 lg:left-16 lg:flex">
-        <label className="flex h-12 w-full max-w-[600px] items-center gap-3 rounded-2xl bg-surface-hover px-[18px] text-sm text-ink-muted">
-          <SearchIcon className="size-[17px] shrink-0" />
-          <input
-            aria-label="Search notes"
-            value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Search notes or tags..."
-            className="min-w-0 flex-1 border-0 bg-transparent text-[15px] text-ink-strong outline-none placeholder:text-ink-muted"
+    <div className="px-5 pb-5 pt-4 sm:px-8 lg:px-10 lg:pt-6">
+      <div className="flex items-center">
+        <div className="flex items-center gap-1 rounded-2xl bg-surface/90 p-1 shadow-[0_8px_24px_rgb(37_43_53_/_0.06)]">
+          <DensityButton
+            active={columnCount === 4}
+            columnCount={4}
+            onClick={() => onColumnCountChange(4)}
           />
-        </label>
-      </header>
-
-      <div className="px-5 pb-5 pt-[92px] sm:px-8 lg:px-10 lg:pt-[108px]">
-        <div className="flex items-center">
-          <div className="flex items-center gap-1 rounded-2xl bg-surface/90 p-1 shadow-[0_8px_24px_rgb(37_43_53_/_0.06)]">
-            <DensityButton
-              active={columnCount === 4}
-              columnCount={4}
-              onClick={() => onColumnCountChange(4)}
-            />
-            <DensityButton
-              active={columnCount === 5}
-              columnCount={5}
-              onClick={() => onColumnCountChange(5)}
-            />
-          </div>
-          <label className="ml-3 flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl bg-surface-hover px-3 text-sm text-ink-muted lg:hidden">
-            <SearchIcon className="size-4 shrink-0" />
-            <input
-              aria-label="Search notes"
-              value={query}
-              onChange={(event) => onQueryChange(event.target.value)}
-              placeholder="Search notes or tags..."
-              className="min-w-0 flex-1 border-0 bg-transparent text-sm text-ink-strong outline-none placeholder:text-ink-muted"
-            />
-          </label>
+          <DensityButton
+            active={columnCount === 5}
+            columnCount={5}
+            onClick={() => onColumnCountChange(5)}
+          />
         </div>
+        <SearchField
+          value={query}
+          onChange={onQueryChange}
+          className="ml-3 flex h-10 min-w-0 flex-1 gap-2 rounded-xl bg-surface-hover px-3 text-sm lg:hidden"
+          iconClassName="size-4"
+          inputClassName="text-sm text-ink-strong"
+        />
       </div>
-    </>
+    </div>
   )
 }

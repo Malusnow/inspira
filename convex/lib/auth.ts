@@ -10,7 +10,7 @@ export async function requireOwner(ctx: {
   if (!identity) {
     throw new ConvexError({
       code: "UNAUTHENTICATED",
-      message: "Login is required to access notes."
+      message: "Login is required."
     })
   }
 

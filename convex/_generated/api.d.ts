@@ -10,7 +10,9 @@
 
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_notes from "../lib/notes.js";
+import type * as lib_workspaces from "../lib/workspaces.js";
 import type * as notes from "../notes.js";
+import type * as workspaces from "../workspaces.js";
 
 import type {
   ApiFromModules,
@@ -21,7 +23,9 @@ import type {
 declare const fullApi: ApiFromModules<{
   "lib/auth": typeof lib_auth;
   "lib/notes": typeof lib_notes;
+  "lib/workspaces": typeof lib_workspaces;
   notes: typeof notes;
+  workspaces: typeof workspaces;
 }>;
 
 /**

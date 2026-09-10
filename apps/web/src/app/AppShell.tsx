@@ -17,6 +17,7 @@ import {
   SunnyIcon
 } from "tdesign-icons-react"
 
+import { SearchField } from "../components/SearchField"
 import { useThemePreferences } from "../features/preferences/themePreferencesContext"
 
 const InspirationOverlay = lazy(() =>
@@ -27,6 +28,8 @@ const InspirationOverlay = lazy(() =>
 
 export interface AppShellOutletContext {
   openNoteOverlay: (note?: NoteInspiration) => void
+  query: string
+  setQuery: (query: string) => void
 }
 
 interface RailActionProps {
@@ -170,8 +173,10 @@ export function AppShell() {
   const { resolvedThemeMode, toggleResolvedThemeMode } = useThemePreferences()
   const [isOverlayVisible, setOverlayVisible] = useState(false)
   const [overlayNote, setOverlayNote] = useState<NoteInspiration | undefined>()
+  const [query, setQuery] = useState("")
   const isDarkTheme = resolvedThemeMode === "dark"
   const isSettingsPage = location.pathname.startsWith("/settings")
+  const isAllPage = location.pathname.startsWith("/all")
 
   function openNoteOverlay(note?: NoteInspiration) {
     setOverlayNote(note)
@@ -217,29 +222,40 @@ export function AppShell() {
         </div>
       </aside>
 
-      {isSettingsPage ? null : (
-        <nav
-          aria-label="Content"
-          className="fixed right-4 top-4 z-40 flex items-start gap-7 sm:right-8">
-          <ContentTabs />
-          <button
-            type="button"
-            title="New inspiration"
-            aria-label="New inspiration"
-            onClick={() => openNoteOverlay()}
-            className="grid size-9.5 place-items-center rounded-full border-0 bg-brand text-canvas shadow-[0_2px_8px_rgb(108_99_255_/_0.25)] transition hover:scale-105 hover:bg-brand-hover">
-            <AddIcon />
-          </button>
-          <span className="grid size-8.5 place-items-center rounded-full bg-surface-hover">
-            <UserButton />
-          </span>
-        </nav>
-      )}
-
       <div className="lg:pl-16">
+        {isSettingsPage ? null : (
+          <nav
+            aria-label="Content"
+            className="flex h-[84px] items-start justify-end gap-7 bg-canvas px-5 pt-4 sm:px-8 lg:px-10">
+            {isAllPage ? (
+              <SearchField
+                value={query}
+                onChange={setQuery}
+                className="mr-auto hidden h-12 w-full max-w-[600px] gap-3 self-center rounded-2xl bg-surface-hover px-[18px] text-sm lg:flex"
+                iconClassName="size-[17px]"
+                inputClassName="text-[15px] text-ink-strong"
+              />
+            ) : null}
+            <ContentTabs />
+            <button
+              type="button"
+              title="New inspiration"
+              aria-label="New inspiration"
+              onClick={() => openNoteOverlay()}
+              className="grid size-9.5 place-items-center rounded-full border-0 bg-brand text-canvas shadow-[0_2px_8px_rgb(108_99_255_/_0.25)] transition hover:scale-105 hover:bg-brand-hover">
+              <AddIcon />
+            </button>
+            <span className="grid size-8.5 place-items-center rounded-full bg-surface-hover">
+              <UserButton />
+            </span>
+          </nav>
+        )}
+
         <div key={location.pathname} className="page-transition-clip">
           <div className="page-transition">
-            <Outlet context={{ openNoteOverlay } satisfies AppShellOutletContext} />
+            <Outlet
+              context={{ openNoteOverlay, query, setQuery } satisfies AppShellOutletContext}
+            />
           </div>
         </div>
       </div>

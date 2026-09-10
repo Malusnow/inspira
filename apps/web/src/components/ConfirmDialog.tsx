@@ -1,56 +1,73 @@
-import { Dialog } from "tdesign-react"
+import { AppDialog } from "./AppDialog"
 
 export interface ConfirmDialogProps {
+  cancelText?: string
+  confirmText?: string
+  description?: string
+  intent?: "danger" | "primary"
   isLoading?: boolean
+  title: string
   visible: boolean
   onCancel: () => void
   onConfirm: () => void
 }
 
+const CONFIRM_PILL_CLASS: Record<"danger" | "primary", string> = {
+  danger:
+    "bg-danger text-white hover:bg-danger/90 focus-visible:ring-danger/30",
+  primary:
+    "bg-brand text-white hover:bg-brand-hover focus-visible:ring-brand/30"
+}
+
+/**
+ * Centered, single-column confirm dialog with a full-width pill button and a
+ * plain text cancel underneath — modeled after the mymind "Delete this space?"
+ * pattern, but kept compact for our neutral palette and zoned inside the shared
+ * AppDialog chrome (border, radius, ESC, overlay dismiss) so the surface still
+ * matches every other dialog in the app.
+ */
 export function ConfirmDialog({
+  cancelText = "取消",
+  confirmText = "确认",
+  description,
+  intent = "primary",
   isLoading = false,
+  title,
   visible,
   onCancel,
   onConfirm
 }: ConfirmDialogProps) {
   return (
-    <Dialog
+    <AppDialog
       visible={visible}
-      header={false}
-      footer={false}
-      closeBtn={false}
-      placement="center"
-      width="min(360px, calc(100vw - 32px))"
-      closeOnEscKeydown={!isLoading}
-      closeOnOverlayClick={!isLoading}
-      dialogClassName="!overflow-hidden !rounded-lg border border-line bg-surface text-ink shadow-xl [&_.t-dialog__body]:!overflow-hidden [&_.t-dialog__body]:!rounded-lg [&_.t-dialog__body]:bg-surface [&_.t-dialog__body]:p-0"
-      destroyOnClose
-      onClose={onCancel}
-      onCancel={onCancel}
-      onConfirm={onConfirm}>
-      <div className="rounded-lg bg-surface px-6 py-5 text-start text-ink">
-        <h3 className="text-base font-semibold leading-6 text-ink-strong">
-          确认删除这条灵感吗
-        </h3>
-        <p className="mt-2 text-sm leading-5 text-ink-muted">删除后不可恢复</p>
+      dismissible={!isLoading}
+      width={460}
+      onCancel={onCancel}>
+      <div className="px-5 pb-5 pt-6 text-center text-ink-strong">
+        <h3 className="text-[22px] font-semibold leading-snug">{title}</h3>
+        {description ? (
+          <p className="mx-auto mt-3.5 max-w-[340px] text-[13px] leading-6 text-ink-muted">
+            {description}
+          </p>
+        ) : null}
 
-        <div className="mt-5 flex justify-end gap-3">
-          <button
-            type="button"
-            disabled={isLoading}
-            onClick={onCancel}
-            className="inline-flex h-9 min-w-16 items-center justify-center rounded-md border border-line bg-canvas px-4 text-sm font-medium text-ink transition hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-default disabled:opacity-60">
-            取消
-          </button>
+        <div className="mt-7 flex flex-col items-stretch gap-2">
           <button
             type="button"
             disabled={isLoading}
             onClick={onConfirm}
-            className="inline-flex h-9 min-w-16 items-center justify-center rounded-md border border-transparent bg-danger px-4 text-sm font-medium text-white transition hover:bg-danger/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/30 disabled:cursor-default disabled:opacity-70">
-            删除
+            className={`inline-flex h-11 w-full items-center justify-center rounded-full text-[15px] font-semibold tracking-[0.04em] transition focus-visible:outline-none focus-visible:ring-2 disabled:cursor-default disabled:opacity-70 ${CONFIRM_PILL_CLASS[intent]}`}>
+            {confirmText}
+          </button>
+          <button
+            type="button"
+            disabled={isLoading}
+            onClick={onCancel}
+            className="inline-flex h-10 w-full items-center justify-center rounded-full text-sm font-medium text-ink-muted transition hover:bg-surface-hover hover:text-ink-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 disabled:cursor-default disabled:opacity-60">
+            {cancelText}
           </button>
         </div>
       </div>
-    </Dialog>
+    </AppDialog>
   )
 }
