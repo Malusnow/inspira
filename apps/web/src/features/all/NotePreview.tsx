@@ -8,16 +8,16 @@ function PreviewBlock({ block }: { block: NotePreviewBlock }) {
   switch (block.kind) {
     case "heading":
       return (
-        <strong className="block break-words text-[18px] font-semibold leading-snug text-ink-strong">
+        <strong className="block break-words text-[24px] font-semibold leading-snug text-ink-strong">
           {block.text}
         </strong>
       )
     case "checklist":
       return (
-        <span className="flex min-w-0 items-start gap-2 text-[13.5px] leading-relaxed text-ink-strong">
+        <span className="flex min-w-0 items-start gap-2 text-[16px] leading-relaxed text-ink-strong ">
           <span
             aria-hidden="true"
-            className={`mt-[5px] size-3 shrink-0 rounded-full border ${
+            className={`mt-[5px] size-4 shrink-0 rounded-full border ${
               block.checked
                 ? "border-brand bg-brand"
                 : "border-line-strong bg-transparent"
@@ -33,13 +33,13 @@ function PreviewBlock({ block }: { block: NotePreviewBlock }) {
       )
     case "quote":
       return (
-        <span className="block w-fit max-w-full break-words bg-note-highlight px-2 py-1 text-[15px] font-medium leading-relaxed text-ink-strong">
+        <span className="block w-fit max-w-full break-words bg-note-highlight px-2 py-1 text-[16px] font-medium leading-relaxed text-ink-strong">
           {block.text}
         </span>
       )
     case "code":
       return (
-        <pre className="max-w-full overflow-hidden rounded-md bg-note-code px-4 py-3 font-mono text-[13.5px] leading-relaxed text-ink-strong">
+        <pre className="max-w-full rounded-md bg-note-code px-4 py-3 font-mono text-[16px] leading-relaxed text-ink-strong">
           <code className="line-clamp-5 whitespace-pre-wrap break-words">
             {block.text}
           </code>
@@ -47,10 +47,12 @@ function PreviewBlock({ block }: { block: NotePreviewBlock }) {
       )
     case "divider":
       return <span className="block h-px w-full bg-line-strong" />
+    case "spacer":
+      return <span aria-hidden="true" className="block h-[1.45rem]" />
     case "text":
     default:
       return (
-        <span className="block break-words text-[14.5px] leading-relaxed text-ink-strong">
+        <span className="block break-words text-[20px] leading-relaxed text-ink-strong">
           {block.text}
         </span>
       )
@@ -68,6 +70,26 @@ export function NoteCardPreview({ preview }: NoteCardPreviewProps) {
 
       {preview.blocks.length > 0 ? (
         <div className="mt-3 flex max-h-[220px] min-w-0 flex-col gap-2.5 overflow-hidden">
+          {preview.blocks.map((block, index) => (
+            <PreviewBlock key={`${block.kind}-${index}`} block={block} />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+export function NoteDetailBody({ preview }: NoteCardPreviewProps) {
+  return (
+    <div className="flex min-w-0 flex-1 flex-col">
+      {preview.title ? (
+        <strong className="break-words text-[19px] font-semibold leading-snug text-ink-strong">
+          {preview.title}
+        </strong>
+      ) : null}
+
+      {preview.blocks.length > 0 ? (
+        <div className="mt-5 flex min-w-0 flex-col gap-2.5">
           {preview.blocks.map((block, index) => (
             <PreviewBlock key={`${block.kind}-${index}`} block={block} />
           ))}

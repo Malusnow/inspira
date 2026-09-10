@@ -1,6 +1,13 @@
 import { UserButton } from "@clerk/react"
 import type { NoteInspiration } from "@inspira/contracts"
-import { lazy, Suspense, useState, type ReactNode } from "react"
+import {
+  lazy,
+  Suspense,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode
+} from "react"
 import { NavLink, Outlet, useLocation } from "react-router-dom"
 import {
   AddIcon,
@@ -81,30 +88,79 @@ const CONTENT_TAB_GAP = 38
 
 function ContentTabs() {
   const location = useLocation()
+  const tabListRef = useRef<HTMLDivElement | null>(null)
+  const tabRefs = useRef<Array<HTMLAnchorElement | null>>([])
+  const [indicatorStyle, setIndicatorStyle] = useState({
+    left: 0,
+    width: 0
+  })
   const activeIndex = Math.max(
     contentTabs.findIndex((tab) => location.pathname.startsWith(tab.path)),
     0
   )
 
+  useLayoutEffect(() => {
+    const activeTabElement = tabRefs.current[activeIndex]
+
+    if (!activeTabElement) {
+      return
+    }
+
+    const activeTab = activeTabElement
+
+    function syncIndicator() {
+      setIndicatorStyle({
+        left: activeTab.offsetLeft,
+        width: activeTab.offsetWidth
+      })
+    }
+
+    syncIndicator()
+
+    const resizeObserver = new ResizeObserver(syncIndicator)
+
+    if (tabListRef.current) {
+      resizeObserver.observe(tabListRef.current)
+    }
+
+    for (const tabElement of tabRefs.current) {
+      if (tabElement) {
+        resizeObserver.observe(tabElement)
+      }
+    }
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [activeIndex])
+
   return (
-    <div className="flex h-14 items-start" style={{ gap: CONTENT_TAB_GAP }}>
+    <div
+      ref={tabListRef}
+      className="relative flex h-14 items-start"
+      style={{ gap: CONTENT_TAB_GAP }}>
       {contentTabs.map((tab, index) => (
         <NavLink
           key={tab.label}
+          ref={(element) => {
+            tabRefs.current[index] = element
+          }}
           to={tab.path}
           title={tab.label}
           aria-label={tab.label}
           aria-current={index === activeIndex ? "page" : undefined}
-          className="relative h-11 p-0 font-serif text-[30px] font-normal italic leading-11 tracking-normal text-ink-muted no-underline transition-colors hover:text-brand aria-current:text-ink-strong">
+          className="h-11 p-0 font-serif text-[30px] font-normal italic leading-11 tracking-normal text-ink-muted no-underline transition-colors hover:text-brand aria-current:text-ink-strong">
           {tab.label}
-          {index === activeIndex ? (
-            <span
-              aria-hidden="true"
-              className="absolute inset-x-0 bottom-[-6px] h-2 rounded-full bg-brand"
-            />
-          ) : null}
         </NavLink>
       ))}
+      <span
+        aria-hidden="true"
+        className="absolute bottom-0 h-2 rounded-full bg-brand transition-[transform,width] duration-300 ease-out"
+        style={{
+          transform: `translate3d(${indicatorStyle.left}px, 0, 0)`,
+          width: indicatorStyle.width
+        }}
+      />
     </div>
   )
 }

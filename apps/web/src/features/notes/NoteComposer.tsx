@@ -1,6 +1,7 @@
 import "@blocknote/core/fonts/inter.css"
 import "@blocknote/mantine/style.css"
 
+import type { Block, PartialBlock } from "@blocknote/core"
 import {
   getDefaultReactSlashMenuItems,
   SuggestionMenuController,
@@ -18,6 +19,8 @@ import { CloseIcon } from "tdesign-icons-react"
 
 import { api } from "../../../../../convex/_generated/api"
 import type { Id } from "../../../../../convex/_generated/dataModel"
+
+type Editor = ReturnType<typeof useCreateBlockNote>
 
 export interface NoteComposerProps {
   controlsVisible: boolean
@@ -50,6 +53,82 @@ function matchSlashItems(
   })
 }
 
+function isEmptyParagraphBlock(block: Block | PartialBlock) {
+  return (
+    block.type === "paragraph" &&
+    Array.isArray(block.content) &&
+    block.content.length === 0
+  )
+}
+
+function serializeDocumentToMarkdown(editor: Editor) {
+  return (editor.document as Block[])
+    .map((block: Block) =>
+      isEmptyParagraphBlock(block)
+        ? ""
+        : editor.blocksToMarkdownLossy([block]).replace(/\n+$/g, "")
+    )
+    .join("\n\n")
+}
+
+function parseMarkdownPreservingBlankParagraphs(editor: Editor, markdown: string) {
+  const blocks: PartialBlock[] = []
+  const lines = markdown.split(/\r?\n/)
+  let pendingLines: string[] = []
+  let blankLineCount = 0
+  let inCodeFence = false
+
+  function flushPendingLines() {
+    if (pendingLines.length === 0) return
+
+    const parsedBlocks = editor.tryParseMarkdownToBlocks(
+      pendingLines.join("\n")
+    ) as Block[]
+
+    blocks.push(
+      ...(parsedBlocks.length > 0
+        ? parsedBlocks
+        : [{ type: "paragraph" as const, content: pendingLines.join("\n") }])
+    )
+    pendingLines = []
+  }
+
+  function flushBlankLines() {
+    if (blankLineCount === 0) return
+
+    const spacerCount = Math.floor(blankLineCount / 2)
+
+    for (let index = 0; index < spacerCount; index += 1) {
+      blocks.push({ type: "paragraph", content: "" })
+    }
+
+    blankLineCount = 0
+  }
+
+  for (const line of lines) {
+    if (line.trim().startsWith("```")) {
+      flushBlankLines()
+      pendingLines.push(line)
+      inCodeFence = !inCodeFence
+      continue
+    }
+
+    if (!inCodeFence && line.trim() === "") {
+      flushPendingLines()
+      blankLineCount += 1
+      continue
+    }
+
+    flushBlankLines()
+    pendingLines.push(line)
+  }
+
+  flushPendingLines()
+  flushBlankLines()
+
+  return blocks
+}
+
 export function NoteComposer({
   controlsVisible,
   surfaceState,
@@ -69,7 +148,7 @@ export function NoteComposer({
     if (!note?.content) return
 
     try {
-      const blocks = editor.tryParseMarkdownToBlocks(note.content)
+      const blocks = parseMarkdownPreservingBlankParagraphs(editor, note.content)
       editor.replaceBlocks(
         editor.document,
         blocks.length > 0 ? blocks : [{ type: "paragraph", content: note.content }]
@@ -92,8 +171,8 @@ export function NoteComposer({
       return
     }
 
-    const content = editor.blocksToMarkdownLossy(editor.document).trim()
-    if (!content) {
+    const content = serializeDocumentToMarkdown(editor)
+    if (!content.trim()) {
       setSaveError("先写一点内容再保存。")
       return
     }

@@ -7,6 +7,7 @@ export type NotePreviewKind =
   | "quote"
   | "code"
   | "divider"
+  | "spacer"
 
 export interface NotePreviewBlock {
   kind: NotePreviewKind
@@ -18,11 +19,15 @@ export interface NotePreviewBlock {
 export interface NotePreview {
   title?: string
   blocks: NotePreviewBlock[]
-  dominantKind: Exclude<NotePreviewKind, "heading" | "divider">
+  dominantKind: Exclude<NotePreviewKind, "heading" | "divider" | "spacer">
 }
 
 const MAX_BLOCKS = 7
 const MAX_TEXT_LENGTH = 240
+
+interface BuildNotePreviewOptions {
+  includeAllBlocks?: boolean
+}
 
 function cleanInlineMarkdown(value: string) {
   return value
@@ -50,6 +55,7 @@ function parseMarkdownBlocks(content: string) {
   const lines = content.split(/\r?\n/)
   let paragraph: string[] = []
   let code: string[] = []
+  let blankLineCount = 0
   let inCode = false
 
   function flushParagraph() {
@@ -70,8 +76,21 @@ function parseMarkdownBlocks(content: string) {
     code = []
   }
 
+  function flushBlankLines() {
+    if (blankLineCount === 0) return
+
+    const spacerCount = Math.floor(blankLineCount / 2)
+
+    for (let index = 0; index < spacerCount; index += 1) {
+      blocks.push({ kind: "spacer" })
+    }
+
+    blankLineCount = 0
+  }
+
   for (const line of lines) {
     if (isFence(line)) {
+      flushBlankLines()
       if (inCode) {
         flushCode()
         inCode = false
@@ -91,8 +110,11 @@ function parseMarkdownBlocks(content: string) {
 
     if (!trimmed) {
       flushParagraph()
+      blankLineCount += 1
       continue
     }
+
+    flushBlankLines()
 
     const heading = /^(#{1,3})\s+(.+)$/.exec(trimmed)
     if (heading) {
@@ -136,8 +158,12 @@ function parseMarkdownBlocks(content: string) {
 
   if (inCode) flushCode()
   flushParagraph()
+  flushBlankLines()
 
-  return blocks.filter((block) => block.kind === "divider" || block.text)
+  return blocks.filter(
+    (block) =>
+      block.kind === "divider" || block.kind === "spacer" || block.text
+  )
 }
 
 function firstTextBlock(blocks: NotePreviewBlock[]) {
@@ -154,14 +180,24 @@ function inferDominantKind(
   return "text"
 }
 
-export function buildNotePreview(note: NoteInspiration): NotePreview {
+export function buildNotePreview(
+  note: NoteInspiration,
+  options: BuildNotePreviewOptions = {}
+): NotePreview {
   const parsedBlocks = parseMarkdownBlocks(note.content)
   const firstHeading = parsedBlocks.find((block) => block.kind === "heading")
   const title = note.title?.trim() || firstHeading?.text
   const blocks = title
     ? parsedBlocks.filter((block) => block !== firstHeading)
     : parsedBlocks
-  const visibleBlocks = blocks.slice(0, MAX_BLOCKS)
+  const renderableBlocks = blocks.filter((block, index, allBlocks) => {
+    if (block.kind !== "spacer") return true
+
+    return index > 0 && index < allBlocks.length - 1
+  })
+  const visibleBlocks = options.includeAllBlocks
+    ? renderableBlocks
+    : renderableBlocks.slice(0, MAX_BLOCKS)
 
   if (visibleBlocks.length === 0) {
     const fallbackText = firstTextBlock(parsedBlocks)?.text
