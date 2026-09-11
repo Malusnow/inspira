@@ -5,6 +5,9 @@ import type {
 import { PlayCircleIcon } from "tdesign-icons-react"
 import { useState } from "react"
 
+import { NoteCompactPreview } from "../all/NotePreview"
+import { buildNotePreview } from "../all/notePreview"
+
 export interface WorkspacePreviewProps {
   name: string
   /** Total items in the workspace, used for the "+N" badge. */
@@ -43,14 +46,13 @@ function toTransform({ x, y, rotate }: CardOffset) {
   return `translate(-50%, -50%) translate3d(${x}px, ${y}px, 0) rotate(${rotate}deg)`
 }
 
-function getItemText(item: WorkspacePreviewItem) {
-  return item.text ?? item.title ?? ""
-}
-
 /**
  * Front card rendering is driven by the item itself: `imageUrl` → image,
  * `type === "video"` → play placeholder, otherwise text. Today every item is a
  * Note, so the image/video branches stay dormant until media types exist.
+ *
+ * The text branch reuses the note preview parser so raw markdown markers never
+ * leak into the thumbnail, and renders it with the compact block scale.
  */
 function CardFace({ item, name }: { item: WorkspacePreviewItem; name: string }) {
   if (item.imageUrl) {
@@ -71,11 +73,12 @@ function CardFace({ item, name }: { item: WorkspacePreviewItem; name: string }) 
     )
   }
 
-  return (
-    <span className="line-clamp-6 block size-full overflow-hidden px-3.5 py-3 text-[13px] leading-6 text-ink-strong">
-      {getItemText(item)}
-    </span>
-  )
+  const preview = buildNotePreview({
+    content: item.text ?? "",
+    title: item.title
+  })
+
+  return <NoteCompactPreview preview={preview} />
 }
 
 /**

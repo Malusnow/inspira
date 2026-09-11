@@ -18,7 +18,7 @@ export function NoteCard({
   onEdit,
   onOpen
 }: NoteCardProps) {
-  const preview = buildNotePreview(note)
+  const preview = buildNotePreview({ content: note.content, title: note.title })
 
   return (
     <article

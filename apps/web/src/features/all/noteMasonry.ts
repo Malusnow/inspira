@@ -25,7 +25,7 @@ const DIVIDER_HEIGHT = 12
 const CARD_MAX_HEIGHT = 340
 
 export function estimateNoteCardHeight(note: NoteInspiration) {
-  const preview = buildNotePreview(note)
+  const preview = buildNotePreview({ content: note.content, title: note.title })
   let height = CARD_BASE_HEIGHT
 
   if (preview.title) {

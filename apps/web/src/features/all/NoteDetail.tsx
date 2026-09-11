@@ -175,7 +175,10 @@ function NoteDetailContent({
     cancel: cancelDelete,
     confirm: confirmDelete
   } = useNoteDeletion({ onDeleted: onClose })
-  const detailPreview = buildNotePreview(note, { includeAllBlocks: true })
+  const detailPreview = buildNotePreview(
+    { content: note.content, title: note.title },
+    { includeAllBlocks: true }
+  )
 
   const canAddTag = useMemo(() => {
     const nextTag = tagDraft.trim()

@@ -1,5 +1,3 @@
-import type { NoteInspiration } from "@inspira/contracts"
-
 export type NotePreviewKind =
   | "text"
   | "heading"
@@ -24,6 +22,16 @@ export interface NotePreview {
 
 const MAX_BLOCKS = 7
 const MAX_TEXT_LENGTH = 240
+
+/**
+ * The minimum a caller must provide to build a preview. Kept independent of
+ * `NoteInspiration` so both the masonry card and the workspace mini card can
+ * reuse the same parsing without importing the full contract shape.
+ */
+export interface NotePreviewSource {
+  content: string
+  title?: string
+}
 
 interface BuildNotePreviewOptions {
   includeAllBlocks?: boolean
@@ -181,12 +189,12 @@ function inferDominantKind(
 }
 
 export function buildNotePreview(
-  note: NoteInspiration,
+  source: NotePreviewSource,
   options: BuildNotePreviewOptions = {}
 ): NotePreview {
-  const parsedBlocks = parseMarkdownBlocks(note.content)
+  const parsedBlocks = parseMarkdownBlocks(source.content)
   const firstHeading = parsedBlocks.find((block) => block.kind === "heading")
-  const title = note.title?.trim() || firstHeading?.text
+  const title = source.title?.trim() || firstHeading?.text
   const blocks = title
     ? parsedBlocks.filter((block) => block !== firstHeading)
     : parsedBlocks
