@@ -28,7 +28,7 @@ const app = (() => {
   return (
     <main className="grid min-h-svh place-items-center bg-canvas px-6 text-ink">
       <section className="flex w-full max-w-md flex-col items-start gap-3 rounded-lg border border-line bg-surface p-6">
-        <p className="text-sm font-bold uppercase tracking-[0.12em] text-brand">
+        <p className="text-sm font-bold uppercase tracking-[0.12em] text-brand-ink">
           Inspira
         </p>
         <h1 className="text-2xl font-semibold text-ink-strong">

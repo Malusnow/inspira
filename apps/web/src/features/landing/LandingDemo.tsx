@@ -13,7 +13,7 @@ export function LandingDemo({ onOpenVideo }: { onOpenVideo: () => void }) {
         aria-label="打开演示视频"
       >
         <div className="grid h-full place-items-center bg-[linear-gradient(135deg,rgba(65,98,167,0.18),rgba(227,141,97,0.16)),#eceee9] text-[#777570]">
-          <ViewModuleIcon className="h-22 w-22 text-brand/50" />
+          <ViewModuleIcon className="h-22 w-22 text-brand-ink/50" />
           <span className="-mt-20 text-lg font-bold text-[#20201e]">
             Inspira capture demo
           </span>
@@ -34,7 +34,7 @@ export function LandingDemo({ onOpenVideo }: { onOpenVideo: () => void }) {
 function Step({ number, text }: { number: string; text: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand/10 text-[13px] font-bold text-brand">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand/10 text-[13px] font-bold text-brand-ink">
         {number}
       </span>
       <strong className="text-sm font-semibold text-[#55524e]">{text}</strong>

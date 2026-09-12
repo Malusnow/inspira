@@ -59,7 +59,7 @@ function ToolCard({
   return (
     <article className="rounded-lg border border-[#f0eeea] bg-white p-6 shadow-[0_4px_24px_rgba(32,32,30,0.03)] sm:p-9">
       <div className="mb-5 flex items-center gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-lg bg-brand/10 text-brand">
+        <span className="grid h-10 w-10 place-items-center rounded-lg bg-brand/10 text-brand-ink">
           {icon}
         </span>
         <h3 className="m-0 text-xl font-bold text-[#20201e]">{title}</h3>

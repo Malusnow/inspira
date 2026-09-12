@@ -76,7 +76,7 @@ function BrowserMockup() {
           <ContextItem icon={<CopyIcon className="h-3.5 w-3.5" />} text="复制" />
           <ContextItem icon={<SearchIcon className="h-3.5 w-3.5" />} text="搜索" />
           <hr className="mx-2.5 my-1 h-px border-0 bg-[#f0eeea]" />
-          <strong className="flex items-center gap-2 px-3.5 py-2 text-[13px] font-bold text-brand">
+          <strong className="flex items-center gap-2 px-3.5 py-2 text-[13px] font-bold text-brand-ink">
             <AddIcon className="h-3.5 w-3.5" /> Add to Inspira
           </strong>
         </div>

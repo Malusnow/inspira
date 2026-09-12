@@ -25,6 +25,8 @@
 
 正式主题使用语义角色（页面/表面/正文/次级正文/边框/强调/反馈），不要跨组件散布原型十六进制值。Web 私有应用当前由 `apps/web/src/lib/theme/colorScale.ts` 根据主色生成浅到深十色色阶，并通过 `apps/web/src/lib/theme/themeTokens.ts` 映射到 TDesign 主色色阶、关键背景/文字/边框变量和 Web CSS 语义 Token。ECharts 仍待 Insights 接入时使用同一主题来源。
 
+主色不能同时直接充当填充与文字色：过浅的主色在浅色表面、过深的主色在深色表面上都会让文字失去对比度。因此 `themeTokens.ts` 把品牌色拆成两个角色——填充仍用原始主色 `--color-brand`，文字用 `--color-brand-ink`（悬停 `--color-brand-ink-hover`）。文字主色以当前模式表面色为基准，仅在必要时把主色朝该模式墨色调制，直到满足 WCAG AA 4.5:1；组件文字统一走 `text-brand-ink`，TDesign 的 `--td-text-color-brand` / `--td-text-color-link` 也指向同一取值。
+
 状态色不应仅靠主色深浅表达成功/错误。词云按频度分别映射字号、颜色强调和空间优先级；最低频仍应可读、可点击。高频在浅色主题更深，深色主题更亮；不机械地在深色背景上继续加深。
 
 布局稳定、水平排版、漂浮强度和颜色对比阈值为建议；最终参数以视觉验收记录为准。原型的 7–12 秒浮动周期不自动成为产品承诺。

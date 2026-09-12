@@ -62,7 +62,7 @@ function RailAction({
       aria-current={active ? "page" : undefined}
       aria-pressed={pressed}
       onClick={onClick}
-      className="grid size-12 place-items-center rounded-xl border-0 bg-transparent text-[22px] text-ink-muted transition hover:bg-surface-hover hover:text-brand aria-current:bg-brand-soft aria-current:text-brand">
+      className="grid size-12 place-items-center rounded-xl border-0 bg-transparent text-[22px] text-ink-muted transition hover:bg-surface-hover hover:text-brand-ink-hover aria-current:bg-brand-soft aria-current:text-brand-ink">
       {icon}
     </button>
   )
@@ -75,7 +75,7 @@ function RailLink({ icon, label, to, active }: RailLinkProps) {
       title={label}
       aria-label={label}
       aria-current={active ? "page" : undefined}
-      className="grid size-12 place-items-center rounded-xl border-0 bg-transparent text-[22px] text-ink-muted no-underline transition hover:bg-surface-hover hover:text-brand aria-current:bg-brand-soft aria-current:text-brand">
+      className="grid size-12 place-items-center rounded-xl border-0 bg-transparent text-[22px] text-ink-muted no-underline transition hover:bg-surface-hover hover:text-brand-ink-hover aria-current:bg-brand-soft aria-current:text-brand-ink">
       {icon}
     </NavLink>
   )
@@ -152,7 +152,7 @@ function ContentTabs() {
           title={tab.label}
           aria-label={tab.label}
           aria-current={index === activeIndex ? "page" : undefined}
-          className="h-11 p-0 font-serif text-[30px] font-normal italic leading-11 tracking-normal text-ink-muted no-underline transition-colors hover:text-brand aria-current:text-ink-strong">
+          className="h-11 p-0 font-serif text-[30px] font-normal italic leading-11 tracking-normal text-ink-muted no-underline transition-colors hover:text-brand-ink-hover aria-current:text-ink-strong">
           {tab.label}
         </NavLink>
       ))}
@@ -175,8 +175,10 @@ export function AppShell() {
   const [overlayNote, setOverlayNote] = useState<NoteInspiration | undefined>()
   const [query, setQuery] = useState("")
   const isDarkTheme = resolvedThemeMode === "dark"
-  const isSettingsPage = location.pathname.startsWith("/settings")
   const isAllPage = location.pathname.startsWith("/all")
+  const isSettingsPage = location.pathname.startsWith("/settings")
+  const isInsightsPage = location.pathname.startsWith("/insights")
+  const isStandalonePage = isSettingsPage || isInsightsPage
 
   function openNoteOverlay(note?: NoteInspiration) {
     setOverlayNote(note)
@@ -202,14 +204,21 @@ export function AppShell() {
           title="Back to top"
           aria-label="Inspira"
           onClick={scrollToPageTop}
-          className="mt-16 origin-center -rotate-90 whitespace-nowrap font-serif text-[28px] font-medium italic tracking-normal text-ink-strong no-underline transition-colors hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4">
+          className="mt-16 origin-center -rotate-90 whitespace-nowrap font-serif text-[28px] font-medium italic tracking-normal text-ink-strong no-underline transition-colors hover:text-brand-ink-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-4">
           Inspira
         </button>
         <div className="mt-auto flex flex-col gap-2.5">
-          <RailAction icon={<ChartIcon />} label="Insights" />
+          <RailLink
+            icon={<ChartIcon />}
+            label="Insights"
+            to="/insights"
+            active={isInsightsPage}
+          />
           <RailAction
             icon={isDarkTheme ? <SunnyIcon /> : <MoonIcon />}
-            label={isDarkTheme ? "Switch to light theme" : "Switch to dark theme"}
+            label={
+              isDarkTheme ? "Switch to light theme" : "Switch to dark theme"
+            }
             pressed={isDarkTheme}
             onClick={toggleResolvedThemeMode}
           />
@@ -223,7 +232,7 @@ export function AppShell() {
       </aside>
 
       <div className="lg:pl-16">
-        {isSettingsPage ? null : (
+        {isStandalonePage ? null : (
           <nav
             aria-label="Content"
             className="flex h-[84px] items-start justify-end gap-7 bg-canvas px-5 pt-4 sm:px-8 lg:px-10">
@@ -254,7 +263,13 @@ export function AppShell() {
         <div key={location.pathname} className="page-transition-clip">
           <div className="page-transition">
             <Outlet
-              context={{ openNoteOverlay, query, setQuery } satisfies AppShellOutletContext}
+              context={
+                {
+                  openNoteOverlay,
+                  query,
+                  setQuery
+                } satisfies AppShellOutletContext
+              }
             />
           </div>
         </div>

@@ -5,7 +5,7 @@ import { sectionTitleClass } from "./landingStyles"
 export function LandingPrivacy() {
   return (
     <section className="mx-auto max-w-[640px] px-5 py-20 text-center sm:px-11" id="privacy">
-      <span className="mx-auto mb-5 grid h-12 w-12 place-items-center rounded-[14px] bg-brand/10 text-brand">
+      <span className="mx-auto mb-5 grid h-12 w-12 place-items-center rounded-[14px] bg-brand/10 text-brand-ink">
         <LockOnIcon className="h-[22px] w-[22px]" />
       </span>
       <h2 className={sectionTitleClass}>你的灵感，只属于你。</h2>

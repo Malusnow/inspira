@@ -317,7 +317,7 @@ function NoteDetailContent({
 
               requestAssignment(note, { x: bounds.left, y: bounds.bottom + 8 })
             }}
-            className="inline-flex min-h-10 items-center gap-2 rounded-full border-0 bg-surface-hover px-4 text-sm font-medium text-ink-muted transition duration-200 hover:-translate-y-0.5 hover:bg-brand-soft hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-default disabled:opacity-60 disabled:hover:translate-y-0">
+            className="inline-flex min-h-10 items-center gap-2 rounded-full border-0 bg-surface-hover px-4 text-sm font-medium text-ink-muted transition duration-200 hover:-translate-y-0.5 hover:bg-brand-soft hover:text-brand-ink-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-default disabled:opacity-60 disabled:hover:translate-y-0">
             <FolderAddIcon className="size-4" />
             移动到工作区
           </button>

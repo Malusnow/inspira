@@ -28,7 +28,7 @@ export function LandingDownload() {
           插件发布地址确认后会接入这里。已有账户？
           <SignInButton mode="modal">
             <button
-              className="border-0 bg-transparent p-0 text-brand hover:text-brand-hover focus:outline-none focus:ring-2 focus:ring-brand-line"
+              className="border-0 bg-transparent p-0 text-brand-ink hover:text-brand-ink-hover focus:outline-none focus:ring-2 focus:ring-brand-line"
               type="button"
             >
               登录 Inspira

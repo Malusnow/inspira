@@ -77,7 +77,7 @@ export function Appearance({ onCopyToast }: AppearanceProps) {
               type="button"
               aria-pressed={active}
               onClick={() => setThemeMode(option.mode as ThemeMode)}
-              className="min-h-24 rounded-[10px] border border-line bg-surface px-4 text-center text-2xl text-ink-muted transition hover:border-line-strong hover:bg-surface-hover aria-pressed:border-brand aria-pressed:bg-brand-soft aria-pressed:text-brand">
+              className="min-h-24 rounded-[10px] border border-line bg-surface px-4 text-center text-2xl text-ink-muted transition hover:border-line-strong hover:bg-surface-hover aria-pressed:border-brand aria-pressed:bg-brand-soft aria-pressed:text-brand-ink">
               <span className="mx-auto mb-2 grid size-7 place-items-center">
                 {option.icon}
               </span>

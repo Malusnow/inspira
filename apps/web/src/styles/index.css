@@ -35,6 +35,13 @@
   --color-brand-soft: #f0effe;
   --color-brand-line: #c7c0ff;
   --color-brand-muted: #8b7ef7;
+  /*
+   * Foreground brand: used for brand-colored text/icons. JS rewrites this to the
+   * closest color to the primary that clears AA contrast against the mode surface,
+   * so a very light or very dark primary never makes copy disappear.
+   */
+  --color-brand-ink: #6961f8;
+  --color-brand-ink-hover: #6059dc;
 
   /* All note card tones */
   --color-note-paper: #ffffff;
@@ -79,6 +86,8 @@
     --color-brand-soft: #2a2a55;
     --color-brand-line: #4a44b0;
     --color-brand-muted: #8b84e0;
+    --color-brand-ink: #a09bff;
+    --color-brand-ink-hover: #aba6fb;
 
     --color-note-paper: #303331;
     --color-note-sage: #293532;
@@ -114,6 +123,8 @@
   --color-brand-soft: #f0effe;
   --color-brand-line: #c7c0ff;
   --color-brand-muted: #8b7ef7;
+  --color-brand-ink: #6961f8;
+  --color-brand-ink-hover: #6059dc;
 
   --color-note-paper: #ffffff;
   --color-note-sage: #eef4f1;
@@ -149,6 +160,8 @@
   --color-brand-soft: #2a2a55;
   --color-brand-line: #4a44b0;
   --color-brand-muted: #8b84e0;
+  --color-brand-ink: #a09bff;
+  --color-brand-ink-hover: #aba6fb;
 
   --color-note-paper: #303331;
   --color-note-sage: #293532;
@@ -284,7 +297,7 @@ body {
     var(--color-surface) 76%,
     var(--color-brand-soft) 24%
   );
-  color: var(--color-brand);
+  color: var(--color-brand-ink);
 }
 
 .workspace-create:focus-visible .workspace-create-ring {
@@ -300,7 +313,7 @@ body {
     var(--color-surface) 80%,
     var(--color-brand-soft) 20%
   );
-  color: var(--color-brand);
+  color: var(--color-brand-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {

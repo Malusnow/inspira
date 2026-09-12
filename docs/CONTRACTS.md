@@ -110,6 +110,38 @@ All 的 S1 查询只返回当前登录用户自己的 Note，按最新创建在�
 
 仍待确认：总额度 D03b、视频封面 D03c、删除后的媒体清理策略 D01b。
 
+## Insights 统计契约
+
+统计口径已确认：
+
+- 统计只反映当前存量的内容；内容删除后立即从总数、构成、热力图和趋势中消失。
+- 日、周、月边界按调用方传入的 IANA 时区解析；缺失或非法时区回退 UTC。
+- 周起始日为周一。
+- 标签频度按"一条内容对一个去重后的标签计一次"。
+
+查询：
+
+| 项   | 值                                                          |
+| ---- | ----------------------------------------------------------- |
+| 函数 | `insights.summary`                                          |
+| 入参 | `timeZone?: string`（IANA 时区名，如 `Asia/Shanghai`）      |
+| 鉴权 | 从已验证会话取 owner，只读取该 owner 的 `inspirations` 行   |
+| 校验 | 未知时区回退 UTC，不报错，不信任客户端传入的任何 owner 标识 |
+
+返回 `InsightsSummary`：
+
+| 字段                                | 含义                                                       |
+| ----------------------------------- | ---------------------------------------------------------- |
+| totalCount                          | 当前存量总数                                               |
+| createdThisMonth / createdLastMonth | 本月 / 上月新增                                            |
+| createdThisWeek / createdLastWeek   | 本周 / 上周新增                                            |
+| activeDayCount                      | 最近 30 天内有内容的天数                                   |
+| dailyCounts                         | 最近 365 天逐日计数，升序零填充，`date` 为 `YYYY-MM-DD`    |
+| typeCounts                          | 固定顺序 `page/image/quote/note/video` 的类型计数，含 0 值 |
+| topTags                             | 标签频度前 5，次数降序，同次数按标签升序                   |
+
+窗口与上限常量位于 `packages/contracts`：`INSIGHTS_HEATMAP_WINDOW_DAYS`、`INSIGHTS_ACTIVE_WINDOW_DAYS`、`INSIGHTS_TOP_TAG_LIMIT`、`INSIGHTS_WEEK_START_DAY`。聚合与日期分桶是纯函数，位于 `packages/contracts` 的 `buildInsightsSummary`，Web 与 Convex 共用同一实现。
+
 ## 当前代码差异
 
 当前 `CreateInspirationInput` 仍只有基础字段，没有 `clientRequestId`、采集结果/错误、消息协议和媒体资产绑定。S1 已补 `CreateNoteInput`、`NoteInspiration` 和 Note 限制常量；运行时校验位于 Convex Note 函数，后续插件采集与媒体仍需在对应 change 中继续补齐 contracts、调用端、服务端和测试。

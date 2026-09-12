@@ -245,12 +245,8 @@
       .heatmap-header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-end;
         margin-bottom: 20px;
-      }
-      .heatmap-title {
-        font-size: 15px;
-        font-weight: 600;
       }
       .heatmap-legend {
         display: flex;
@@ -262,7 +258,7 @@
       .legend-swatch {
         width: 12px;
         height: 12px;
-        border-radius: 2px;
+        border-radius: 3px;
       }
       .heatmap-grid {
         display: flex;
@@ -278,14 +274,8 @@
       .heatmap-cell {
         width: 14px;
         height: 14px;
-        border-radius: 2px;
-        cursor: pointer;
-        transition: transform 0.1s;
+        border-radius: 3px;
         position: relative;
-      }
-      .heatmap-cell:hover {
-        transform: scale(1.2);
-        z-index: 2;
       }
       .heatmap-cell.l0 {
         background: #f0effe;
@@ -302,9 +292,10 @@
       .heatmap-cell.l4 {
         background: #6c63ff;
       }
+      /* Hovering reports the count; the cell itself does not move or light up. */
       .heatmap-tooltip {
         position: absolute;
-        bottom: 20px;
+        top: 20px;
         left: 50%;
         transform: translateX(-50%);
         background: #20201e;
@@ -316,11 +307,11 @@
         pointer-events: none;
         opacity: 0;
         transition: opacity 0.15s;
+        z-index: 2;
       }
       .heatmap-cell:hover .heatmap-tooltip {
         opacity: 1;
       }
-
       /* ===== TWO COLUMN ===== */
       .two-col {
         display: grid;
@@ -729,7 +720,6 @@
         <!-- Heatmap -->
         <div class="heatmap-wrap" style="margin-top: 16px">
           <div class="heatmap-header">
-            <div class="heatmap-title">最近 365 天</div>
             <div class="heatmap-legend">
               <span>少</span>
               <div class="legend-swatch" style="background: #f0effe"></div>
@@ -943,14 +933,16 @@
       </div>
     </main>
     <script>
-      // Generate heatmap
+      // Generate heatmap: 365 days rounded up to whole weeks, so the grid opens
+      // on a Monday and only the last column stops short.
       const heatmap = document.getElementById("heatmap")
       const levels = ["l0", "l1", "l2", "l3", "l4"]
       const weights = [0.55, 0.2, 0.12, 0.08, 0.05]
-      for (let w = 0; w < 53; w++) {
+      const CELL_COUNT = 369
+      for (let week = 0; week < 53; week++) {
         const col = document.createElement("div")
         col.className = "heatmap-col"
-        for (let d = 0; d < 7; d++) {
+        for (let day = 0; day < 7 && week * 7 + day < CELL_COUNT; day++) {
           const cell = document.createElement("div")
           cell.className = "heatmap-cell"
           const r = Math.random()

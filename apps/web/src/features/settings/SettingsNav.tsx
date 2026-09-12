@@ -14,7 +14,7 @@ export function SettingsNav() {
           href={item.href}
           className={`inline-flex min-h-9 items-center rounded-lg px-3.5 text-sm no-underline transition lg:mb-1 lg:flex ${
             item.active
-              ? "bg-brand-soft font-medium text-brand"
+              ? "bg-brand-soft font-medium text-brand-ink"
               : "text-ink-muted hover:bg-surface-hover hover:text-ink-strong"
           }`}>
           {item.label}
