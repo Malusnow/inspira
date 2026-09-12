@@ -9,7 +9,7 @@ import {
   type WorkspacePreviewItem,
   type WorkspaceSummary
 } from "../../packages/contracts/src/index"
-import { toNote } from "./notes"
+import { toInspiration } from "./notes"
 
 export const createWorkspaceArgs = {
   name: v.string()
@@ -57,6 +57,7 @@ function toPreviewItem(doc: Doc<"inspirations">): WorkspacePreviewItem {
     type: doc.type,
     title: doc.title,
     text: doc.content,
+    imageUrl: doc.imageUrl,
     createdAt: doc.createdAt
   }
 }
@@ -93,7 +94,7 @@ export function toWorkspaceDetail(
   return {
     id: workspace._id,
     name: workspace.name,
-    items: items.map(toNote),
+    items: items.map(toInspiration),
     createdAt: workspace.createdAt,
     updatedAt: workspace.updatedAt
   }

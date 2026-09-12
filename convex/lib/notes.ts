@@ -8,7 +8,7 @@ import {
   NOTE_TAG_MAX_LENGTH,
   NOTE_TITLE_MAX_LENGTH,
   type CreateNoteInput,
-  type NoteInspiration,
+  type InspirationItem,
   type UpdateNoteInput
 } from "../../packages/contracts/src/index"
 
@@ -32,7 +32,7 @@ export const removeArgs = {
 export const STARTER_NOTES_VERSION = 1
 
 export const starters: Array<
-  Pick<NoteInspiration, "title" | "content" | "tags">
+  Pick<InspirationItem, "title" | "content" | "tags">
 > = [
   {
     title: "产品评审准备",
@@ -133,15 +133,24 @@ export function cleanUpdate(args: UpdateNoteInput) {
   return cleanCreate(args)
 }
 
-export function toNote(doc: Doc<"inspirations">): NoteInspiration {
+/**
+ * Maps a stored row onto the shared item shape. Notes and captures live in one
+ * table, so the stored `type` is passed through instead of being forced to
+ * "note"; capture-only columns stay optional.
+ */
+export function toInspiration(doc: Doc<"inspirations">): InspirationItem {
   return {
     id: doc._id,
-    type: "note",
+    type: doc.type,
     title: doc.title,
     content: doc.content,
     notes: doc.notes,
     tags: doc.tags,
     workspaceId: doc.workspaceId,
+    sourceUrl: doc.sourceUrl,
+    imageUrl: doc.imageUrl,
+    selectedText: doc.selectedText,
+    capturedAt: doc.capturedAt,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt
   }

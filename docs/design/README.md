@@ -12,7 +12,7 @@
 | [卡片详情](prototypes/inspira-detail.html)                       | 直接打开 All 卡片详情浮层                    | 共用 All 的详情状态，右侧仅 Tags / Notes；编辑仅在当前页面有效                  |
 | [Insights / Settings](prototypes/inspira-insights-settings.html) | 热力图、构成、趋势、外观设置                 | 通过 #insights / #settings 独立展示；已移除收藏统计和旧内容回顾，不添加替代指标 |
 | [Explore](prototypes/inspira-explore.html)                   | 标签星群 → 内容浮现 → 详情                   | 标签字号/坐标是静态演示，必须由频度驱动；动画参数只是参考                   |
-| [Plugin](prototypes/inspira-plugin.html)                         | Popup 五态、右上角位置、统一 tag/notes 补充               | 不把演示登录链路、权限和上传方式当作已通过 SDK 验证                             |
+| [Plugin](prototypes/inspira-plugin.html)                         | Popup 五态、右上角位置、统一 tag/notes 补充、右键入口 `Add to Inspira` | 登录按 D05 在 Web 应用完成并由扩展同步会话，原型的演示登录链路不是实现依据；权限清单未实测 |
 
 ## 导航与详情
 

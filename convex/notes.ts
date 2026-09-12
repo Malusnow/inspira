@@ -9,7 +9,7 @@ import {
   removeArgs,
   STARTER_NOTES_VERSION,
   starters,
-  toNote,
+  toInspiration,
   updateArgs
 } from "./lib/notes"
 import { resolveOwnedWorkspaceId, touchWorkspace } from "./lib/workspaces"
@@ -190,7 +190,7 @@ export const listMine = query({
       .order("desc")
       .take(100)
 
-    return notes.map(toNote)
+    return notes.map(toInspiration)
   }
 })
 
@@ -206,6 +206,6 @@ export const getMine = query({
       return null
     }
 
-    return toNote(note)
+    return toInspiration(note)
   }
 })

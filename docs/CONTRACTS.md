@@ -50,18 +50,23 @@ All 的 S1 查询只返回当前登录用户自己的 Note，按最新创建在�
 
 插件只采集 `page`、`image`、`quote`。Web Note 与 Video 上传不走采集请求。
 
-| 字段            | 条件                                | 含义                               |
-| --------------- | ----------------------------------- | ---------------------------------- |
-| clientRequestId | 必须                                | 一次主动操作生成一次；传输重试复用 |
-| kind            | 必须，page/image/quote              | 采集类型                           |
-| sourceUrl       | page/quote 必须，image 建议带来源页 | 来源页面 URL                       |
-| pageTitle       | 可选                                | 页面标题                           |
-| selectedText    | quote 必须                          | 选中文字                           |
-| imageUrl        | image 必须                          | 原图片地址                         |
-| note            | 可选                                | 用户备注                           |
-| workspaceId     | 可选                                | 本人工作区                         |
-| tags            | 可选 string[]                       | 用户输入标签                       |
-| capturedAt      | 建议                                | 客户端时间，仅作上下文             |
+| 字段            | 条件                                | 含义                               | 限制                                               |
+| --------------- | ----------------------------------- | ---------------------------------- | -------------------------------------------------- |
+| clientRequestId | 必须                                | 一次主动操作生成一次；传输重试复用 | trim 后必须非空；最多 128 字符                     |
+| kind            | 必须，page/image/quote              | 采集类型                           | 只接受三种；其他值返回 INVALID_INPUT               |
+| sourceUrl       | page/quote 必须，image 建议带来源页 | 来源页面 URL                       | http/https 绝对地址；最多 2048 字符                |
+| pageTitle       | 可选                                | 页面标题                           | trim 后为空视为未提供；最多 300 字符               |
+| description     | 可选                                | 页面摘要，作为 page 的正文         | trim 后为空视为未提供；最多 1000 字符              |
+| selectedText    | quote 必须                          | 选中文字                           | trim 后必须非空；最多 10000 字符                   |
+| imageUrl        | image 必须                          | 原图片地址                         | http/https 绝对地址；最多 2048 字符                |
+| note            | 可选                                | 用户备注                           | trim 后为空视为未提供；最多 5000 字符              |
+| workspaceId     | 可选                                | 本人工作区                         | 不裁剪不截断；服务端校验归属                       |
+| tags            | 可选 string[]                       | 用户输入标签                       | trim、去空、同条去重；最多 12 个，每个最多 40 字符 |
+| capturedAt      | 建议                                | 客户端时间，仅作上下文             | 有限数字时间戳；不参与排序                         |
+
+上表限制与 `packages/contracts/src/index.ts` 的采集契约常量逐项对应，由 `normalizeCaptureRequest` 在写入前统一执行。
+
+`data:`、`blob:` 等非 http(s) 地址不通过校验，按无法保存处理（T03 记录实际页面行为）。`sourceUrl` 对 image 是来源页上下文，缺失不影响采集成功。
 
 成功结果建议：
 
@@ -84,6 +89,22 @@ All 的 S1 查询只返回当前登录用户自己的 Note，按最新创建在�
 | SOURCE_UNAVAILABLE    | 页面或图片无法读取       | 按 D04 决定是否外链降级  |
 | REQUEST_CONFLICT      | 同请求 ID 被不同内容复用 | 停止重试并修正客户端逻辑 |
 | TEMPORARY_FAILURE     | 网络或服务暂时失败       | 同次操作复用 ID 重试     |
+
+## 插件消息协议
+
+popup 只呈现状态，采集编排在 Service Worker，两者按 `apps/extension/lib/messages.ts` 的类型收发：
+
+| 消息                  | 方向           | 结果                                                       |
+| --------------------- | -------------- | ---------------------------------------------------------- |
+| `auth-status`         | popup → worker | 返回 `authenticated` / `anonymous` / `unknown`             |
+| `capture-active-page` | popup → worker | 生成新 `clientRequestId` 采集当前页，返回 `CaptureOutcome` |
+| `update-details`      | popup → worker | 按内容 id 写回 tags / note，返回 `saved: boolean`          |
+
+`CaptureOutcome` 为 `saved` / `unauthorized` / `failed` 三态，popup 据此渲染五状态：保存中、保存成功（含已填写）、未登录、无法保存。请求进入业务前必须通过 `isExtensionRequest` 的运行时校验。
+
+右键采集时 popup 尚未打开：worker 先把结果写入 `chrome.storage.session` 的 `inspira_pending_capture`，再请求打开 popup；popup 读取并消费该结果，因此 Worker 重启不丢反馈。`update-details` 只改标签与备注，不改内容本体；note 为空表示不修改。
+
+插件不在自身弹窗内登录：popup 与 worker 都通过 Clerk 的 `syncHost` 从登录主机读取会话 cookie（开发为 `http://localhost`，生产为 Frontend API 主机，D05），所以「未登录 → 登录 → 重新保存」是用户可见的两步，不存在隐式恢复。
 
 ## 媒体契约
 
@@ -144,4 +165,8 @@ All 的 S1 查询只返回当前登录用户自己的 Note，按最新创建在�
 
 ## 当前代码差异
 
-当前 `CreateInspirationInput` 仍只有基础字段，没有 `clientRequestId`、采集结果/错误、消息协议和媒体资产绑定。S1 已补 `CreateNoteInput`、`NoteInspiration` 和 Note 限制常量；运行时校验位于 Convex Note 函数，后续插件采集与媒体仍需在对应 change 中继续补齐 contracts、调用端、服务端和测试。
+采集协议已在 `packages/contracts/src/index.ts` 落地：`CaptureKind`、`CaptureRequestInput`、`CaptureRequest`、`CaptureResult`、`CAPTURE_ERROR_CODES` 与 `normalizeCaptureRequest` 运行时校验，字段与限制见上一节。
+
+服务端与插件调用端已接通：`convex/captures.ts` 提供 `captures:capture`（按 `clientRequestId` 幂等）与 `captures:updateDetails`，`convex/schema.ts` 已放开五种 `inspirations.type` 并新增 `captureAttempts`；`apps/extension` 实现了三类采集编排（`lib/capture.ts`、`background.ts`）、五状态 popup 与 tags/notes 回写，消息协议见上一节。
+
+仍未实现：媒体资产绑定与直传（S7）。插件的 `manifest` 已声明 `contextMenus` / `storage` / `activeTab` / `scripting` / `cookies`，两个 host 为 `$PLASMO_PUBLIC_CLERK_SYNC_HOST/*` 与 `$CLERK_FRONTEND_API/*`（构建期插值，`cookies` 用于按 D05 从登录主机同步 Clerk 会话），不使用全量域名；生产同步域名随 D10 填入 `.env.production`。

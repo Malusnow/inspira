@@ -8,8 +8,10 @@
  * @module
  */
 
+import type * as captures from "../captures.js";
 import type * as insights from "../insights.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_captures from "../lib/captures.js";
 import type * as lib_notes from "../lib/notes.js";
 import type * as lib_workspaces from "../lib/workspaces.js";
 import type * as notes from "../notes.js";
@@ -22,8 +24,10 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  captures: typeof captures;
   insights: typeof insights;
   "lib/auth": typeof lib_auth;
+  "lib/captures": typeof lib_captures;
   "lib/notes": typeof lib_notes;
   "lib/workspaces": typeof lib_workspaces;
   notes: typeof notes;

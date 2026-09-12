@@ -62,13 +62,13 @@ pnpm install --frozen-lockfile
 
 ## 环境配置
 
-| 信息                                  | 建议位置                  | 说明                         |
-| ------------------------------------- | ------------------------- | ---------------------------- |
-| Web Clerk publishable key、Convex URL | `apps/web` 环境变量       | 可进入客户端，不是服务端密钥 |
-| 插件 Clerk publishable key、后端 URL  | `apps/extension` 构建环境 | 可进入客户端，不放秘密       |
-| Convex 部署和 Clerk issuer/audience   | 后端部署环境              | 地址与部署凭证分开           |
-| 存储密钥、视频服务凭证                | 后端秘密环境              | 不能进入 Vite/Plasmo 或仓库  |
-| 生产域名、CRX ID、隐私地址            | 发布配置                  | D05/D10/T01 完成后确定       |
+| 信息                                        | 建议位置                  | 说明                         |
+| ------------------------------------------- | ------------------------- | ---------------------------- |
+| Web Clerk publishable key、Convex URL       | `apps/web` 环境变量       | 可进入客户端，不是服务端密钥 |
+| 插件 Clerk publishable key、Frontend API 地址、同步主机、Convex URL | `apps/extension` 构建环境 | 可进入客户端，不放秘密 |
+| Convex 部署和 Clerk issuer/audience         | 后端部署环境              | 地址与部署凭证分开           |
+| 存储密钥、视频服务凭证                      | 后端秘密环境              | 不能进入 Vite/Plasmo 或仓库  |
+| 生产域名、CRX ID、隐私地址                  | 发布配置                  | D05/D10/T01 完成后确定       |
 
 .env 示例只能放安全占位值。不要提交 Token、真实用户内容、完整私密网页数据或存储密钥。
 
@@ -86,6 +86,23 @@ CLERK_JWT_ISSUER_DOMAIN=https://placeholder.clerk.accounts.dev
 ```
 
 这些值必须替换为本地/测试项目的真实配置后才能做 A/B 账户人工验收；真实值不得提交。
+
+Chrome 插件本地运行需要 `apps/extension/.env.development`（`plasmo dev` 读它；`plasmo build` 读 `.env.production`）：
+
+```bash
+PLASMO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_placeholder
+CLERK_FRONTEND_API=https://placeholder.clerk.accounts.dev
+PLASMO_PUBLIC_CLERK_SYNC_HOST=http://localhost
+PLASMO_PUBLIC_CONVEX_URL=https://placeholder.convex.cloud
+PLASMO_PUBLIC_LANDING_URL=http://localhost:5173
+```
+
+- 必须与 Web 应用是同一个 Clerk 实例、同一个 Convex deployment。
+- `PLASMO_PUBLIC_CLERK_SYNC_HOST` 是登录 cookie 所在的主机：开发填 `http://localhost`（Clerk 的 dev cookie 落在 localhost，与端口无关），生产填 Frontend API 主机。它会同时插进 manifest 的 `host_permissions`。
+- Plasmo 只在构建期读取这些文件：变量缺失时 manifest 里的 `$VAR` 不会被展开，产物装不进 Chrome。改完要重新构建或重启 dev。
+- Clerk 实例还需启用 Native API，并把扩展来源 `chrome-extension://<ID>` 加入 allowed origins，否则扩展的请求会被 CORS 拒绝。完整步骤见 [插件 README](../apps/extension/README.md#配置)。
+
+插件与 Web 的环境变量模板分别是 `apps/extension/.env.example`，占位值不可直接使用。
 
 ## OpenSpec
 
