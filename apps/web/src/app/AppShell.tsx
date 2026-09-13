@@ -19,6 +19,7 @@ import {
 
 import { SearchField } from "../components/SearchField"
 import { useThemePreferences } from "../features/preferences/themePreferencesContext"
+import { useReplayEntryAnimation } from "../hooks/useReplayEntryAnimation"
 
 const InspirationOverlay = lazy(() =>
   import("../features/notes/InspirationOverlay").then((module) => ({
@@ -170,6 +171,7 @@ function ContentTabs() {
 
 export function AppShell() {
   const location = useLocation()
+  const pageTransitionRef = useRef<HTMLDivElement | null>(null)
   const { resolvedThemeMode, toggleResolvedThemeMode } = useThemePreferences()
   const [isOverlayVisible, setOverlayVisible] = useState(false)
   const [overlayNote, setOverlayNote] = useState<InspirationItem | undefined>()
@@ -179,6 +181,14 @@ export function AppShell() {
   const isSettingsPage = location.pathname.startsWith("/settings")
   const isInsightsPage = location.pathname.startsWith("/insights")
   const isStandalonePage = isSettingsPage || isInsightsPage
+
+  // Replays the entry animation per route without remounting the routed
+  // subtree, so previews already loaded inside a page survive navigation.
+  useReplayEntryAnimation(
+    pageTransitionRef,
+    "page-transition",
+    location.pathname
+  )
 
   function openNoteOverlay(note?: InspirationItem) {
     setOverlayNote(note)
@@ -260,8 +270,8 @@ export function AppShell() {
           </nav>
         )}
 
-        <div key={location.pathname} className="page-transition-clip">
-          <div className="page-transition">
+        <div className="page-transition-clip">
+          <div ref={pageTransitionRef} className="page-transition">
             <Outlet
               context={
                 {

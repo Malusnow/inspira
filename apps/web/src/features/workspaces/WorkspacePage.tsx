@@ -1,10 +1,11 @@
 import type { InspirationItem } from "@inspira/contracts"
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { useOutletContext } from "react-router-dom"
 import { MessagePlugin } from "tdesign-react"
 
 import type { AppShellOutletContext } from "../../app/AppShell"
 import { ConfirmDialog } from "../../components/ConfirmDialog"
+import { useReplayEntryAnimation } from "../../hooks/useReplayEntryAnimation"
 import { NoteDetailDialog } from "../all/NoteDetail"
 import { useNoteDeletion } from "../all/useNoteDeletion"
 import {
@@ -28,6 +29,14 @@ export function WorkspacePage() {
   const { openNoteOverlay } = useOutletContext<AppShellOutletContext>()
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(
     null
+  )
+  const flowTransitionRef = useRef<HTMLDivElement | null>(null)
+  // Replays the entry animation when opening or leaving a workspace without
+  // remounting the flow, which would drop every snapshot loaded inside it.
+  useReplayEntryAnimation(
+    flowTransitionRef,
+    "page-transition",
+    selectedWorkspaceId ?? "overview"
   )
   const selectedWorkspace = useWorkspaceDetailData(selectedWorkspaceId)
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
@@ -174,11 +183,11 @@ export function WorkspacePage() {
   return (
     <section className="mx-auto min-h-[calc(100svh-84px)] w-full max-w-[1280px] px-5 pb-14 pt-10 sm:px-8 lg:px-12">
       {/*
-        Remounting on the selected workspace replays the entry animation, so
-        opening and leaving a workspace reads as one continuous page instead of
-        an abrupt swap.
+        The entry animation replays through useReplayEntryAnimation, so opening
+        and leaving a workspace still reads as one continuous page instead of an
+        abrupt swap — without remounting the flow.
       */}
-      <div key={selectedWorkspaceId ?? "overview"} className="page-transition">
+      <div ref={flowTransitionRef} className="page-transition">
         {selectedWorkspaceId ? (
           <WorkspaceFlow
             workspace={selectedWorkspace}
