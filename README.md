@@ -113,26 +113,6 @@ Landing 页面上与插件发布相关的入口目前都是模板按钮，**仅�
 
 重新构建后，回到 `chrome://extensions` 点该卡片上的刷新按钮即可生效。
 
-### 使用方法
-
-登录不在插件里完成：先在 Web 应用（`PLASMO_PUBLIC_LANDING_URL` 指向的地址）登录，插件通过 Clerk 的 `syncHost` 同步登录主机的会话 cookie。
-
-| 操作                                       | 保存的内容        |
-| ------------------------------------------ | ----------------- |
-| 点击工具栏的 Inspira 图标                  | 当前网页（page）  |
-| 在页面中选中文字 → 右键 → `Add to Inspira` | 选中文字（quote） |
-| 在图片上右键 → `Add to Inspira`            | 图片地址（image） |
-
-保存成功后 popup 会停留在成功态，可以接着补 tags 和备注，点「在 Inspira 中查看」跳回 Web 端查看。未登录、受限页面（`chrome://`、受保护的图片）以及网络失败都会如实提示，不会伪装成保存成功。
-
-插件只申请采集与登录必需的权限（`activeTab`、`contextMenus`、`scripting`、`storage`、`cookies`），不申请 `tabs`，也不使用 `<all_urls>`；页面信息只在用户点击后经临时授权读取。详见 [权限说明](apps/extension/README.md#权限)。
-
-### 打包分发
-
-`pnpm --filter apps-extension package` 会生成 `apps/extension/build/chrome-mv3-prod.zip`，可直接拖入 `chrome://extensions` 安装或用于提交商店；这不代表已发布。
-
-分发前注意：未打包扩展的 ID 由加载目录决定，换目录就会变，ID 变化后要同步更新 Clerk 实例的来源白名单；正式分发需按 Clerk 的 consistent CRX ID 指南固定 `manifest.key`。
-
 ## 更多文档
 
 - 产品范围：[docs/PRODUCT.md](docs/PRODUCT.md)
