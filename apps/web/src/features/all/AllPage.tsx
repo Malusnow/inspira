@@ -39,10 +39,10 @@ export function AllPage() {
   const {
     pending: pendingAssignment,
     workspaces,
-    isAssigning,
+    isSaving,
     requestAssignment,
     closePicker,
-    assign
+    save
   } = useNoteWorkspaceAssignment()
   // Derived instead of copied into state, so an edit always shows the fresh row
   // and a delete closes the layer without a manual `setSelectedNote` patch.
@@ -66,7 +66,7 @@ export function AllPage() {
           onEditNote={openNoteOverlay}
           onOpenNote={(note) => setSelectedNoteId(note.id)}
           onRequestDeleteNote={requestDelete}
-          onRequestAddToWorkspace={requestAssignment}
+          onRequestWorkspaceChange={requestAssignment}
         />
       </section>
       <NoteDetailDialog
@@ -90,10 +90,10 @@ export function AllPage() {
         <WorkspacePickerPopover
           anchor={pendingAssignment.anchor}
           workspaces={workspaces}
-          currentWorkspaceId={pendingAssignment.note.workspaceId}
-          isAdding={isAssigning}
+          currentWorkspaceIds={pendingAssignment.note.workspaceIds}
+          isSaving={isSaving}
           onClose={closePicker}
-          onSelect={(workspaceId) => void assign(workspaceId)}
+          onSave={(workspaceIds) => void save(workspaceIds)}
         />
       ) : null}
     </AllErrorBoundary>
@@ -109,7 +109,7 @@ function AllContent({
   onEditNote,
   onOpenNote,
   onRequestDeleteNote,
-  onRequestAddToWorkspace
+  onRequestWorkspaceChange
 }: {
   notes: InspirationItem[] | undefined
   isAuthenticated: boolean
@@ -119,7 +119,7 @@ function AllContent({
   onEditNote: (note: InspirationItem) => void
   onOpenNote: (note: InspirationItem) => void
   onRequestDeleteNote: (note: InspirationItem) => void
-  onRequestAddToWorkspace: (
+  onRequestWorkspaceChange: (
     note: InspirationItem,
     anchor: { x: number; y: number }
   ) => void
@@ -172,7 +172,7 @@ function AllContent({
         onEditNote={onEditNote}
         onOpenNote={onOpenNote}
         onRequestDeleteNote={onRequestDeleteNote}
-        onRequestAddToWorkspace={onRequestAddToWorkspace}
+        onRequestWorkspaceChange={onRequestWorkspaceChange}
       />
     </>
   )

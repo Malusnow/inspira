@@ -11,7 +11,7 @@ Inspira 是私人灵感收集与再发现工具。用户可以保存网页、图
 - 保存优先：首次保存不强制填写标签、工作区或备注。
 - 数据私有：所有内容、工作区、标签聚合、搜索、统计和媒体访问都按当前登录用户隔离。
 - 标签轻量：tags 是用户输入的字符串数组，不做预建标签 ID。
-- 单工作区：一条内容最多属于一个工作区，也可以不归类。
+- 多工作区归属：一条内容可同时属于多个工作区（最多 12 个），也可以不归类；加入或移出某个工作区不影响其他归属。
 - 主动重复保存创建新内容；同一次请求重试不能重复创建。
 - 直接删除，不提供恢复入口。
 
@@ -24,7 +24,7 @@ Inspira 是私人灵感收集与再发现工具。用户可以保存网页、图
 | Identity          | Clerk 登录、退出、会话过期处理、用户隔离           | 自建密码系统           |
 | All               | 全部内容卡片流、内容详情、创建/编辑/删除           | Insights、Explore      |
 | Content Types     | page、image、quote、note、video 五类内容字段与校验 | AI 生成字段            |
-| Workspaces        | 工作区列表、创建、内容归类、专题流                 | 多工作区归属           |
+| Workspaces        | 工作区列表、创建、0..N 归属与调整、专题流                 | 工作区协作/共享        |
 | Tags              | 字符串标签输入、展示、聚合                         | tagId 预建模型         |
 | Search            | 搜索本人内容，包含标签                             | 语义搜索               |
 | Extension Capture | 插件保存网页、图片、选中文字                       | 视频上传               |
@@ -59,7 +59,7 @@ Inspira 是私人灵感收集与再发现工具。用户可以保存网页、图
 - Note：正文、可选标题。
 - Video：上传文件或视频链接；标题、来源、备注等适用信息。
 
-共同字段：owner、type、title/content 等类型字段、可选 notes 备注、tags、可选 workspaceId、创建/更新时间。
+共同字段：owner、type、title/content 等类型字段、可选 notes 备注、tags、可选 workspaceIds（最多 12 个）、创建/更新时间。
 
 上传限制已确认：图片 JPG/PNG/WebP/GIF 单张不超过 20MB；视频 MP4 H.264/AAC 单个不超过 200MB 且不超过 10 分钟；首版暂不自动转码。
 
@@ -77,7 +77,7 @@ Inspira 是私人灵感收集与再发现工具。用户可以保存网页、图
 | D05  | 插件登录入口：已定为在 Web 应用登录、扩展同步会话；是否自动恢复待保存请求仍未定 | 插件未登录流程        |
 | D06  | 标签空白、大小写、同条重复规则；词频统计口径                                    | Tags、Search、Explore |
 | D07  | Explore 排序、过多标签处理、内容浮现规则                                        | Explore               |
-| D08  | 删除工作区后内容归属；标签全局重命名                                            | Workspaces、Tags      |
+| D08  | 标签全局重命名（删除工作区后内容保留、其他归属不受影响已确认）                                            | Workspaces、Tags      |
 | D09  | 搜索字段、筛选、排序；统计时区和删除计数口径                                    | Search、Insights      |
 | D10  | 生产域名、商店地址、隐私地址、偏好跨端同步范围                                  | 发布、Settings        |
 
@@ -90,7 +90,8 @@ Inspira 是私人灵感收集与再发现工具。用户可以保存网页、图
 | S0   | `establish-engineering-checks`        | 工程检查                       | 接通根 typecheck、test、build、CI；补真实契约测试           | 已有脚本现状清楚         | 检查失败能真实失败，不允许空测试通过     |
 | S1   | `implement-note-core`                 | Identity、All、Note            | Clerk 接入；后端用户隔离；创建 Note；All 展示；详情浮层     | S0；Note 字段定稿        | A/B 用户隔离，创建后可见，详情可打开     |
 | S2   | `implement-web-content-crud`          | All、Content Types             | Page/Image/Quote/Video 元数据模型；编辑；直接删除确认       | S1；删除行为已确认       | 五类内容基础 CRUD，无收藏和恢复入口      |
-| S3   | `implement-workspaces-tags`           | Workspaces、Tags               | 工作区创建/列表/专题流；内容归类；标签输入展示              | S2；D06/D08 已确认       | 单工作区、字符串 tags、所有权校验        |
+| S3   | `implement-workspaces-tags`           | Workspaces、Tags               | 工作区创建/列表/专题流；内容归类；标签输入展示              | S2；D06/D08 已确认       | 多工作区归属、字符串 tags、所有权校验    |
+| S3b  | `support-multi-workspace-inspirations` | Workspaces、All                | 单工作区归属升级为 0..N membership；Web 多选归属入口        | S3                       | 多归属可见可管理；移除或删除工作区不丢内容 |
 | S4   | `implement-search-views`              | Search、All Views              | 搜索字段、标签匹配、视图切换、空/错/加载状态                | S3；D09 搜索口径确认     | 本人内容搜索，标签可命中，状态完整       |
 | S5   | `implement-extension-page-capture`    | Extension Capture              | 插件登录衔接；点击保存网页；同请求重试；Web 同步            | S1；D05、T01/T02         | 主动两次生成两条，同请求重试只一条       |
 | S6   | `implement-extension-quote-image`     | Extension Capture、Image       | 右键选文保存 Quote；右键图片保存 Image；受限来源反馈        | S5；T03                  | 成功/失败/未登录反馈，不伪装保存成功     |

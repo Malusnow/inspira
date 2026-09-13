@@ -20,8 +20,8 @@ export interface NoteListProps {
   onOpenNote: (note: InspirationItem) => void
   /** Right-click → delete the card (confirmation is handled by the caller). */
   onRequestDeleteNote: (note: InspirationItem) => void
-  /** Right-click → pick a workspace for the card, anchored at the menu. */
-  onRequestAddToWorkspace: (
+  /** Right-click → manage the card's workspaces, anchored at the menu. */
+  onRequestWorkspaceChange: (
     note: InspirationItem,
     anchor: { x: number; y: number }
   ) => void
@@ -33,7 +33,7 @@ export function NoteList({
   columnCount,
   onOpenNote,
   onRequestDeleteNote,
-  onRequestAddToWorkspace
+  onRequestWorkspaceChange
 }: NoteListProps) {
   const previousNoteIds = useRef<Set<string> | undefined>(undefined)
   const menuPositionRef = useRef({ x: 0, y: 0 })
@@ -103,11 +103,11 @@ export function NoteList({
           }}
           items={[
             {
-              id: "move-to-workspace",
-              label: "移动到工作区",
+              id: "manage-workspaces",
+              label: "加入工作区",
               icon: <FolderAddIcon className="size-4" />,
               onSelect: () =>
-                onRequestAddToWorkspace(note, menuPositionRef.current)
+                onRequestWorkspaceChange(note, menuPositionRef.current)
             },
             {
               id: "delete",

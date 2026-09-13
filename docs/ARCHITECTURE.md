@@ -19,14 +19,17 @@
 | 概念           | 关系与数据边界                                                                |
 | -------------- | ----------------------------------------------------------------------------- |
 | 用户身份       | 从服务端验证后的 Clerk 会话获得主体，客户端不可指定所有者                     |
-| Inspiration    | owner、五种类型之一、类型对应内容、tags、可选单一 workspace、时间；无收藏字段 |
-| Workspace      | 属于一个用户；内容最多关联一个；删除归属规则 D08                              |
+| Inspiration    | owner、五种类型之一、类型对应内容、tags、0..N workspace 归属、时间；无收藏字段 |
+| Workspace      | 属于一个用户；通过 membership 关联 0..N 条内容；删除只删归属，内容保留        |
+| WorkspaceMembership | owner + inspirationId + workspaceId 三元组，同一组合唯一；只存归属不存内容 |
 | Tag            | 内容上的用户字符串，不要求独立标签 ID；聚合结果也按 owner 限定，规范化 D06    |
 | MediaAsset     | owner、服务端关联的存储标识、真实元信息、可用/处理状态；清理 D01b             |
 | CaptureAttempt | owner + clientRequestId 关联操作结果，区别新的主动操作与重试；生命周期需 T02  |
 | Preferences    | 模式、主色、视图等；跨设备/插件同步范围 D10                                   |
 
 Note 不依赖媒体。Image/Video 的外部来源和受管文件必须分开建模。字段和索引在对应 change 定稿。
+
+`inspirations` 不保存 `workspaceId`；归属只在 `workspaceMemberships`（ownerId / inspirationId / workspaceId / createdAt / updatedAt）里，按 owner + inspiration 和 owner + workspace 建索引，因此一条内容可出现在多个工作区，而 All 卡片流仍只按 `inspirations` 去重展示。
 
 ## 数据流
 
@@ -45,7 +48,7 @@ Web 创建与插件采集进入同一内容域。插件 Popup 负责反馈和补
 ## 权限
 
 - 每次读写验证用户身份。
-- 内容、工作区、文件关联必须同 owner。
+- 内容、工作区、工作区归属、文件关联必须同 owner。
 - 搜索、统计、标签聚合和词云只使用当前用户数据。
 - 上传 URL 签发和文件访问独立鉴权。
 - 完成媒体绑定时不能只信任客户端提供的存储 ID。

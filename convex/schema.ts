@@ -44,7 +44,6 @@ export default defineSchema({
     content: v.string(),
     notes: v.optional(v.string()),
     tags: v.array(v.string()),
-    workspaceId: v.optional(v.string()),
     // Capture-only fields, absent on notes. Rendering uses managed media.
     sourceUrl: v.optional(v.string()),
     primaryAssetId: v.optional(v.id("mediaAssets")),
@@ -54,13 +53,7 @@ export default defineSchema({
     capturedAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number()
-  })
-    .index("by_owner_createdAt", ["ownerId", "createdAt"])
-    .index("by_owner_workspace_createdAt", [
-      "ownerId",
-      "workspaceId",
-      "createdAt"
-    ]),
+  }).index("by_owner_createdAt", ["ownerId", "createdAt"]),
   mediaAssets: defineTable({
     ownerId: v.string(),
     storageId: v.optional(v.id("_storage")),
@@ -116,6 +109,33 @@ export default defineSchema({
   })
     .index("by_owner_createdAt", ["ownerId", "createdAt"])
     .index("by_owner_nameKey", ["ownerId", "nameKey"]),
+  /**
+   * Join table for the 0..N workspaces an inspiration belongs to. Persisting a
+   * single `inspirations.workspaceId` was replaced by this table so one item can
+   * live in several workspaces without duplicating content. `ownerId` is
+   * denormalized here so every read can carry the owner prefix and never has to
+   * resolve ownership through `inspirations`. Convex indexes are not unique: the
+   * helpers read before writing and rely on serializable transaction retries to
+   * keep (ownerId, inspirationId, workspaceId) to a single row.
+   */
+  workspaceMemberships: defineTable({
+    ownerId: v.string(),
+    inspirationId: v.id("inspirations"),
+    workspaceId: v.id("workspaces"),
+    createdAt: v.number(),
+    updatedAt: v.number()
+  })
+    .index("by_owner_workspace_createdAt", [
+      "ownerId",
+      "workspaceId",
+      "createdAt"
+    ])
+    .index("by_owner_inspiration", ["ownerId", "inspirationId"])
+    .index("by_owner_inspiration_workspace", [
+      "ownerId",
+      "inspirationId",
+      "workspaceId"
+    ]),
   userInitializations: defineTable({
     ownerId: v.string(),
     starterNotesSeededAt: v.optional(v.number()),

@@ -9,7 +9,7 @@ import {
   type CaptureRequest,
   type CaptureRequestInput
 } from "../../packages/contracts/src/index"
-import { resolveOwnedWorkspaceId } from "./workspaces"
+import { resolveOwnedWorkspaceIds } from "./workspaces"
 
 /**
  * Convex validators mirror `CaptureRequestInput` on purpose: shape-level
@@ -26,6 +26,9 @@ export const captureArgs = {
   imageUrl: v.optional(v.string()),
   snapshotHtml: v.optional(v.string()),
   note: v.optional(v.string()),
+  /** Workspaces this capture joins. Empty means no workspace. */
+  workspaceIds: v.optional(v.array(v.string())),
+  /** Single-workspace legacy entry point, normalized into `workspaceIds`. */
   workspaceId: v.optional(v.string()),
   tags: v.optional(v.array(v.string())),
   capturedAt: v.optional(v.number())
@@ -62,7 +65,9 @@ export function buildCapturePayload(request: CaptureRequest) {
     imageUrl: request.imageUrl ?? null,
     snapshotHtml: request.snapshotHtml ?? null,
     note: request.note ?? null,
-    workspaceId: request.workspaceId ?? null,
+    // Sorted so a retry with the same set in a different order still resolves to
+    // the same content instead of a false REQUEST_CONFLICT.
+    workspaceIds: [...request.workspaceIds].sort(),
     tags: request.tags
   })
 }
@@ -159,17 +164,17 @@ function normalizeCaptureNote(note: string) {
 }
 
 /**
- * Resolves the optional workspace for a capture. Capture reports a missing or
+ * Resolves the optional workspaces for a capture. Capture reports a missing or
  * foreign workspace as `WORKSPACE_UNAVAILABLE` instead of the note-specific
  * `INVALID_INPUT`, matching docs/CONTRACTS.md.
  */
-export async function resolveCaptureWorkspaceId(
+export async function resolveCaptureWorkspaceIds(
   ctx: QueryCtx | MutationCtx,
   ownerId: string,
-  workspaceId: string | undefined
+  workspaceIds: string[]
 ) {
   try {
-    return await resolveOwnedWorkspaceId(ctx, ownerId, workspaceId)
+    return await resolveOwnedWorkspaceIds(ctx, ownerId, workspaceIds)
   } catch {
     throw new ConvexError({
       code: "WORKSPACE_UNAVAILABLE",

@@ -156,6 +156,90 @@ describe("captures.capture", () => {
         workspaceId: "not-a-workspace-id"
       })
     ).rejects.toThrow(/Workspace is not available/)
+
+    await expect(
+      t.withIdentity(owner).mutation(api.captures.capture, {
+        ...quoteRequest,
+        workspaceIds: ["not-a-workspace-id"]
+      })
+    ).rejects.toThrow(/Workspace is not available/)
+
+    const rows = await t.run(async (ctx) =>
+      ctx.db.query("workspaceMemberships").collect()
+    )
+
+    expect(rows).toHaveLength(0)
+  })
+
+  test("多个 workspaceIds 写入多条成员关系并可读回", async () => {
+    const t = convexTest(schema, modules)
+    const reading = await t
+      .withIdentity(owner)
+      .mutation(api.workspaces.create, { name: "阅读" })
+    const design = await t
+      .withIdentity(owner)
+      .mutation(api.workspaces.create, { name: "设计" })
+
+    const result = await t.withIdentity(owner).mutation(api.captures.capture, {
+      ...quoteRequest,
+      workspaceIds: [reading, design, ""]
+    })
+
+    const view = await t
+      .withIdentity(owner)
+      .query(api.notes.getMine, { id: result.inspirationId })
+    const memberships = await t.run(async (ctx) =>
+      ctx.db.query("workspaceMemberships").collect()
+    )
+
+    expect([...(view?.workspaceIds ?? [])].sort()).toEqual(
+      [reading, design].sort()
+    )
+    expect(memberships).toHaveLength(2)
+  })
+
+  test("legacy 单值 workspaceId 仍能加入工作区", async () => {
+    const t = convexTest(schema, modules)
+    const reading = await t
+      .withIdentity(owner)
+      .mutation(api.workspaces.create, { name: "阅读" })
+
+    const result = await t.withIdentity(owner).mutation(api.captures.capture, {
+      ...quoteRequest,
+      workspaceId: reading
+    })
+
+    const view = await t
+      .withIdentity(owner)
+      .query(api.notes.getMine, { id: result.inspirationId })
+
+    expect(view?.workspaceIds).toEqual([reading])
+  })
+
+  test("重试同一 clientRequestId 不重复写成员关系", async () => {
+    const t = convexTest(schema, modules)
+    const reading = await t
+      .withIdentity(owner)
+      .mutation(api.workspaces.create, { name: "阅读" })
+    const design = await t
+      .withIdentity(owner)
+      .mutation(api.workspaces.create, { name: "设计" })
+    const request = {
+      ...quoteRequest,
+      workspaceIds: [reading, design]
+    }
+
+    const first = await t.withIdentity(owner).mutation(api.captures.capture, request)
+    const retry = await t.withIdentity(owner).mutation(api.captures.capture, request)
+
+    expect(first.created).toBe(true)
+    expect(retry.created).toBe(false)
+
+    const memberships = await t.run(async (ctx) =>
+      ctx.db.query("workspaceMemberships").collect()
+    )
+
+    expect(memberships).toHaveLength(2)
   })
 
   test("另一账户读不到该采集内容", async () => {

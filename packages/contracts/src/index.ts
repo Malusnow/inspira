@@ -6,6 +6,11 @@ export const NOTE_NOTES_MAX_LENGTH = 5000
 export const NOTE_TAG_MAX_COUNT = 12
 export const NOTE_TAG_MAX_LENGTH = 40
 export const WORKSPACE_NAME_MAX_LENGTH = 60
+/**
+ * Upper bound on how many workspaces a single inspiration may belong to. Kept
+ * in sync with the picker UI, which renders the memberships in a scroll list.
+ */
+export const INSPIRATION_WORKSPACE_MAX_COUNT = 12
 export const MEDIA_IMAGE_MAX_BYTES = 20 * 1024 * 1024
 export const MEDIA_PAGE_HTML_MAX_BYTES = 2 * 1024 * 1024
 export const NOTE_MEDIA_REFERENCE_PREFIX = "inspira-media:"
@@ -92,6 +97,12 @@ export interface CreateNoteInput {
   content: string
   notes?: string
   tags?: string[]
+  /** Workspaces this note joins. Omitted or empty means no workspace. */
+  workspaceIds?: string[]
+  /**
+   * Single-workspace legacy entry point. Normalized into `workspaceIds` before
+   * use so older callers keep working; new callers should send `workspaceIds`.
+   */
   workspaceId?: string
 }
 
@@ -111,7 +122,8 @@ export interface InspirationItem {
   content: string
   notes?: string
   tags: string[]
-  workspaceId?: string
+  /** Workspaces this item belongs to. Always an array; `[]` means none. */
+  workspaceIds: string[]
   /** Capture-only: source page of a page / quote / image item. */
   sourceUrl?: string
   primaryAssetId?: string
@@ -181,7 +193,15 @@ export interface CaptureRequestInput {
   snapshotHtml?: string
   /** User remark; stored on the content's `notes` field. */
   note?: string
-  /** Must belong to the current owner; validated against the DB on write. */
+  /**
+   * Workspaces to join. Every id must belong to the current owner and is
+   * validated against the DB on write.
+   */
+  workspaceIds?: string[]
+  /**
+   * Single-workspace legacy entry point. Normalized into `workspaceIds` before
+   * validation; new callers should send `workspaceIds`.
+   */
   workspaceId?: string
   tags?: string[]
   /** Client clock, context only; never trusted for ordering. */
@@ -203,7 +223,7 @@ export interface CaptureRequest {
   imageUrl?: string
   snapshotHtml?: string
   note?: string
-  workspaceId?: string
+  workspaceIds: string[]
   tags: string[]
   capturedAt?: number
 }
@@ -311,6 +331,21 @@ export function normalizeCaptureTags(tags: string[] | undefined) {
   return cleanedTags
 }
 
+function normalizeCaptureWorkspaceIds(input: {
+  workspaceIds?: string[]
+  workspaceId?: string
+}) {
+  try {
+    return normalizeWorkspaceIds(input)
+  } catch (error) {
+    if (error instanceof WorkspaceIdsValidationError) {
+      throw new CaptureValidationError(error.message)
+    }
+
+    throw error
+  }
+}
+
 /**
  * Trims and validates capture input before any write. Throws
  * `CaptureValidationError` when the request is invalid, and never derives or
@@ -405,9 +440,9 @@ export function normalizeCaptureRequest(
     imageUrl,
     snapshotHtml,
     note: cleanCaptureText(input.note, CAPTURE_NOTE_MAX_LENGTH, "note"),
-    // workspaceId is an opaque Convex id: never trim or limit it here. Existence
-    // and ownership are validated against the DB in the backend handler.
-    workspaceId: input.workspaceId,
+    // Workspace ids are opaque Convex ids: normalized only for emptiness,
+    // duplicates and count. Existence and ownership are validated in the backend.
+    workspaceIds: normalizeCaptureWorkspaceIds(input),
     tags: normalizeCaptureTags(input.tags),
     capturedAt: input.capturedAt
   }
@@ -554,6 +589,44 @@ export function validateWorkspaceName(name: string) {
   }
 
   return normalizedName
+}
+
+/** Thrown by `normalizeWorkspaceIds`; the backend maps it to `INVALID_INPUT`. */
+export class WorkspaceIdsValidationError extends Error {
+  readonly code = "INVALID_INPUT" as const
+
+  constructor(message: string) {
+    super(message)
+    this.name = "WorkspaceIdsValidationError"
+  }
+}
+
+/**
+ * Cleans a workspace id list before any ownership check. Drops falsy and empty
+ * entries, de-duplicates, and enforces `INSPIRATION_WORKSPACE_MAX_COUNT`.
+ * Convex ids are opaque, so they are never trimmed or truncated here; existence
+ * and ownership are validated against the DB in the backend handler.
+ */
+export function normalizeWorkspaceIds(input: {
+  workspaceIds?: string[]
+  workspaceId?: string
+}): string[] {
+  const candidates = [...(input.workspaceIds ?? []), input.workspaceId]
+  const workspaceIds = Array.from(
+    new Set(
+      candidates.filter(
+        (id): id is string => typeof id === "string" && id.length > 0
+      )
+    )
+  )
+
+  if (workspaceIds.length > INSPIRATION_WORKSPACE_MAX_COUNT) {
+    throw new WorkspaceIdsValidationError(
+      `Use ${INSPIRATION_WORKSPACE_MAX_COUNT} workspaces or fewer.`
+    )
+  }
+
+  return workspaceIds
 }
 
 export const INSIGHTS_TYPE_ORDER: readonly InspirationType[] = [

@@ -8,7 +8,7 @@
 | ---------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------- |
 | [Landing](prototypes/inspira-landing.html)                       | 产品介绍、采集演示、登录和 Chrome 入口       | 不使用虚构发布地址；“收藏正在看的图片”是过期措辞，应理解为保存，不存在收藏功能  |
 | [All](prototypes/inspira-all.html)                           | All、视图、内容卡片、工作区和详情参考        | 示例数据不能作为真实产品状态                                                |
-| [Workspaces](prototypes/inspira-workspaces.html)                 | 工作区总览、进入专题卡片流、创建空工作区     | 本页示例数据仅在当前页面有效                                                    |
+| [Workspaces](prototypes/inspira-workspaces.html)                 | 工作区总览、进入专题卡片流、创建空工作区     | 本页示例数据仅在当前页面有效；原型仍是单工作区归类文案，多工作区归属以实现为准  |
 | [卡片详情](prototypes/inspira-detail.html)                       | 直接打开 All 卡片详情浮层                    | 共用 All 的详情状态，右侧仅 Tags / Notes；编辑仅在当前页面有效                  |
 | [Insights / Settings](prototypes/inspira-insights-settings.html) | 热力图、构成、趋势、外观设置                 | 通过 #insights / #settings 独立展示；已移除收藏统计和旧内容回顾，不添加替代指标 |
 | [Explore](prototypes/inspira-explore.html)                   | 标签星群 → 内容浮现 → 详情                   | 标签字号/坐标是静态演示，必须由频度驱动；动画参数只是参考                   |
@@ -23,6 +23,8 @@ All / Workspace / Explore 从右上角栏目进入，保留窄侧栏。Workspace
 点击卡片在当前流上打开详情浮层。左侧展示媒体或内容主体；右侧展示标题、时间、Tags、Notes。无 TLDR、AI 摘要、色板、分享或收藏工具。
 
 图片示例直接展示；视频原型没有可播放媒体，不代表播放验证已通过。
+
+All 卡片右键与详情里的「加入工作区」是多选：勾选表示加入，取消勾选表示移出该工作区，未提交的选择保持原状；原型尚未体现该交互。
 
 静态原型共用 `prototype-shell.css` / `prototype-shell.js`。主题选择只存浏览器本地；正式同步范围见 `PRODUCT.md` 的 D10。
 

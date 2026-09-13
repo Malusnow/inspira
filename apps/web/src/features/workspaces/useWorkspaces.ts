@@ -43,7 +43,8 @@ export function useWorkspaceMutations() {
   const renameWorkspaceMutation = useMutation(api.workspaces.rename)
   const removeWorkspaceMutation = useMutation(api.workspaces.remove)
   const removeItemMutation = useMutation(api.workspaces.removeItem)
-  const moveItemMutation = useMutation(api.workspaces.moveItem)
+  const addItemMutation = useMutation(api.workspaces.addItem)
+  const setItemWorkspacesMutation = useMutation(api.workspaces.setItemWorkspaces)
 
   // Memoised, so callers can safely list these in effect dependencies.
   return useMemo(
@@ -57,28 +58,38 @@ export function useWorkspaceMutations() {
       removeWorkspace(id: string) {
         return removeWorkspaceMutation({ id: toWorkspaceId(id) })
       },
+      /** Removes one membership; the inspiration itself is kept. */
       removeWorkspaceItem(workspaceId: string, inspirationId: string) {
         return removeItemMutation({
           workspaceId: toWorkspaceId(workspaceId),
           inspirationId: toInspirationId(inspirationId)
         })
       },
-      /** Passing `targetWorkspaceId` as undefined moves the note back to All. */
-      moveWorkspaceItem(inspirationId: string, targetWorkspaceId?: string) {
-        return moveItemMutation({
+      /** Adds one membership, leaving the item's other workspaces intact. */
+      addWorkspaceItem(workspaceId: string, inspirationId: string) {
+        return addItemMutation({
+          workspaceId: toWorkspaceId(workspaceId),
+          inspirationId: toInspirationId(inspirationId)
+        })
+      },
+      /**
+       * Replaces the item's whole workspace set. The multi-select editor sends
+       * the full selection, so unchecking a workspace removes only that one.
+       */
+      setItemWorkspaces(inspirationId: string, workspaceIds: string[]) {
+        return setItemWorkspacesMutation({
           inspirationId: toInspirationId(inspirationId),
-          workspaceId: targetWorkspaceId
-            ? toWorkspaceId(targetWorkspaceId)
-            : undefined
+          workspaceIds
         })
       }
     }),
     [
+      addItemMutation,
       createWorkspaceMutation,
-      moveItemMutation,
       removeItemMutation,
       removeWorkspaceMutation,
-      renameWorkspaceMutation
+      renameWorkspaceMutation,
+      setItemWorkspacesMutation
     ]
   )
 }

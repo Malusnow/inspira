@@ -167,10 +167,10 @@ function NoteDetailContent({
   const {
     pending: pendingAssignment,
     workspaces,
-    isAssigning,
+    isSaving: isSavingWorkspaces,
     requestAssignment,
     closePicker,
-    assign
+    save: saveWorkspaces
   } = useNoteWorkspaceAssignment()
   const {
     pendingNote,
@@ -231,7 +231,7 @@ function NoteDetailContent({
           content: note.content.slice(0, NOTE_CONTENT_MAX_LENGTH),
           notes: nextNotes || undefined,
           tags: nextTags,
-          workspaceId: note.workspaceId
+          workspaceIds: note.workspaceIds
         })
       } else {
         await updateCaptureDetails({
@@ -341,9 +341,9 @@ function NoteDetailContent({
           <button
             ref={addToWorkspaceButtonRef}
             type="button"
-            aria-label="移动到工作区"
-            title="移动到工作区"
-            disabled={isAssigning}
+            aria-label="加入工作区"
+            title="加入工作区"
+            disabled={isSavingWorkspaces}
             onClick={() => {
               const bounds =
                 addToWorkspaceButtonRef.current?.getBoundingClientRect()
@@ -354,7 +354,7 @@ function NoteDetailContent({
             }}
             className="inline-flex min-h-10 items-center gap-2 rounded-full border-0 bg-surface-hover px-4 text-sm font-medium text-ink-muted transition duration-200 hover:-translate-y-0.5 hover:bg-brand-soft hover:text-brand-ink-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-default disabled:opacity-60 disabled:hover:translate-y-0">
             <FolderAddIcon className="size-4" />
-            移动到工作区
+            加入工作区
           </button>
           <button
             type="button"
@@ -383,10 +383,10 @@ function NoteDetailContent({
           <WorkspacePickerPopover
             anchor={pendingAssignment.anchor}
             workspaces={workspaces}
-            currentWorkspaceId={pendingAssignment.note.workspaceId}
-            isAdding={isAssigning}
+            currentWorkspaceIds={pendingAssignment.note.workspaceIds}
+            isSaving={isSavingWorkspaces}
             onClose={closePicker}
-            onSelect={(workspaceId) => void assign(workspaceId)}
+            onSave={(workspaceIds) => void saveWorkspaces(workspaceIds)}
           />
         ) : null}
       </aside>

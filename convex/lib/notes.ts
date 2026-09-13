@@ -11,12 +11,16 @@ import {
   type InspirationItem,
   type UpdateNoteInput
 } from "../../packages/contracts/src/index"
+import { cleanWorkspaceIds } from "./workspaces"
 
 export const createArgs = {
   title: v.optional(v.string()),
   content: v.string(),
   notes: v.optional(v.string()),
   tags: v.optional(v.array(v.string())),
+  /** Workspaces this note joins. Empty means no workspace. */
+  workspaceIds: v.optional(v.array(v.string())),
+  /** Single-workspace legacy entry point, normalized into `workspaceIds`. */
   workspaceId: v.optional(v.string())
 }
 
@@ -122,10 +126,13 @@ export function cleanCreate(args: CreateNoteInput) {
     content,
     notes: cleanText(args.notes, NOTE_NOTES_MAX_LENGTH),
     tags: cleanTags(args.tags),
-    // workspaceId is an opaque Convex id: never trim/limit it here. Existence and
-    // ownership are validated against the DB in the handler via
-    // `resolveOwnedWorkspaceId`.
-    workspaceId: args.workspaceId
+    // Workspace ids are opaque Convex ids: normalized only for emptiness,
+    // duplicates and count. Existence and ownership are validated against the DB
+    // in the handler via `resolveOwnedWorkspaceIds`.
+    workspaceIds: cleanWorkspaceIds({
+      workspaceIds: args.workspaceIds,
+      workspaceId: args.workspaceId
+    })
   }
 }
 
@@ -136,9 +143,13 @@ export function cleanUpdate(args: UpdateNoteInput) {
 /**
  * Maps a stored row onto the shared item shape. Notes and captures live in one
  * table, so the stored `type` is passed through instead of being forced to
- * "note"; capture-only columns stay optional.
+ * "note"; capture-only columns stay optional. Workspace membership lives in the
+ * join table and is passed in by the caller, which keeps this a pure mapping.
  */
-export function toInspiration(doc: Doc<"inspirations">): InspirationItem {
+export function toInspiration(
+  doc: Doc<"inspirations">,
+  workspaceIds: string[]
+): InspirationItem {
   return {
     id: doc._id,
     type: doc.type,
@@ -146,7 +157,7 @@ export function toInspiration(doc: Doc<"inspirations">): InspirationItem {
     content: doc.content,
     notes: doc.notes,
     tags: doc.tags,
-    workspaceId: doc.workspaceId,
+    workspaceIds,
     sourceUrl: doc.sourceUrl,
     primaryAssetId: doc.primaryAssetId,
     pageSnapshotId: doc.pageSnapshotId,

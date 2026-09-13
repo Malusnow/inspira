@@ -5,7 +5,7 @@
 ## 共享原则
 
 - 客户端不提交可信 `userId` 或 `owner`；服务端从已验证会话确定用户。
-- 所有内容、工作区、标签聚合、统计和媒体关联都必须验证所有权。
+- 所有内容、工作区、工作区归属、标签聚合、统计和媒体关联都必须验证所有权。
 - TypeScript 类型不是安全边界；服务端要做运行时校验。
 - 契约改动必须同步 `packages/contracts`、Web、插件、后端、测试和本文。
 - 文档示例不是稳定 API，未实现字段不能在交付中写成已上线。
@@ -16,13 +16,25 @@
 
 | 实体           | 核心字段                                                            |
 | -------------- | ------------------------------------------------------------------- |
-| Inspiration    | owner、type、类型字段、tags、可选 workspaceId、createdAt、updatedAt |
+| Inspiration    | owner、type、类型字段、tags、workspaceIds（0..N）、createdAt、updatedAt |
 | Workspace      | owner、name、createdAt、updatedAt                                   |
+| WorkspaceMembership | owner、inspirationId、workspaceId、createdAt、updatedAt        |
 | MediaAsset     | owner、存储标识、真实类型、大小、状态、createdAt                    |
 | CaptureAttempt | owner、clientRequestId、payload 指纹、结果 inspirationId、状态      |
 | Preferences    | owner、theme、primaryColor、默认视图等                              |
 
 `type` 支持 `page`、`image`、`quote`、`note`、`video`。S1 已定稿 Note 最小字段；其他类型字段名、索引、分页和长度上限在对应实现 change 中定稿。
+
+## 工作区归属
+
+归属关系存在 `workspaceMemberships`（ownerId / inspirationId / workspaceId），`inspirations` 不再保存 `workspaceId`。
+
+- 一条内容可同时归属 0..N 个工作区，最多 12 个。`workspaceIds` 先去掉空值与重复项，再判上限，超限返回 `INVALID_INPUT`。
+- 写入入口：`notes.create`、`notes.update`、采集请求创建内容、`workspaces.addItem`、`workspaces.setItemWorkspaces`。
+- `notes.update` 与 `setItemWorkspaces` 提交的是**完整目标集合**：未出现在集合里的归属会被移除，未提交视为空集合。`addItem` 只新增一条归属，不影响其他归属。
+- 提交空数组表示不属于任何工作区，内容仍保留在 All；删除工作区只删归属，不删内容，其他归属不受影响。
+- 非本人或不存在的 workspace 一律返回 `WORKSPACE_UNAVAILABLE`，不区分具体原因；内容归属条目不匹配返回 `NOT_FOUND`；校验失败时不写入任何部分归属。
+- 旧入口 `workspaceId?: string` 保留兼容，与 `workspaceIds` 合并后去重；Web 与插件的新调用方只提交 `workspaceIds`。
 
 ## Web Note 契约
 
@@ -34,7 +46,8 @@ Web Note 不走插件采集请求。客户端提交：
 | content     | 必须          | trim 后必须非空；最多 10000 字符                           |
 | notes       | 可选          | 右侧详情备注；trim 后为空视为未提供；最多 5000 字符        |
 | tags        | 可选 string[] | trim、移除空字符串、同条去重；最多 12 个，每个最多 40 字符 |
-| workspaceId | 可选          | S1 UI 不提供工作区选择；服务端允许为空                     |
+| workspaceIds | 可选 string[] | 去空、去重；最多 12 个；空数组表示不属于任何工作区；逐个校验本人工作区 |
+| workspaceId  | 可选（兼容）  | 旧单值入口；与 `workspaceIds` 合并后去重；新调用方只提交 `workspaceIds` |
 
 客户端不得提交可信 `owner` 或 `userId`。服务端从已验证会话获得 owner，并将 Note 保存为 `Inspiration` 的 `type: "note"`。成功创建返回新 Note 的 ID；无登录返回 `UNAUTHENTICATED`，字段不合法返回 `INVALID_INPUT`，均不得创建内容。
 
@@ -61,7 +74,8 @@ All 的 S1 查询只返回当前登录用户自己的 Note，按最新创建在�
 | imageUrl        | image 必须                          | 原图片地址                         | http/https 绝对地址；最多 2048 字符                |
 | snapshotHtml    | page 建议由插件提供                 | 静态 HTML 网页快照                 | 不保存到 inspirations 行；作为受管媒体资产写入     |
 | note            | 可选                                | 用户备注                           | trim 后为空视为未提供；最多 5000 字符              |
-| workspaceId     | 可选                                | 本人工作区                         | 不裁剪不截断；服务端校验归属                       |
+| workspaceIds    | 可选 string[]                       | 本人工作区集合                     | 去空、去重；最多 12 个；不裁剪不截断；逐个校验归属 |
+| workspaceId     | 可选（兼容）                        | 旧单值入口                         | 合并进 `workspaceIds` 后去重；新调用方只提交 `workspaceIds` |
 | tags            | 可选 string[]                       | 用户输入标签                       | trim、去空、同条去重；最多 12 个，每个最多 40 字符 |
 | capturedAt      | 建议                                | 客户端时间，仅作上下文             | 有限数字时间戳；不参与排序                         |
 

@@ -244,7 +244,7 @@ export function NoteComposer({
       notes?: string
       tags: string[]
       title?: string
-      workspaceId?: string
+      workspaceIds?: string[]
     } = {
       content: content.slice(0, NOTE_CONTENT_MAX_LENGTH),
       tags: note?.tags ?? []
@@ -252,7 +252,7 @@ export function NoteComposer({
 
     if (note?.title) payload.title = note.title
     if (note?.notes) payload.notes = note.notes
-    if (note?.workspaceId) payload.workspaceId = note.workspaceId
+    if (note?.workspaceIds?.length) payload.workspaceIds = note.workspaceIds
 
     onFinish()
 

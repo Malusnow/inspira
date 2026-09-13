@@ -14,7 +14,14 @@ import {
   toInspiration,
   updateArgs
 } from "./lib/notes"
-import { resolveOwnedWorkspaceId, touchWorkspace } from "./lib/workspaces"
+import {
+  deleteWorkspaceMembershipsForInspiration,
+  ensureWorkspaceMemberships,
+  listWorkspaceIdsForInspiration,
+  resolveOwnedWorkspaceIds,
+  syncWorkspaceMemberships,
+  touchWorkspaces
+} from "./lib/workspaces"
 import { markAssetsForCleanup, mediaAssetIdsFromContent } from "./media"
 
 async function assertOwnedAvailableAssets(
@@ -69,7 +76,12 @@ async function hydrateInspiration(
   ctx: QueryCtx | MutationCtx,
   doc: Doc<"inspirations">
 ) {
-  const item = toInspiration(doc)
+  const workspaceIds = await listWorkspaceIdsForInspiration(
+    ctx,
+    doc.ownerId,
+    doc._id
+  )
+  const item = toInspiration(doc, workspaceIds)
   const mediaAssets: NonNullable<typeof item.mediaAssets> = {}
   const embeddedIds = mediaAssetIdsFromContent(ctx, doc.content)
 
@@ -124,10 +136,10 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const ownerId = await requireOwner(ctx)
     const note = cleanCreate(args)
-    const workspaceId = await resolveOwnedWorkspaceId(
+    const workspaceIds = await resolveOwnedWorkspaceIds(
       ctx,
       ownerId,
-      note.workspaceId
+      note.workspaceIds
     )
     const referencedAssetIds = mediaAssetIdsFromContent(ctx, note.content)
 
@@ -141,12 +153,12 @@ export const create = mutation({
       content: note.content,
       notes: note.notes,
       tags: note.tags,
-      workspaceId,
       createdAt: now,
       updatedAt: now
     })
 
-    await touchWorkspace(ctx, workspaceId)
+    await ensureWorkspaceMemberships(ctx, ownerId, noteId, workspaceIds)
+    await touchWorkspaces(ctx, workspaceIds)
 
     return noteId
   }
@@ -166,19 +178,16 @@ export const update = mutation({
     }
 
     const note = cleanUpdate(args)
-    const workspaceId = await resolveOwnedWorkspaceId(
+    const workspaceIds = await resolveOwnedWorkspaceIds(
       ctx,
       ownerId,
-      note.workspaceId
+      note.workspaceIds
     )
     const previousAssetIds = mediaAssetIdsFromContent(ctx, existingNote.content)
     const nextAssetIds = mediaAssetIdsFromContent(ctx, note.content)
 
     await assertOwnedAvailableAssets(ctx, ownerId, nextAssetIds)
 
-    const previousWorkspaceId = existingNote.workspaceId
-      ? ctx.db.normalizeId("workspaces", existingNote.workspaceId)
-      : undefined
     const now = Date.now()
 
     await ctx.db.patch(args.id, {
@@ -186,7 +195,6 @@ export const update = mutation({
       content: note.content,
       notes: note.notes,
       tags: note.tags,
-      workspaceId,
       updatedAt: now
     })
 
@@ -197,10 +205,13 @@ export const update = mutation({
       now
     )
 
-    if (previousWorkspaceId !== workspaceId) {
-      await touchWorkspace(ctx, workspaceId)
-      await touchWorkspace(ctx, previousWorkspaceId ?? undefined)
-    }
+    const { added, removed } = await syncWorkspaceMemberships(
+      ctx,
+      ownerId,
+      args.id,
+      workspaceIds
+    )
+    await touchWorkspaces(ctx, [...added, ...removed])
 
     return args.id
   }
@@ -233,16 +244,15 @@ export const remove = mutation({
       }
     }
 
+    const removedWorkspaceIds = await deleteWorkspaceMembershipsForInspiration(
+      ctx,
+      ownerId,
+      args.id
+    )
+
     await ctx.db.delete(args.id)
     await markAssetsForCleanup(ctx, ownerId, assetIds)
-
-    await touchWorkspace(
-      ctx,
-      existingNote.workspaceId
-        ? ctx.db.normalizeId("workspaces", existingNote.workspaceId) ??
-            undefined
-        : undefined
-    )
+    await touchWorkspaces(ctx, removedWorkspaceIds)
 
     return args.id
   }

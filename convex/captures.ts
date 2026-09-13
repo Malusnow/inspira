@@ -22,9 +22,12 @@ import {
   cleanCapture,
   cleanCaptureDetails,
   hashCapturePayload,
-  resolveCaptureWorkspaceId
+  resolveCaptureWorkspaceIds
 } from "./lib/captures"
-import { touchWorkspace } from "./lib/workspaces"
+import {
+  ensureWorkspaceMemberships,
+  touchWorkspaces
+} from "./lib/workspaces"
 import { createAvailableMediaAsset } from "./media"
 
 const getCaptureAttemptResultRef =
@@ -52,6 +55,7 @@ const createManagedCaptureRef =
       imageUrl?: string
       snapshotHtml?: string
       note?: string
+      workspaceIds?: string[]
       workspaceId?: string
       tags?: string[]
       capturedAt?: number
@@ -128,10 +132,10 @@ export const capture = mutation({
       }
     }
 
-    const workspaceId = await resolveCaptureWorkspaceId(
+    const workspaceIds = await resolveCaptureWorkspaceIds(
       ctx,
       ownerId,
-      request.workspaceId
+      request.workspaceIds
     )
     const columns = buildCaptureColumns(request)
     const now = Date.now()
@@ -142,7 +146,6 @@ export const capture = mutation({
       content: columns.content,
       notes: request.note,
       tags: request.tags,
-      workspaceId,
       sourceUrl: columns.sourceUrl,
       selectedText: columns.selectedText,
       capturedAt: request.capturedAt ?? now,
@@ -152,7 +155,10 @@ export const capture = mutation({
 
     // Written in the same transaction as the content. A concurrent retry of the
     // same id is caught by Convex' serializable retry, which then reads this row
-    // and returns the same content instead of inserting a second one (T02).
+    // and returns the same content instead of inserting a second one (T02). The
+    // early return above means a retry never inserts a second membership either.
+    await ensureWorkspaceMemberships(ctx, ownerId, inspirationId, workspaceIds)
+
     await ctx.db.insert("captureAttempts", {
       ownerId,
       clientRequestId: request.clientRequestId,
@@ -162,7 +168,7 @@ export const capture = mutation({
       createdAt: now
     })
 
-    await touchWorkspace(ctx, workspaceId)
+    await touchWorkspaces(ctx, workspaceIds)
 
     return { inspirationId, created: true }
   }
@@ -329,10 +335,10 @@ export const createManagedCapture = internalMutation({
       }
     }
 
-    const workspaceId = await resolveCaptureWorkspaceId(
+    const workspaceIds = await resolveCaptureWorkspaceIds(
       ctx,
       args.ownerId,
-      request.workspaceId
+      request.workspaceIds
     )
     const columns = buildCaptureColumns(request)
     const now = Date.now()
@@ -353,7 +359,6 @@ export const createManagedCapture = internalMutation({
       content: columns.content,
       notes: request.note,
       tags: request.tags,
-      workspaceId,
       sourceUrl: columns.sourceUrl,
       primaryAssetId: request.kind === "image" ? assetId : undefined,
       mediaStatus: "available",
@@ -362,6 +367,13 @@ export const createManagedCapture = internalMutation({
       createdAt: now,
       updatedAt: now
     })
+
+    await ensureWorkspaceMemberships(
+      ctx,
+      args.ownerId,
+      inspirationId,
+      workspaceIds
+    )
 
     if (request.kind === "page") {
       const snapshotId = await ctx.db.insert("pageSnapshots", {
@@ -387,7 +399,7 @@ export const createManagedCapture = internalMutation({
       createdAt: now
     })
 
-    await touchWorkspace(ctx, workspaceId)
+    await touchWorkspaces(ctx, workspaceIds)
 
     return { inspirationId, created: true }
   }

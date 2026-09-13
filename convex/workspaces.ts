@@ -6,16 +6,25 @@ import { mutation, query } from "./_generated/server"
 import { requireOwner } from "./lib/auth"
 import { toInspiration } from "./lib/notes"
 import {
+  addWorkspaceItemArgs,
+  cleanWorkspaceIds,
   cleanWorkspaceName,
   createWorkspaceArgs,
-  moveWorkspaceItemArgs,
+  deleteWorkspaceMembership,
+  deleteWorkspaceMembershipsForWorkspace,
+  ensureWorkspaceMemberships,
+  listWorkspaceIdsForInspiration,
+  listWorkspaceMembershipsByWorkspace,
   removeWorkspaceItemArgs,
   renameWorkspaceArgs,
-  resolveOwnedWorkspaceId,
-  touchWorkspace,
+  resolveOwnedWorkspaceIds,
+  setItemWorkspacesArgs,
+  syncWorkspaceMemberships,
+  touchWorkspaces,
   toWorkspaceNameKey,
-  unavailableWorkspaceError,
-  workspaceIdArgs
+  workspaceIdArgs,
+  workspaceItemUnavailableError,
+  workspaceUnavailableError
 } from "./lib/workspaces"
 import { mediaAssetIdsFromContent } from "./media"
 
@@ -35,7 +44,7 @@ async function getOwnedWorkspace(
   const workspace = await ctx.db.get(id)
 
   if (!workspace || workspace.ownerId !== ownerId) {
-    throw unavailableWorkspaceError()
+    throw workspaceUnavailableError()
   }
 
   return workspace
@@ -56,7 +65,12 @@ async function getAssetUrl(
 }
 
 async function hydrateWorkspaceItem(ctx: QueryCtx, doc: Doc<"inspirations">) {
-  const item = toInspiration(doc)
+  const workspaceIds = await listWorkspaceIdsForInspiration(
+    ctx,
+    doc.ownerId,
+    doc._id
+  )
+  const item = toInspiration(doc, workspaceIds)
   const mediaAssets: NonNullable<typeof item.mediaAssets> = {}
 
   if (doc.primaryAssetId) {
@@ -129,69 +143,71 @@ async function hydrateWorkspaceItem(ctx: QueryCtx, doc: Doc<"inspirations">) {
   return item
 }
 
+async function toPreviewItem(
+  ctx: QueryCtx,
+  ownerId: string,
+  doc: Doc<"inspirations">
+) {
+  const snapshot = doc.pageSnapshotId
+    ? await ctx.db.get(doc.pageSnapshotId)
+    : null
+
+  return {
+    id: doc._id,
+    type: doc.type,
+    title: doc.title,
+    text: doc.content,
+    primaryAssetUrl: await getAssetUrl(ctx, doc.primaryAssetId),
+    pageSnapshotUrl:
+      snapshot && snapshot.ownerId === ownerId
+        ? await getAssetUrl(ctx, snapshot.htmlAssetId)
+        : undefined,
+    createdAt: doc.createdAt
+  }
+}
+
 export const listMine = query({
   args: {},
   handler: async (ctx) => {
     const ownerId = await requireOwner(ctx)
-    // One read per table instead of a per-workspace query, so the overview no
-    // longer degrades linearly with the number of workspaces. The window is
-    // shared by both reads, so the badge count and the thumbnails come from the
-    // exact same snapshot of the owner's notes.
-    const [workspaces, items] = await Promise.all([
-      ctx.db
-        .query("workspaces")
-        .withIndex("by_owner_createdAt", (q) => q.eq("ownerId", ownerId))
-        .order("desc")
-        .take(WORKSPACE_ITEM_LIMIT),
-      ctx.db
-        .query("inspirations")
-        .withIndex("by_owner_createdAt", (q) => q.eq("ownerId", ownerId))
-        .order("desc")
-        .take(WORKSPACE_ITEM_LIMIT)
-    ])
-    const itemsByWorkspace = new Map<string, Array<Doc<"inspirations">>>()
+    const workspaces = await ctx.db
+      .query("workspaces")
+      .withIndex("by_owner_createdAt", (q) => q.eq("ownerId", ownerId))
+      .order("desc")
+      .take(WORKSPACE_ITEM_LIMIT)
 
-    for (const item of items) {
-      if (!item.workspaceId) continue
-
-      const bucket = itemsByWorkspace.get(item.workspaceId)
-
-      if (bucket) {
-        bucket.push(item)
-      } else {
-        itemsByWorkspace.set(item.workspaceId, [item])
-      }
-    }
-
+    // One membership query per workspace, then hydrate the newest preview items.
+    // `itemCount` is the membership count, so an item that belongs to several
+    // workspaces is counted once in each of them and never duplicated inside one.
     return await Promise.all(
       workspaces.map(async (workspace) => {
-        const workspaceItems = itemsByWorkspace.get(workspace._id) ?? []
+        const memberships = await listWorkspaceMembershipsByWorkspace(
+          ctx,
+          ownerId,
+          workspace._id,
+          WORKSPACE_ITEM_LIMIT
+        )
         const previewItems = await Promise.all(
-          workspaceItems.slice(0, PREVIEW_ITEM_LIMIT).map(async (item) => {
-            const snapshot = item.pageSnapshotId
-              ? await ctx.db.get(item.pageSnapshotId)
-              : null
+          memberships.slice(0, PREVIEW_ITEM_LIMIT).map(async (membership) => {
+            const item = await ctx.db.get(membership.inspirationId)
 
-            return {
-              id: item._id,
-              type: item.type,
-              title: item.title,
-              text: item.content,
-              primaryAssetUrl: await getAssetUrl(ctx, item.primaryAssetId),
-              pageSnapshotUrl:
-                snapshot && snapshot.ownerId === ownerId
-                  ? await getAssetUrl(ctx, snapshot.htmlAssetId)
-                  : undefined,
-              createdAt: item.createdAt
+            if (!item || item.ownerId !== ownerId) {
+              return null
             }
+
+            return await toPreviewItem(ctx, ownerId, item)
           })
         )
 
         return {
           id: workspace._id,
           name: workspace.name,
-          itemCount: workspaceItems.length,
-          preview: { items: previewItems },
+          itemCount: memberships.length,
+          preview: {
+            items: previewItems.filter(
+              (item): item is NonNullable<typeof item> => item !== null
+            )
+          },
           createdAt: workspace.createdAt,
           updatedAt: workspace.updatedAt
         }
@@ -237,13 +253,21 @@ export const getDetail = query({
   handler: async (ctx, args) => {
     const ownerId = await requireOwner(ctx)
     const workspace = await getOwnedWorkspace(ctx, args.id, ownerId)
-    const items = await ctx.db
-      .query("inspirations")
-      .withIndex("by_owner_workspace_createdAt", (q) =>
-        q.eq("ownerId", ownerId).eq("workspaceId", workspace._id)
-      )
-      .order("desc")
-      .take(WORKSPACE_ITEM_LIMIT)
+    const memberships = await listWorkspaceMembershipsByWorkspace(
+      ctx,
+      ownerId,
+      workspace._id,
+      WORKSPACE_ITEM_LIMIT
+    )
+    const docs = await Promise.all(
+      memberships.map((membership) => ctx.db.get(membership.inspirationId))
+    )
+    // A single workspace stores one membership per item, so the hydrated list
+    // cannot contain the same inspiration twice.
+    const items = docs.filter(
+      (doc): doc is Doc<"inspirations"> =>
+        doc !== null && doc.ownerId === ownerId
+    )
 
     return {
       id: workspace._id,
@@ -293,32 +317,24 @@ export const rename = mutation({
   }
 })
 
+/**
+ * Deletes the workspace and its memberships only. Inspirations stay in the
+ * owner's library, and their memberships in other workspaces are untouched.
+ */
 export const remove = mutation({
   args: workspaceIdArgs,
   handler: async (ctx, args) => {
     const ownerId = await requireOwner(ctx)
     const workspace = await getOwnedWorkspace(ctx, args.id, ownerId)
-    const items = await ctx.db
-      .query("inspirations")
-      .withIndex("by_owner_workspace_createdAt", (q) =>
-        q.eq("ownerId", ownerId).eq("workspaceId", workspace._id)
-      )
-      .take(WORKSPACE_ITEM_LIMIT)
-    const now = Date.now()
 
-    for (const item of items) {
-      await ctx.db.patch(item._id, {
-        workspaceId: undefined,
-        updatedAt: now
-      })
-    }
-
+    await deleteWorkspaceMembershipsForWorkspace(ctx, ownerId, workspace._id)
     await ctx.db.delete(workspace._id)
 
     return workspace._id
   }
 })
 
+/** Removes a single membership; the content itself is left untouched. */
 export const removeItem = mutation({
   args: removeWorkspaceItemArgs,
   handler: async (ctx, args) => {
@@ -326,67 +342,84 @@ export const removeItem = mutation({
     const workspace = await getOwnedWorkspace(ctx, args.workspaceId, ownerId)
     const item = await ctx.db.get(args.inspirationId)
 
-    if (
-      !item ||
-      item.ownerId !== ownerId ||
-      item.workspaceId !== workspace._id
-    ) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Workspace item is not available."
-      })
+    if (!item || item.ownerId !== ownerId) {
+      throw workspaceItemUnavailableError()
     }
 
-    await ctx.db.patch(item._id, {
-      workspaceId: undefined,
-      updatedAt: Date.now()
-    })
+    const removed = await deleteWorkspaceMembership(
+      ctx,
+      ownerId,
+      item._id,
+      workspace._id
+    )
 
-    await touchWorkspace(ctx, workspace._id)
+    if (!removed) {
+      throw workspaceItemUnavailableError()
+    }
+
+    await touchWorkspaces(ctx, [workspace._id])
 
     return item._id
   }
 })
 
 /**
- * Moves a note between workspaces (or back to All when `workspaceId` is
- * omitted). Ownership of both the note and the target workspace is verified, and
- * both sides get their updatedAt bumped so previews refresh.
+ * Adds one membership without disturbing the item's other workspaces. Already
+ * present memberships are a no-op, so this is safe to retry.
  */
-export const moveItem = mutation({
-  args: moveWorkspaceItemArgs,
+export const addItem = mutation({
+  args: addWorkspaceItemArgs,
+  handler: async (ctx, args) => {
+    const ownerId = await requireOwner(ctx)
+    const workspace = await getOwnedWorkspace(ctx, args.workspaceId, ownerId)
+    const item = await ctx.db.get(args.inspirationId)
+
+    if (!item || item.ownerId !== ownerId) {
+      throw workspaceItemUnavailableError()
+    }
+
+    const added = await ensureWorkspaceMemberships(ctx, ownerId, item._id, [
+      workspace._id
+    ])
+
+    if (added.length > 0) {
+      await touchWorkspaces(ctx, [workspace._id])
+    }
+
+    return item._id
+  }
+})
+
+/**
+ * Replaces the item's whole workspace set. Used by the Web multi-select editor:
+ * missing memberships are added, unchecked ones are removed, so a selected
+ * workspace never silently pushes the item out of another one.
+ */
+export const setItemWorkspaces = mutation({
+  args: setItemWorkspacesArgs,
   handler: async (ctx, args) => {
     const ownerId = await requireOwner(ctx)
     const item = await ctx.db.get(args.inspirationId)
 
     if (!item || item.ownerId !== ownerId) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Workspace item is not available."
-      })
+      throw workspaceItemUnavailableError()
     }
 
-    const targetWorkspaceId = await resolveOwnedWorkspaceId(
+    const workspaceIds = await resolveOwnedWorkspaceIds(
       ctx,
       ownerId,
-      args.workspaceId
+      // Normalized like the note / capture write paths so the multi-select
+      // editor cannot bypass the per-inspiration workspace cap.
+      cleanWorkspaceIds({ workspaceIds: args.workspaceIds })
     )
-    // Persisted as a plain string, so normalise before comparing and patching.
-    const sourceWorkspaceId = item.workspaceId
-      ? ctx.db.normalizeId("workspaces", item.workspaceId) ?? undefined
-      : undefined
+    const { added, removed } = await syncWorkspaceMemberships(
+      ctx,
+      ownerId,
+      item._id,
+      workspaceIds
+    )
 
-    if (sourceWorkspaceId === targetWorkspaceId) {
-      return item._id
-    }
-
-    await ctx.db.patch(item._id, {
-      workspaceId: targetWorkspaceId,
-      updatedAt: Date.now()
-    })
-
-    await touchWorkspace(ctx, sourceWorkspaceId)
-    await touchWorkspace(ctx, targetWorkspaceId)
+    await touchWorkspaces(ctx, [...added, ...removed])
 
     return item._id
   }
