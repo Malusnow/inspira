@@ -22,7 +22,7 @@ Inspira 是私人灵感收集与再发现工具。用户可以保存网页、图
 | 模块              | 首版职责                                           | 不属于本模块           |
 | ----------------- | -------------------------------------------------- | ---------------------- |
 | Identity          | Clerk 登录、退出、会话过期处理、用户隔离           | 自建密码系统           |
-| All               | 全部内容卡片流、内容详情、创建/编辑/删除            | Insights、Explore      |
+| All               | 全部内容卡片流、内容详情、创建/编辑/删除           | Insights、Explore      |
 | Content Types     | page、image、quote、note、video 五类内容字段与校验 | AI 生成字段            |
 | Workspaces        | 工作区列表、创建、内容归类、专题流                 | 多工作区归属           |
 | Tags              | 字符串标签输入、展示、聚合                         | tagId 预建模型         |
@@ -69,33 +69,32 @@ Inspira 是私人灵感收集与再发现工具。用户可以保存网页、图
 
 这些问题只阻塞相关模块，不阻塞无关编码：
 
-| ID   | 问题                                           | 阻塞                      |
-| ---- | ---------------------------------------------- | ------------------------- |
-| D01b | 内容删除后的媒体清理延迟、重试和额度回收时机   | Media 删除清理            |
-| D03b | 每用户总存储额度                               | Media 上传                |
-| D03c | 是否自动生成视频封面                           | Video 卡片展示            |
-| D04  | 右键图片是否转存优先，失败后是否允许外链降级   | 图片采集                  |
-| D05  | 插件登录入口：已定为在 Web 应用登录、扩展同步会话；是否自动恢复待保存请求仍未定 | 插件未登录流程 |
-| D06  | 标签空白、大小写、同条重复规则；词频统计口径   | Tags、Search、Explore |
-| D07  | Explore 排序、过多标签处理、内容浮现规则       | Explore               |
-| D08  | 删除工作区后内容归属；标签全局重命名           | Workspaces、Tags          |
-| D09  | 搜索字段、筛选、排序；统计时区和删除计数口径   | Search、Insights          |
-| D10  | 生产域名、商店地址、隐私地址、偏好跨端同步范围 | 发布、Settings            |
+| ID   | 问题                                                                            | 阻塞                  |
+| ---- | ------------------------------------------------------------------------------- | --------------------- |
+| D01b | 内容删除后的媒体清理延迟、重试和额度回收时机                                    | Media 删除清理        |
+| D03b | 每用户总存储额度                                                                | Media 上传            |
+| D03c | 是否自动生成视频封面                                                            | Video 卡片展示        |
+| D05  | 插件登录入口：已定为在 Web 应用登录、扩展同步会话；是否自动恢复待保存请求仍未定 | 插件未登录流程        |
+| D06  | 标签空白、大小写、同条重复规则；词频统计口径                                    | Tags、Search、Explore |
+| D07  | Explore 排序、过多标签处理、内容浮现规则                                        | Explore               |
+| D08  | 删除工作区后内容归属；标签全局重命名                                            | Workspaces、Tags      |
+| D09  | 搜索字段、筛选、排序；统计时区和删除计数口径                                    | Search、Insights      |
+| D10  | 生产域名、商店地址、隐私地址、偏好跨端同步范围                                  | 发布、Settings        |
 
 ## 实现顺序
 
 每个阶段建议单独建一个 OpenSpec change。只实现本阶段范围，完成后同步任务状态和验证结果。
 
-| 顺序 | Change 建议名                             | 交付模块                           | 主要任务                                                       | 进入条件                 | 验收重点                                 |
-| ---- | ----------------------------------------- | ---------------------------------- | -------------------------------------------------------------- | ------------------------ | ---------------------------------------- |
-| S0   | `establish-engineering-checks`            | 工程检查                           | 接通根 typecheck、test、build、CI；补真实契约测试              | 已有脚本现状清楚         | 检查失败能真实失败，不允许空测试通过     |
-| S1   | `implement-note-core`                     | Identity、All、Note                | Clerk 接入；后端用户隔离；创建 Note；All 展示；详情浮层        | S0；Note 字段定稿        | A/B 用户隔离，创建后可见，详情可打开     |
-| S2   | `implement-web-content-crud`              | All、Content Types                 | Page/Image/Quote/Video 元数据模型；编辑；直接删除确认          | S1；删除行为已确认       | 五类内容基础 CRUD，无收藏和恢复入口      |
-| S3   | `implement-workspaces-tags`               | Workspaces、Tags                   | 工作区创建/列表/专题流；内容归类；标签输入展示                 | S2；D06/D08 已确认       | 单工作区、字符串 tags、所有权校验        |
-| S4   | `implement-search-views`                  | Search、All Views                  | 搜索字段、标签匹配、视图切换、空/错/加载状态                   | S3；D09 搜索口径确认     | 本人内容搜索，标签可命中，状态完整       |
-| S5   | `implement-extension-page-capture`        | Extension Capture                  | 插件登录衔接；点击保存网页；同请求重试；Web 同步               | S1；D05、T01/T02         | 主动两次生成两条，同请求重试只一条       |
-| S6   | `implement-extension-quote-image`         | Extension Capture、Image           | 右键选文保存 Quote；右键图片保存 Image；受限来源反馈           | S5；D04、T03             | 成功/失败/未登录反馈，不伪装保存成功     |
-| S7   | `implement-media-upload`                  | Media、Video                       | 上传授权；完成核验；短时访问；图片预览；视频播放；失败/取消    | S1；D01b/D03b/D03c、T04  | 超限拒绝，跨用户不可访问，详情可看/播    |
-| S8   | `implement-insights-explore-settings`     | Insights、Explore、Preferences     | 统计图表；词云频度布局；主题与主色；设置持久化                 | S4；D06/D07/D09/D10、T05 | 统计口径正确，词云频度三维表达，主题一致 |
+| 顺序 | Change 建议名                         | 交付模块                       | 主要任务                                                    | 进入条件                 | 验收重点                                 |
+| ---- | ------------------------------------- | ------------------------------ | ----------------------------------------------------------- | ------------------------ | ---------------------------------------- |
+| S0   | `establish-engineering-checks`        | 工程检查                       | 接通根 typecheck、test、build、CI；补真实契约测试           | 已有脚本现状清楚         | 检查失败能真实失败，不允许空测试通过     |
+| S1   | `implement-note-core`                 | Identity、All、Note            | Clerk 接入；后端用户隔离；创建 Note；All 展示；详情浮层     | S0；Note 字段定稿        | A/B 用户隔离，创建后可见，详情可打开     |
+| S2   | `implement-web-content-crud`          | All、Content Types             | Page/Image/Quote/Video 元数据模型；编辑；直接删除确认       | S1；删除行为已确认       | 五类内容基础 CRUD，无收藏和恢复入口      |
+| S3   | `implement-workspaces-tags`           | Workspaces、Tags               | 工作区创建/列表/专题流；内容归类；标签输入展示              | S2；D06/D08 已确认       | 单工作区、字符串 tags、所有权校验        |
+| S4   | `implement-search-views`              | Search、All Views              | 搜索字段、标签匹配、视图切换、空/错/加载状态                | S3；D09 搜索口径确认     | 本人内容搜索，标签可命中，状态完整       |
+| S5   | `implement-extension-page-capture`    | Extension Capture              | 插件登录衔接；点击保存网页；同请求重试；Web 同步            | S1；D05、T01/T02         | 主动两次生成两条，同请求重试只一条       |
+| S6   | `implement-extension-quote-image`     | Extension Capture、Image       | 右键选文保存 Quote；右键图片保存 Image；受限来源反馈        | S5；T03                  | 成功/失败/未登录反馈，不伪装保存成功     |
+| S7   | `implement-media-upload`              | Media、Video                   | 上传授权；完成核验；短时访问；图片预览；视频播放；失败/取消 | S1；D01b/D03b/D03c、T04  | 超限拒绝，跨用户不可访问，详情可看/播    |
+| S8   | `implement-insights-explore-settings` | Insights、Explore、Preferences | 统计图表；词云频度布局；主题与主色；设置持久化              | S4；D06/D07/D09/D10、T05 | 统计口径正确，词云频度三维表达，主题一致 |
 
 如果需要更小切片，S8 可拆为 `implement-insights`、`implement-explore`、`implement-preferences`。

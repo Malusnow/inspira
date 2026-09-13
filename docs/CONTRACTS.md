@@ -59,6 +59,7 @@ All 的 S1 查询只返回当前登录用户自己的 Note，按最新创建在�
 | description     | 可选                                | 页面摘要，作为 page 的正文         | trim 后为空视为未提供；最多 1000 字符              |
 | selectedText    | quote 必须                          | 选中文字                           | trim 后必须非空；最多 10000 字符                   |
 | imageUrl        | image 必须                          | 原图片地址                         | http/https 绝对地址；最多 2048 字符                |
+| snapshotHtml    | page 建议由插件提供                 | 静态 HTML 网页快照                 | 不保存到 inspirations 行；作为受管媒体资产写入     |
 | note            | 可选                                | 用户备注                           | trim 后为空视为未提供；最多 5000 字符              |
 | workspaceId     | 可选                                | 本人工作区                         | 不裁剪不截断；服务端校验归属                       |
 | tags            | 可选 string[]                       | 用户输入标签                       | trim、去空、同条去重；最多 12 个，每个最多 40 字符 |
@@ -67,6 +68,12 @@ All 的 S1 查询只返回当前登录用户自己的 Note，按最新创建在�
 上表限制与 `packages/contracts/src/index.ts` 的采集契约常量逐项对应，由 `normalizeCaptureRequest` 在写入前统一执行。
 
 `data:`、`blob:` 等非 http(s) 地址不通过校验，按无法保存处理（T03 记录实际页面行为）。`sourceUrl` 对 image 是来源页上下文，缺失不影响采集成功。
+
+page/image 的新采集路径优先走受管媒体：
+
+- page capture 由插件读取当前页面静态 HTML，后端保存为 `pageHtml` 媒体资产并创建 `pageSnapshots`；`inspirations` 只保存标题、摘要、来源 URL 和引用字段。
+- image capture 由后端尝试拉取原图并保存为 `captureImage` 媒体资产；失败时返回 `SOURCE_UNAVAILABLE` 或明确失败，不把外链伪装成受管媒体成功。
+- quote capture 仍走纯文本采集。
 
 成功结果建议：
 
@@ -86,7 +93,7 @@ All 的 S1 查询只返回当前登录用户自己的 Note，按最新创建在�
 | UNAUTHENTICATED       | 未登录或会话过期         | 引导登录；恢复策略见 D05 |
 | INVALID_INPUT         | 字段、URL 或类型不合法   | 停止自动重试             |
 | WORKSPACE_UNAVAILABLE | 工作区不可用             | 不泄露其他账户详情       |
-| SOURCE_UNAVAILABLE    | 页面或图片无法读取       | 按 D04 决定是否外链降级  |
+| SOURCE_UNAVAILABLE    | 页面或图片无法读取       | 失败；不外链降级         |
 | REQUEST_CONFLICT      | 同请求 ID 被不同内容复用 | 停止重试并修正客户端逻辑 |
 | TEMPORARY_FAILURE     | 网络或服务暂时失败       | 同次操作复用 ID 重试     |
 
@@ -108,6 +115,15 @@ popup 只呈现状态，采集编排在 Service Worker，两者按 `apps/extensi
 
 ## 媒体契约
 
+实体：
+
+| 实体         | 核心字段                                                                                     |
+| ------------ | -------------------------------------------------------------------------------------------- |
+| MediaAsset   | ownerId、storageId、kind、mimeType、byteSize、status、usage、sourceUrl、createdAt、updatedAt |
+| PageSnapshot | ownerId、inspirationId、htmlAssetId、可选 previewAssetId、originalUrl、capturedAt            |
+
+`MediaAsset.kind` 首版包含 `image`、`pageHtml`、`pagePreview`、`noteImage`；`usage` 包含 `captureImage`、`pageSnapshotHtml`、`pageSnapshotPreview`、`noteEmbed`；`status` 包含 `uploading`、`available`、`failed`、`pendingCleanup`、`deleted`。
+
 上传流程：
 
 1. 客户端选择文件并做友好提示。
@@ -122,6 +138,15 @@ popup 只呈现状态，采集编排在 Service Worker，两者按 `apps/extensi
 - 查询内容时只返回业务元信息，不暴露永久公共文件地址。
 - 详情需要展示媒体时，服务端确认当前用户拥有内容和资产，再签发短时访问地址。
 - 短时地址过期后重新授权；有效期内可能被转发，不等于逐次登录鉴权。
+- Web Note 正文只保存 `inspira-media:<mediaAssetId>` 形式的受控引用，不保存永久公开 URL；渲染前通过 owner 授权查询换取短时 URL。
+- Page 详情通过 owner 授权 URL 在 sandboxed iframe 中展示 HTML 快照，不执行原网页脚本。
+- Image 卡片和详情优先使用受管图片资产；没有受管资产时必须显示明确不可用或旧外链兼容状态。
+
+清理流程：
+
+- 删除 inspiration、移除 Note 图片引用、失败或取消上传导致资产不再被引用时，先把资产标记为 `pendingCleanup` 并记录后续清理时间。
+- cleanup mutation/action 再删除 Convex File Storage 对象并把资产标记为 `deleted`；清理失败保留可重试状态。
+- 首版可延迟清理，但不能丢失孤立资产记录。
 
 限制已确认：
 
@@ -129,7 +154,7 @@ popup 只呈现状态，采集编排在 Service Worker，两者按 `apps/extensi
 - 视频：MP4 H.264/AAC，单个不超过 200MB 且不超过 10 分钟。
 - 首版不自动转码。
 
-仍待确认：总额度 D03b、视频封面 D03c、删除后的媒体清理策略 D01b。
+仍待确认：总额度 D03b、视频封面 D03c、清理延迟窗口与额度回收口径 D01b。
 
 ## Insights 统计契约
 
@@ -169,4 +194,4 @@ popup 只呈现状态，采集编排在 Service Worker，两者按 `apps/extensi
 
 服务端与插件调用端已接通：`convex/captures.ts` 提供 `captures:capture`（按 `clientRequestId` 幂等）与 `captures:updateDetails`，`convex/schema.ts` 已放开五种 `inspirations.type` 并新增 `captureAttempts`；`apps/extension` 实现了三类采集编排（`lib/capture.ts`、`background.ts`）、五状态 popup 与 tags/notes 回写，消息协议见上一节。
 
-仍未实现：媒体资产绑定与直传（S7）。插件的 `manifest` 已声明 `contextMenus` / `storage` / `activeTab` / `scripting` / `cookies`，两个 host 为 `$PLASMO_PUBLIC_CLERK_SYNC_HOST/*` 与 `$CLERK_FRONTEND_API/*`（构建期插值，`cookies` 用于按 D05 从登录主机同步 Clerk 会话），不使用全量域名；生产同步域名随 D10 填入 `.env.production`。
+媒体底座已开始接入：`mediaAssets` / `pageSnapshots`、Web Note 图片 upload/finalize、媒体短时 URL 授权、page snapshot action 和 image transfer action 已纳入方案 A 实现范围。插件的 `manifest` 已声明 `contextMenus` / `storage` / `activeTab` / `scripting` / `cookies`，两个 host 为 `$PLASMO_PUBLIC_CLERK_SYNC_HOST/*` 与 `$CLERK_FRONTEND_API/*`（构建期插值，`cookies` 用于按 D05 从登录主机同步 Clerk 会话），不使用全量域名；生产同步域名随 D10 填入 `.env.production`。

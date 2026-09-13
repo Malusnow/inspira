@@ -57,7 +57,6 @@ function toPreviewItem(doc: Doc<"inspirations">): WorkspacePreviewItem {
     type: doc.type,
     title: doc.title,
     text: doc.content,
-    imageUrl: doc.imageUrl,
     createdAt: doc.createdAt
   }
 }

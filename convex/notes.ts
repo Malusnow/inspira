@@ -1,6 +1,8 @@
 import { ConvexError, v } from "convex/values"
 
+import type { Doc, Id } from "./_generated/dataModel"
 import { mutation, query } from "./_generated/server"
+import type { MutationCtx, QueryCtx } from "./_generated/server"
 import { requireOwner } from "./lib/auth"
 import {
   cleanCreate,
@@ -13,6 +15,109 @@ import {
   updateArgs
 } from "./lib/notes"
 import { resolveOwnedWorkspaceId, touchWorkspace } from "./lib/workspaces"
+import { markAssetsForCleanup, mediaAssetIdsFromContent } from "./media"
+
+async function assertOwnedAvailableAssets(
+  ctx: QueryCtx | MutationCtx,
+  ownerId: string,
+  assetIds: Id<"mediaAssets">[]
+) {
+  for (const assetId of assetIds) {
+    const asset = await ctx.db.get(assetId)
+
+    if (
+      !asset ||
+      asset.ownerId !== ownerId ||
+      asset.status !== "available" ||
+      asset.usage !== "noteEmbed"
+    ) {
+      throw new ConvexError({
+        code: "INVALID_INPUT",
+        message: "Note media is not available."
+      })
+    }
+  }
+}
+
+async function mediaView(
+  ctx: QueryCtx | MutationCtx,
+  assetId: Id<"mediaAssets">
+) {
+  const asset = await ctx.db.get(assetId)
+
+  if (!asset || asset.status !== "available" || !asset.storageId) {
+    return null
+  }
+
+  const url = await ctx.storage.getUrl(asset.storageId)
+
+  return {
+    id: asset._id,
+    kind: asset.kind,
+    mimeType: asset.mimeType,
+    byteSize: asset.byteSize,
+    status: asset.status,
+    usage: asset.usage,
+    sourceUrl: asset.sourceUrl,
+    createdAt: asset.createdAt,
+    updatedAt: asset.updatedAt,
+    url: url ?? undefined
+  }
+}
+
+async function hydrateInspiration(
+  ctx: QueryCtx | MutationCtx,
+  doc: Doc<"inspirations">
+) {
+  const item = toInspiration(doc)
+  const mediaAssets: NonNullable<typeof item.mediaAssets> = {}
+  const embeddedIds = mediaAssetIdsFromContent(ctx, doc.content)
+
+  for (const assetId of embeddedIds) {
+    const view = await mediaView(ctx, assetId)
+    if (view) mediaAssets[assetId] = view
+  }
+
+  if (doc.primaryAssetId) {
+    const view = await mediaView(ctx, doc.primaryAssetId)
+    if (view) {
+      item.primaryAssetUrl = view.url
+      mediaAssets[doc.primaryAssetId] = view
+    }
+  }
+
+  if (doc.pageSnapshotId) {
+    const snapshot = await ctx.db.get(doc.pageSnapshotId)
+
+    if (snapshot && snapshot.ownerId === doc.ownerId) {
+      const htmlAsset = await mediaView(ctx, snapshot.htmlAssetId)
+      const previewAsset = snapshot.previewAssetId
+        ? await mediaView(ctx, snapshot.previewAssetId)
+        : null
+
+      if (htmlAsset) mediaAssets[snapshot.htmlAssetId] = htmlAsset
+      if (snapshot.previewAssetId && previewAsset) {
+        mediaAssets[snapshot.previewAssetId] = previewAsset
+      }
+
+      item.pageSnapshot = {
+        id: snapshot._id,
+        htmlAssetId: snapshot.htmlAssetId,
+        htmlUrl: htmlAsset?.url,
+        previewAssetId: snapshot.previewAssetId,
+        previewUrl: previewAsset?.url,
+        originalUrl: snapshot.originalUrl,
+        capturedAt: snapshot.capturedAt
+      }
+    }
+  }
+
+  if (Object.keys(mediaAssets).length > 0) {
+    item.mediaAssets = mediaAssets
+  }
+
+  return item
+}
 
 export const create = mutation({
   args: createArgs,
@@ -24,6 +129,10 @@ export const create = mutation({
       ownerId,
       note.workspaceId
     )
+    const referencedAssetIds = mediaAssetIdsFromContent(ctx, note.content)
+
+    await assertOwnedAvailableAssets(ctx, ownerId, referencedAssetIds)
+
     const now = Date.now()
     const noteId = await ctx.db.insert("inspirations", {
       ownerId,
@@ -62,6 +171,11 @@ export const update = mutation({
       ownerId,
       note.workspaceId
     )
+    const previousAssetIds = mediaAssetIdsFromContent(ctx, existingNote.content)
+    const nextAssetIds = mediaAssetIdsFromContent(ctx, note.content)
+
+    await assertOwnedAvailableAssets(ctx, ownerId, nextAssetIds)
+
     const previousWorkspaceId = existingNote.workspaceId
       ? ctx.db.normalizeId("workspaces", existingNote.workspaceId)
       : undefined
@@ -75,6 +189,13 @@ export const update = mutation({
       workspaceId,
       updatedAt: now
     })
+
+    await markAssetsForCleanup(
+      ctx,
+      ownerId,
+      previousAssetIds.filter((assetId) => !nextAssetIds.includes(assetId)),
+      now
+    )
 
     if (previousWorkspaceId !== workspaceId) {
       await touchWorkspace(ctx, workspaceId)
@@ -98,7 +219,22 @@ export const remove = mutation({
       })
     }
 
+    const assetIds = [
+      existingNote.primaryAssetId,
+      ...mediaAssetIdsFromContent(ctx, existingNote.content)
+    ]
+
+    if (existingNote.pageSnapshotId) {
+      const snapshot = await ctx.db.get(existingNote.pageSnapshotId)
+
+      if (snapshot && snapshot.ownerId === ownerId) {
+        assetIds.push(snapshot.htmlAssetId, snapshot.previewAssetId)
+        await ctx.db.delete(snapshot._id)
+      }
+    }
+
     await ctx.db.delete(args.id)
+    await markAssetsForCleanup(ctx, ownerId, assetIds)
 
     await touchWorkspace(
       ctx,
@@ -190,7 +326,7 @@ export const listMine = query({
       .order("desc")
       .take(100)
 
-    return notes.map(toInspiration)
+    return await Promise.all(notes.map((note) => hydrateInspiration(ctx, note)))
   }
 })
 
@@ -206,6 +342,6 @@ export const getMine = query({
       return null
     }
 
-    return toInspiration(note)
+    return await hydrateInspiration(ctx, note)
   }
 })

@@ -1,4 +1,4 @@
-import type { NoteInspiration } from "@inspira/contracts"
+import type { InspirationItem } from "@inspira/contracts"
 import { useMutation } from "convex/react"
 import { useCallback, useState } from "react"
 import { MessagePlugin } from "tdesign-react"
@@ -8,14 +8,14 @@ import { toInspirationId } from "../../lib/convexIds"
 
 export interface UseNoteDeletionOptions {
   /** Runs after a successful delete, e.g. to close a detail layer. */
-  onDeleted?: (note: NoteInspiration) => void
+  onDeleted?: (note: InspirationItem) => void
 }
 
 export interface UseNoteDeletionResult {
   /** Note awaiting confirmation, or null while the dialog stays closed. */
-  pendingNote: NoteInspiration | null
+  pendingNote: InspirationItem | null
   isDeleting: boolean
-  requestDelete: (note: NoteInspiration) => void
+  requestDelete: (note: InspirationItem) => void
   cancel: () => void
   confirm: () => Promise<void>
 }
@@ -29,10 +29,10 @@ export function useNoteDeletion({
   onDeleted
 }: UseNoteDeletionOptions = {}): UseNoteDeletionResult {
   const removeNote = useMutation(api.notes.remove)
-  const [pendingNote, setPendingNote] = useState<NoteInspiration | null>(null)
+  const [pendingNote, setPendingNote] = useState<InspirationItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const requestDelete = useCallback((note: NoteInspiration) => {
+  const requestDelete = useCallback((note: InspirationItem) => {
     setPendingNote(note)
   }, [])
 

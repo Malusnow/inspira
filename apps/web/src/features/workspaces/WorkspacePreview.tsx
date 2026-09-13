@@ -1,12 +1,13 @@
 import type {
-  WorkspacePreview as WorkspacePreviewValue,
-  WorkspacePreviewItem
+  WorkspacePreviewItem,
+  WorkspacePreview as WorkspacePreviewValue
 } from "@inspira/contracts"
-import { PlayCircleIcon } from "tdesign-icons-react"
 import { useState } from "react"
+import { PlayCircleIcon } from "tdesign-icons-react"
 
 import { NoteCompactPreview } from "../all/NotePreview"
 import { buildNotePreview } from "../all/notePreview"
+import { PageSnapshotFrame } from "../all/PageSnapshotFrame"
 
 export interface WorkspacePreviewProps {
   name: string
@@ -38,7 +39,10 @@ interface CardPose {
  */
 const CARD_POSES: CardPose[] = [
   { stacked: { x: 0, y: 0, rotate: -2 }, fanned: { x: 0, y: -20, rotate: -5 } },
-  { stacked: { x: -7, y: 6, rotate: 2 }, fanned: { x: -58, y: 10, rotate: -11 } },
+  {
+    stacked: { x: -7, y: 6, rotate: 2 },
+    fanned: { x: -58, y: 10, rotate: -11 }
+  },
   { stacked: { x: 8, y: 11, rotate: 4 }, fanned: { x: 60, y: 16, rotate: 9 } }
 ]
 
@@ -46,19 +50,42 @@ function toTransform({ x, y, rotate }: CardOffset) {
   return `translate(-50%, -50%) translate3d(${x}px, ${y}px, 0) rotate(${rotate}deg)`
 }
 
+function getPreviewCardClass(item: WorkspacePreviewItem) {
+  if (item.type === "page") {
+    return "aspect-[16/10] w-[86%]"
+  }
+
+  return "h-[78%] w-[62%]"
+}
+
 /**
- * Front card rendering is driven by the item itself: `imageUrl` → image,
- * `type === "video"` → play placeholder, otherwise text. Today every item is a
- * Note, so the image/video branches stay dormant until media types exist.
+ * Front card rendering is driven by the item itself: managed image URL → image,
+ * `type === "video"` → play placeholder, otherwise text.
  *
  * The text branch reuses the note preview parser so raw markdown markers never
  * leak into the thumbnail, and renders it with the compact block scale.
  */
-function CardFace({ item, name }: { item: WorkspacePreviewItem; name: string }) {
-  if (item.imageUrl) {
+function CardFace({
+  item,
+  name
+}: {
+  item: WorkspacePreviewItem
+  name: string
+}) {
+  if (item.type === "page") {
+    return (
+      <PageSnapshotFrame
+        title={item.title ?? name}
+        url={item.pageSnapshotUrl}
+        className="size-full rounded-none border-0"
+      />
+    )
+  }
+
+  if (item.primaryAssetUrl) {
     return (
       <img
-        src={item.imageUrl}
+        src={item.primaryAssetUrl}
         alt={item.title ?? name}
         className="size-full object-cover"
       />
@@ -123,7 +150,7 @@ export function WorkspacePreview({
           <span
             key={item.id}
             aria-hidden={index > 0}
-            className="absolute left-1/2 top-1/2 h-[78%] w-[62%] overflow-hidden rounded-lg border border-line/70 bg-surface shadow-[0_8px_20px_rgb(37_43_53/0.11)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+            className={`absolute left-1/2 top-1/2 overflow-hidden rounded-lg border border-line/70 bg-surface shadow-[0_8px_20px_rgb(37_43_53/0.11)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${getPreviewCardClass(item)}`}
             style={{
               transform: toTransform(isFanned ? pose.fanned : pose.stacked),
               zIndex: 30 - index

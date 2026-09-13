@@ -6,12 +6,15 @@ export type NotePreviewKind =
   | "code"
   | "divider"
   | "spacer"
+  | "media"
 
 export interface NotePreviewBlock {
   kind: NotePreviewKind
   text?: string
   level?: 1 | 2 | 3
   checked?: boolean
+  assetId?: string
+  url?: string
 }
 
 export interface NotePreview {
@@ -25,12 +28,13 @@ const MAX_TEXT_LENGTH = 240
 
 /**
  * The minimum a caller must provide to build a preview. Kept independent of
- * `NoteInspiration` so both the masonry card and the workspace mini card can
+ * `InspirationItem` so both the masonry card and the workspace mini card can
  * reuse the same parsing without importing the full contract shape.
  */
 export interface NotePreviewSource {
   content: string
   title?: string
+  mediaAssets?: Record<string, { url?: string }>
 }
 
 interface BuildNotePreviewOptions {
@@ -124,6 +128,13 @@ function parseMarkdownBlocks(content: string) {
 
     flushBlankLines()
 
+    const media = /^!\[[^\]]*]\(inspira-media:([^)]+)\)$/.exec(trimmed)
+    if (media) {
+      flushParagraph()
+      blocks.push({ kind: "media", assetId: media[1] })
+      continue
+    }
+
     const heading = /^(#{1,3})\s+(.+)$/.exec(trimmed)
     if (heading) {
       flushParagraph()
@@ -170,7 +181,10 @@ function parseMarkdownBlocks(content: string) {
 
   return blocks.filter(
     (block) =>
-      block.kind === "divider" || block.kind === "spacer" || block.text
+      block.kind === "divider" ||
+      block.kind === "spacer" ||
+      block.kind === "media" ||
+      block.text
   )
 }
 
@@ -206,8 +220,13 @@ export function buildNotePreview(
   const visibleBlocks = options.includeAllBlocks
     ? renderableBlocks
     : renderableBlocks.slice(0, MAX_BLOCKS)
+  const hydratedBlocks = visibleBlocks.map((block) =>
+    block.kind === "media" && block.assetId
+      ? { ...block, url: source.mediaAssets?.[block.assetId]?.url }
+      : block
+  )
 
-  if (visibleBlocks.length === 0) {
+  if (hydratedBlocks.length === 0) {
     const fallbackText = firstTextBlock(parsedBlocks)?.text
 
     return {
@@ -219,7 +238,7 @@ export function buildNotePreview(
 
   return {
     title,
-    blocks: visibleBlocks,
-    dominantKind: inferDominantKind(visibleBlocks)
+    blocks: hydratedBlocks,
+    dominantKind: inferDominantKind(hydratedBlocks)
   }
 }

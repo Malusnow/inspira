@@ -4,6 +4,7 @@ import type { Doc, Id } from "./_generated/dataModel"
 import type { MutationCtx, QueryCtx } from "./_generated/server"
 import { mutation, query } from "./_generated/server"
 import { requireOwner } from "./lib/auth"
+import { toInspiration } from "./lib/notes"
 import {
   cleanWorkspaceName,
   createWorkspaceArgs,
@@ -12,12 +13,11 @@ import {
   renameWorkspaceArgs,
   resolveOwnedWorkspaceId,
   touchWorkspace,
-  toWorkspaceDetail,
   toWorkspaceNameKey,
-  toWorkspaceSummary,
   unavailableWorkspaceError,
   workspaceIdArgs
 } from "./lib/workspaces"
+import { mediaAssetIdsFromContent } from "./media"
 
 const PREVIEW_ITEM_LIMIT = 3
 /**
@@ -39,6 +39,94 @@ async function getOwnedWorkspace(
   }
 
   return workspace
+}
+
+async function getAssetUrl(
+  ctx: QueryCtx,
+  assetId: Id<"mediaAssets"> | undefined
+) {
+  if (!assetId) return undefined
+
+  const asset = await ctx.db.get(assetId)
+  if (!asset || asset.status !== "available" || !asset.storageId) {
+    return undefined
+  }
+
+  return (await ctx.storage.getUrl(asset.storageId)) ?? undefined
+}
+
+async function hydrateWorkspaceItem(ctx: QueryCtx, doc: Doc<"inspirations">) {
+  const item = toInspiration(doc)
+  const mediaAssets: NonNullable<typeof item.mediaAssets> = {}
+
+  if (doc.primaryAssetId) {
+    const asset = await ctx.db.get(doc.primaryAssetId)
+    const url =
+      asset?.status === "available" && asset.storageId
+        ? await ctx.storage.getUrl(asset.storageId)
+        : undefined
+
+    if (asset) {
+      item.primaryAssetUrl = url ?? undefined
+      mediaAssets[asset._id] = {
+        id: asset._id,
+        kind: asset.kind,
+        mimeType: asset.mimeType,
+        byteSize: asset.byteSize,
+        status: asset.status,
+        usage: asset.usage,
+        sourceUrl: asset.sourceUrl,
+        createdAt: asset.createdAt,
+        updatedAt: asset.updatedAt,
+        url: url ?? undefined
+      }
+    }
+  }
+
+  for (const assetId of mediaAssetIdsFromContent(ctx, doc.content)) {
+    const asset = await ctx.db.get(assetId)
+    const url =
+      asset?.status === "available" && asset.storageId
+        ? await ctx.storage.getUrl(asset.storageId)
+        : undefined
+
+    if (asset) {
+      mediaAssets[asset._id] = {
+        id: asset._id,
+        kind: asset.kind,
+        mimeType: asset.mimeType,
+        byteSize: asset.byteSize,
+        status: asset.status,
+        usage: asset.usage,
+        sourceUrl: asset.sourceUrl,
+        createdAt: asset.createdAt,
+        updatedAt: asset.updatedAt,
+        url: url ?? undefined
+      }
+    }
+  }
+
+  if (doc.pageSnapshotId) {
+    const snapshot = await ctx.db.get(doc.pageSnapshotId)
+
+    if (snapshot && snapshot.ownerId === doc.ownerId) {
+      item.pageSnapshot = {
+        id: snapshot._id,
+        htmlAssetId: snapshot.htmlAssetId,
+        htmlUrl: await getAssetUrl(ctx, snapshot.htmlAssetId),
+        previewAssetId: snapshot.previewAssetId,
+        previewUrl: await getAssetUrl(ctx, snapshot.previewAssetId),
+        originalUrl: snapshot.originalUrl,
+        capturedAt: snapshot.capturedAt
+      }
+    }
+  }
+
+  if (Object.keys(mediaAssets).length > 0) {
+    item.mediaAssets = mediaAssets
+  }
+
+  return item
 }
 
 export const listMine = query({
@@ -75,15 +163,40 @@ export const listMine = query({
       }
     }
 
-    return workspaces.map((workspace) => {
-      const workspaceItems = itemsByWorkspace.get(workspace._id) ?? []
+    return await Promise.all(
+      workspaces.map(async (workspace) => {
+        const workspaceItems = itemsByWorkspace.get(workspace._id) ?? []
+        const previewItems = await Promise.all(
+          workspaceItems.slice(0, PREVIEW_ITEM_LIMIT).map(async (item) => {
+            const snapshot = item.pageSnapshotId
+              ? await ctx.db.get(item.pageSnapshotId)
+              : null
 
-      return toWorkspaceSummary(
-        workspace,
-        workspaceItems.slice(0, PREVIEW_ITEM_LIMIT),
-        workspaceItems.length
-      )
-    })
+            return {
+              id: item._id,
+              type: item.type,
+              title: item.title,
+              text: item.content,
+              primaryAssetUrl: await getAssetUrl(ctx, item.primaryAssetId),
+              pageSnapshotUrl:
+                snapshot && snapshot.ownerId === ownerId
+                  ? await getAssetUrl(ctx, snapshot.htmlAssetId)
+                  : undefined,
+              createdAt: item.createdAt
+            }
+          })
+        )
+
+        return {
+          id: workspace._id,
+          name: workspace.name,
+          itemCount: workspaceItems.length,
+          preview: { items: previewItems },
+          createdAt: workspace.createdAt,
+          updatedAt: workspace.updatedAt
+        }
+      })
+    )
   }
 })
 
@@ -132,7 +245,15 @@ export const getDetail = query({
       .order("desc")
       .take(WORKSPACE_ITEM_LIMIT)
 
-    return toWorkspaceDetail(workspace, items)
+    return {
+      id: workspace._id,
+      name: workspace.name,
+      items: await Promise.all(
+        items.map((item) => hydrateWorkspaceItem(ctx, item))
+      ),
+      createdAt: workspace.createdAt,
+      updatedAt: workspace.updatedAt
+    }
   }
 })
 

@@ -14,6 +14,28 @@ const inspirationType = v.union(
   v.literal("video")
 )
 
+const mediaAssetKind = v.union(
+  v.literal("image"),
+  v.literal("pageHtml"),
+  v.literal("pagePreview"),
+  v.literal("noteImage")
+)
+
+const mediaAssetUsage = v.union(
+  v.literal("captureImage"),
+  v.literal("pageSnapshotHtml"),
+  v.literal("pageSnapshotPreview"),
+  v.literal("noteEmbed")
+)
+
+const mediaAssetStatus = v.union(
+  v.literal("uploading"),
+  v.literal("available"),
+  v.literal("failed"),
+  v.literal("pendingCleanup"),
+  v.literal("deleted")
+)
+
 export default defineSchema({
   inspirations: defineTable({
     ownerId: v.string(),
@@ -23,10 +45,11 @@ export default defineSchema({
     notes: v.optional(v.string()),
     tags: v.array(v.string()),
     workspaceId: v.optional(v.string()),
-    // Capture-only fields, absent on notes. `imageUrl` keeps the remote address
-    // until media transfer exists (D04).
+    // Capture-only fields, absent on notes. Rendering uses managed media.
     sourceUrl: v.optional(v.string()),
-    imageUrl: v.optional(v.string()),
+    primaryAssetId: v.optional(v.id("mediaAssets")),
+    pageSnapshotId: v.optional(v.id("pageSnapshots")),
+    mediaStatus: v.optional(mediaAssetStatus),
     selectedText: v.optional(v.string()),
     capturedAt: v.optional(v.number()),
     createdAt: v.number(),
@@ -38,6 +61,37 @@ export default defineSchema({
       "workspaceId",
       "createdAt"
     ]),
+  mediaAssets: defineTable({
+    ownerId: v.string(),
+    storageId: v.optional(v.id("_storage")),
+    kind: mediaAssetKind,
+    mimeType: v.string(),
+    byteSize: v.number(),
+    status: mediaAssetStatus,
+    usage: mediaAssetUsage,
+    sourceUrl: v.optional(v.string()),
+    cleanupAfter: v.optional(v.number()),
+    failureCode: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number()
+  })
+    .index("by_owner_createdAt", ["ownerId", "createdAt"])
+    .index("by_owner_status_cleanupAfter", [
+      "ownerId",
+      "status",
+      "cleanupAfter"
+    ]),
+  pageSnapshots: defineTable({
+    ownerId: v.string(),
+    inspirationId: v.id("inspirations"),
+    htmlAssetId: v.id("mediaAssets"),
+    previewAssetId: v.optional(v.id("mediaAssets")),
+    originalUrl: v.string(),
+    capturedAt: v.number(),
+    createdAt: v.number()
+  })
+    .index("by_owner_inspiration", ["ownerId", "inspirationId"])
+    .index("by_owner_createdAt", ["ownerId", "createdAt"]),
   /**
    * Result of a capture request id, so a transport retry returns the same
    * content instead of writing twice. Convex indexes are not unique: the

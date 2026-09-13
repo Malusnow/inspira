@@ -9,23 +9,26 @@ import {
   useCreateBlockNote
 } from "@blocknote/react"
 import {
+  createNoteMediaReference,
+  isMediaImageMimeType,
+  MEDIA_IMAGE_MAX_BYTES,
   NOTE_CONTENT_MAX_LENGTH,
-  type NoteInspiration
+  type InspirationItem
 } from "@inspira/contracts"
 import { useConvexAuth, useMutation } from "convex/react"
-import { useEffect, useId, useState, type KeyboardEvent } from "react"
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react"
 import { createPortal } from "react-dom"
 import { CloseIcon } from "tdesign-icons-react"
 
 import { api } from "../../../../../convex/_generated/api"
-import { toInspirationId } from "../../lib/convexIds"
+import { toInspirationId, toStorageId } from "../../lib/convexIds"
 
 type Editor = ReturnType<typeof useCreateBlockNote>
 
 export interface NoteComposerProps {
   controlsVisible: boolean
   surfaceState: "entering" | "open" | "leaving"
-  note?: NoteInspiration
+  note?: InspirationItem
   onDismiss: () => void
   onFinish: () => void
 }
@@ -142,10 +145,14 @@ export function NoteComposer({
   const formId = useId()
   const noteMutation = useMutation(api.notes.create)
   const updateNoteMutation = useMutation(api.notes.update)
+  const requestMediaUpload = useMutation(api.media.requestUpload)
+  const finalizeMediaUpload = useMutation(api.media.finalizeUpload)
   const { isAuthenticated, isLoading } = useConvexAuth()
   const editor = useCreateBlockNote()
   const [isSaving, setIsSaving] = useState(false)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!note?.content) return
@@ -221,6 +228,69 @@ export function NoteComposer({
     }
   }
 
+  async function handleImageSelected(file: File | undefined) {
+    if (!file || isUploadingImage) return
+
+    if (!isMediaImageMimeType(file.type)) {
+      setSaveError("仅支持 JPG、PNG、WebP 或 GIF 图片。")
+      return
+    }
+
+    if (file.size > MEDIA_IMAGE_MAX_BYTES) {
+      setSaveError("图片不能超过 20MB。")
+      return
+    }
+
+    setIsUploadingImage(true)
+    setSaveError("图片上传中...")
+
+    try {
+      const { uploadUrl } = await requestMediaUpload({
+        kind: "noteImage",
+        usage: "noteEmbed",
+        mimeType: file.type,
+        byteSize: file.size
+      })
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error("Upload failed.")
+      }
+
+      const { storageId } = (await uploadResponse.json()) as {
+        storageId: string
+      }
+      const { assetId } = await finalizeMediaUpload({
+        storageId: toStorageId(storageId),
+        kind: "noteImage",
+        usage: "noteEmbed",
+        mimeType: file.type,
+        byteSize: file.size
+      })
+      const nextContent =
+        `${serializeDocumentToMarkdown(editor).trim()}\n\n${createNoteMediaReference(assetId, file.name || "Inspira image")}`.trim()
+      const blocks = parseMarkdownPreservingBlankParagraphs(editor, nextContent)
+
+      editor.replaceBlocks(
+        editor.document,
+        blocks.length > 0
+          ? blocks
+          : [{ type: "paragraph", content: nextContent }]
+      )
+      setSaveError("图片已插入，保存后会出现在笔记中。")
+    } catch (error) {
+      console.error("Failed to upload note image", error)
+      setSaveError("图片上传失败，请稍后再试。")
+    } finally {
+      setIsUploadingImage(false)
+      if (imageInputRef.current) imageInputRef.current.value = ""
+    }
+  }
+
   function handleKeyDown(event: KeyboardEvent<HTMLFormElement>) {
     if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
       event.preventDefault()
@@ -258,10 +328,28 @@ export function NoteComposer({
                   {saveError}
                 </p>
               ) : null}
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="sr-only"
+                onChange={(event) =>
+                  void handleImageSelected(event.currentTarget.files?.[0])
+                }
+              />
+              <button
+                type="button"
+                disabled={isSaving || isLoading || isUploadingImage}
+                onClick={() => imageInputRef.current?.click()}
+                className={`inspiration-control pointer-events-auto rounded-full border border-line bg-surface/88 px-5 py-3 text-xs font-semibold uppercase text-ink-muted shadow-[0_18px_42px_rgb(37_43_53_/_0.16)] backdrop-blur focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-default disabled:opacity-60 ${
+                  controlsVisible ? "" : "inspiration-control--hidden-down"
+                }`}>
+                {isUploadingImage ? "Uploading" : "Image"}
+              </button>
               <button
                 form={formId}
                 type="submit"
-                disabled={isSaving || isLoading}
+                disabled={isSaving || isLoading || isUploadingImage}
                 className={`inspiration-control pointer-events-auto rounded-full border border-line bg-surface/88 px-7 py-3 text-xs font-semibold uppercase text-ink-muted shadow-[0_18px_42px_rgb(37_43_53_/_0.16)] backdrop-blur focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-default disabled:opacity-60 ${
                   controlsVisible ? "" : "inspiration-control--hidden-down"
                 }`}>

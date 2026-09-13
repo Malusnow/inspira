@@ -92,7 +92,8 @@ function PreviewBlock({
       return (
         <pre
           className={`max-w-full rounded-md bg-note-code font-mono text-ink-strong ${styles.code}`}>
-          <code className={`whitespace-pre-wrap break-words ${styles.codeInner}`}>
+          <code
+            className={`whitespace-pre-wrap break-words ${styles.codeInner}`}>
             {block.text}
           </code>
         </pre>
@@ -101,6 +102,20 @@ function PreviewBlock({
       return <span className="block h-px w-full bg-line-strong" />
     case "spacer":
       return <span aria-hidden="true" className={`block ${styles.spacer}`} />
+    case "media":
+      return block.url ? (
+        <img
+          src={block.url}
+          alt={block.text || "Note media"}
+          className="max-h-80 w-full rounded-md object-cover"
+          loading="lazy"
+        />
+      ) : (
+        <span
+          className={`block rounded-md border border-dashed border-line px-3 py-4 text-center text-ink-muted ${styles.quote}`}>
+          图片暂不可用
+        </span>
+      )
     case "text":
     default:
       return (

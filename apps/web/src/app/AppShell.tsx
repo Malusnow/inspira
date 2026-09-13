@@ -1,5 +1,5 @@
 import { UserButton } from "@clerk/react"
-import type { NoteInspiration } from "@inspira/contracts"
+import type { InspirationItem } from "@inspira/contracts"
 import {
   lazy,
   Suspense,
@@ -27,7 +27,7 @@ const InspirationOverlay = lazy(() =>
 )
 
 export interface AppShellOutletContext {
-  openNoteOverlay: (note?: NoteInspiration) => void
+  openNoteOverlay: (note?: InspirationItem) => void
   query: string
   setQuery: (query: string) => void
 }
@@ -172,7 +172,7 @@ export function AppShell() {
   const location = useLocation()
   const { resolvedThemeMode, toggleResolvedThemeMode } = useThemePreferences()
   const [isOverlayVisible, setOverlayVisible] = useState(false)
-  const [overlayNote, setOverlayNote] = useState<NoteInspiration | undefined>()
+  const [overlayNote, setOverlayNote] = useState<InspirationItem | undefined>()
   const [query, setQuery] = useState("")
   const isDarkTheme = resolvedThemeMode === "dark"
   const isAllPage = location.pathname.startsWith("/all")
@@ -180,7 +180,7 @@ export function AppShell() {
   const isInsightsPage = location.pathname.startsWith("/insights")
   const isStandalonePage = isSettingsPage || isInsightsPage
 
-  function openNoteOverlay(note?: NoteInspiration) {
+  function openNoteOverlay(note?: InspirationItem) {
     setOverlayNote(note)
     setOverlayVisible(true)
   }

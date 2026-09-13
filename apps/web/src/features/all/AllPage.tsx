@@ -1,4 +1,4 @@
-import type { NoteInspiration } from "@inspira/contracts"
+import type { InspirationItem } from "@inspira/contracts"
 import { useConvexAuth, useMutation, useQuery } from "convex/react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useOutletContext } from "react-router-dom"
@@ -6,8 +6,8 @@ import { useOutletContext } from "react-router-dom"
 import { api } from "../../../../../convex/_generated/api"
 import type { AppShellOutletContext } from "../../app/AppShell"
 import { ConfirmDialog } from "../../components/ConfirmDialog"
-import { WorkspacePickerPopover } from "../workspaces/WorkspacePickerPopover"
 import { useNoteWorkspaceAssignment } from "../workspaces/useNoteWorkspaceAssignment"
+import { WorkspacePickerPopover } from "../workspaces/WorkspacePickerPopover"
 import { AllErrorBoundary } from "./AllErrorBoundary"
 import { AllTopBar, type AllColumnCount } from "./AllTopBar"
 import { NoteDetailDialog } from "./NoteDetail"
@@ -23,10 +23,9 @@ export function AllPage() {
   const { isAuthenticated, isLoading } = useConvexAuth()
   // Queried here rather than inside `AllContent`: the selected Note is derived
   // from this list, so deleting it closes the detail layer on its own.
-  const notes = useQuery(
-    api.notes.listMine,
-    isAuthenticated ? {} : "skip"
-  ) as NoteInspiration[] | undefined
+  const notes = useQuery(api.notes.listMine, isAuthenticated ? {} : "skip") as
+    | InspirationItem[]
+    | undefined
   const { openNoteOverlay, query, setQuery } =
     useOutletContext<AppShellOutletContext>()
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
@@ -50,7 +49,7 @@ export function AllPage() {
   const selectedNote = useMemo(
     () =>
       selectedNoteId
-        ? (notes?.find((note) => note.id === selectedNoteId) ?? null)
+        ? notes?.find((note) => note.id === selectedNoteId) ?? null
         : null,
     [notes, selectedNoteId]
   )
@@ -112,16 +111,16 @@ function AllContent({
   onRequestDeleteNote,
   onRequestAddToWorkspace
 }: {
-  notes: NoteInspiration[] | undefined
+  notes: InspirationItem[] | undefined
   isAuthenticated: boolean
   isLoading: boolean
   query: string
   onQueryChange: (query: string) => void
-  onEditNote: (note: NoteInspiration) => void
-  onOpenNote: (note: NoteInspiration) => void
-  onRequestDeleteNote: (note: NoteInspiration) => void
+  onEditNote: (note: InspirationItem) => void
+  onOpenNote: (note: InspirationItem) => void
+  onRequestDeleteNote: (note: InspirationItem) => void
   onRequestAddToWorkspace: (
-    note: NoteInspiration,
+    note: InspirationItem,
     anchor: { x: number; y: number }
   ) => void
 }) {
@@ -157,7 +156,7 @@ function AllContent({
   }, [notes, query])
 
   const visibleNotes =
-    isLoading || isAuthenticated ? filteredNotes : ([] as NoteInspiration[])
+    isLoading || isAuthenticated ? filteredNotes : ([] as InspirationItem[])
 
   return (
     <>

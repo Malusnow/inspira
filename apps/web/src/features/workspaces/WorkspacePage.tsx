@@ -1,4 +1,4 @@
-import type { NoteInspiration } from "@inspira/contracts"
+import type { InspirationItem } from "@inspira/contracts"
 import { useMemo, useState } from "react"
 import { useOutletContext } from "react-router-dom"
 import { MessagePlugin } from "tdesign-react"
@@ -44,7 +44,7 @@ export function WorkspacePage() {
     string | null
   >(null)
   const [itemPendingRemove, setItemPendingRemove] =
-    useState<NoteInspiration | null>(null)
+    useState<InspirationItem | null>(null)
   // Deleting a card is a Notes concern, so it goes straight through the same
   // hook the All page and the note detail use.
   const {

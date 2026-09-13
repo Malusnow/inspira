@@ -1,4 +1,4 @@
-import type { NoteInspiration } from "@inspira/contracts"
+import type { InspirationItem } from "@inspira/contracts"
 import { useEffect, useRef, useState } from "react"
 import { DeleteIcon, FolderAddIcon } from "tdesign-icons-react"
 
@@ -13,16 +13,16 @@ const FRESH_NOTE_DURATION_MS = 900
 
 export interface NoteListProps {
   /** undefined → still loading; an array → loaded Note rows for the owner. */
-  notes: NoteInspiration[] | undefined
+  notes: InspirationItem[] | undefined
   columnCount: AllColumnCount
-  onEditNote: (note: NoteInspiration) => void
+  onEditNote: (note: InspirationItem) => void
   /** Opens the detail floating layer for the selected Note card. */
-  onOpenNote: (note: NoteInspiration) => void
+  onOpenNote: (note: InspirationItem) => void
   /** Right-click → delete the card (confirmation is handled by the caller). */
-  onRequestDeleteNote: (note: NoteInspiration) => void
+  onRequestDeleteNote: (note: InspirationItem) => void
   /** Right-click → pick a workspace for the card, anchored at the menu. */
   onRequestAddToWorkspace: (
-    note: NoteInspiration,
+    note: InspirationItem,
     anchor: { x: number; y: number }
   ) => void
 }

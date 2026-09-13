@@ -12,3 +12,11 @@ export function toInspirationId(id: string) {
 export function toWorkspaceId(id: string) {
   return id as Id<"workspaces">
 }
+
+export function toMediaAssetId(id: string) {
+  return id as Id<"mediaAssets">
+}
+
+export function toStorageId(id: string) {
+  return id as Id<"_storage">
+}

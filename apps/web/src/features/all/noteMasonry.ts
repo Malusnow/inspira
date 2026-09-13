@@ -1,4 +1,4 @@
-import type { NoteInspiration } from "@inspira/contracts"
+import type { InspirationItem } from "@inspira/contracts"
 
 import { buildNotePreview } from "./notePreview"
 
@@ -24,7 +24,15 @@ const CODE_MAX_LINES = 5
 const DIVIDER_HEIGHT = 12
 const CARD_MAX_HEIGHT = 340
 
-export function estimateNoteCardHeight(note: NoteInspiration) {
+export function estimateNoteCardHeight(note: InspirationItem) {
+  if (note.type === "page") {
+    return 390
+  }
+
+  if (note.type === "image") {
+    return 360
+  }
+
   const preview = buildNotePreview({ content: note.content, title: note.title })
   let height = CARD_BASE_HEIGHT
 
@@ -43,7 +51,10 @@ export function estimateNoteCardHeight(note: NoteInspiration) {
     }
 
     const textLength = block.text?.length ?? 0
-    const estimatedLines = Math.max(1, Math.ceil(textLength / BODY_CHARS_PER_LINE))
+    const estimatedLines = Math.max(
+      1,
+      Math.ceil(textLength / BODY_CHARS_PER_LINE)
+    )
 
     if (block.kind === "code") {
       height +=

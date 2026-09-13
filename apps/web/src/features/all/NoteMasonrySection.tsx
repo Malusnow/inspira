@@ -1,4 +1,4 @@
-import type { NoteInspiration } from "@inspira/contracts"
+import type { InspirationItem } from "@inspira/contracts"
 import type { ReactNode } from "react"
 
 import { MasonryGrid } from "../../components/MasonryGrid"
@@ -7,16 +7,16 @@ import { estimateNoteCardHeight } from "./noteMasonry"
 
 export interface NoteMasonrySectionProps {
   /** undefined → still loading; an array → the loaded rows for the owner. */
-  notes: NoteInspiration[] | undefined
+  notes: InspirationItem[] | undefined
   /** Already-resolved column count, e.g. from `useResponsiveColumnCount`. */
   columnCount: ResponsiveColumnCount
   className?: string
   /** Rendered instead of the grid when there is nothing to show yet. */
   emptyState: ReactNode
-  renderCard: (note: NoteInspiration) => ReactNode
+  renderCard: (note: InspirationItem) => ReactNode
 }
 
-function getNoteKey(note: NoteInspiration) {
+function getNoteKey(note: InspirationItem) {
   return note.id
 }
 

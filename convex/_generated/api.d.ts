@@ -14,6 +14,7 @@ import type * as lib_auth from "../lib/auth.js";
 import type * as lib_captures from "../lib/captures.js";
 import type * as lib_notes from "../lib/notes.js";
 import type * as lib_workspaces from "../lib/workspaces.js";
+import type * as media from "../media.js";
 import type * as notes from "../notes.js";
 import type * as workspaces from "../workspaces.js";
 
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   "lib/captures": typeof lib_captures;
   "lib/notes": typeof lib_notes;
   "lib/workspaces": typeof lib_workspaces;
+  media: typeof media;
   notes: typeof notes;
   workspaces: typeof workspaces;
 }>;

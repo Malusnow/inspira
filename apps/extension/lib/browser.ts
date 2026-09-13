@@ -106,7 +106,7 @@ export async function openPopup(): Promise<boolean> {
 export type PageSnapshot = {
   title?: string
   description?: string
-  imageUrl?: string
+  html?: string
 }
 
 /**
@@ -124,10 +124,47 @@ export async function readPageSnapshot(tabId: number): Promise<PageSnapshot> {
           )
           ?.content?.trim() || undefined
 
+      const clone = document.documentElement.cloneNode(true) as HTMLElement
+
+      clone
+        .querySelectorAll("script, iframe, object, embed")
+        .forEach((node) => {
+          node.remove()
+        })
+      clone.querySelectorAll("*").forEach((node) => {
+        for (const attribute of Array.from(node.attributes)) {
+          const name = attribute.name.toLowerCase()
+          const value = attribute.value.trim().toLowerCase()
+
+          if (
+            name.startsWith("on") ||
+            value.startsWith("javascript:") ||
+            value.startsWith("data:text/html")
+          ) {
+            node.removeAttribute(attribute.name)
+          }
+        }
+      })
+
+      const base = document.baseURI
+        ? `<base href="${document.baseURI.replace(/"/g, "&quot;")}">`
+        : ""
+      const snapshotStyle = `<style id="inspira-snapshot-viewport">
+        html, body {
+          margin: 0 !important;
+          min-width: 1440px !important;
+          width: 1440px !important;
+          min-height: 900px !important;
+          overflow: auto !important;
+          background: white !important;
+        }
+      </style>`
+      const html = `<!doctype html><html>${clone.innerHTML}</html>`
+
       return {
         title: document.title?.trim() || undefined,
         description: readMeta("og:description") ?? readMeta("description"),
-        imageUrl: readMeta("og:image")
+        html: html.replace("<head>", `<head>${base}${snapshotStyle}`)
       }
     }
   })

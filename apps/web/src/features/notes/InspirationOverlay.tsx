@@ -1,11 +1,11 @@
-import type { NoteInspiration } from "@inspira/contracts"
+import type { InspirationItem } from "@inspira/contracts"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { useEscapeKey } from "../../hooks/useEscapeKey"
 import { NoteComposer } from "./NoteComposer"
 
 export interface InspirationOverlayProps {
-  note?: NoteInspiration
+  note?: InspirationItem
   visible: boolean
   onDismiss: () => void
 }
@@ -15,9 +15,9 @@ export function InspirationOverlay({
   visible,
   onDismiss
 }: InspirationOverlayProps) {
-  const [surfaceState, setSurfaceState] = useState<"entering" | "open" | "leaving">(
-    "entering"
-  )
+  const [surfaceState, setSurfaceState] = useState<
+    "entering" | "open" | "leaving"
+  >("entering")
   const [controlsVisible, setControlsVisible] = useState(true)
   const hideTimerRef = useRef<number | undefined>(undefined)
   const dismissTimerRef = useRef<number | undefined>(undefined)

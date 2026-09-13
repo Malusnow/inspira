@@ -1,14 +1,13 @@
 import { createClerkClient } from "@clerk/chrome-extension/client"
-import { ConvexHttpClient } from "convex/browser"
-import type { FunctionReference } from "convex/server"
-import { ConvexError } from "convex/values"
-
 import {
   CAPTURE_ERROR_CODES,
   type CaptureErrorCode,
   type CaptureRequestInput,
   type CaptureResult
 } from "@inspira/contracts"
+import { ConvexHttpClient } from "convex/browser"
+import type { FunctionReference } from "convex/server"
+import { ConvexError } from "convex/values"
 
 import { readExtensionConfig } from "~/lib/config"
 import type { AuthStatus, CaptureOutcome } from "~/lib/messages"
@@ -23,10 +22,9 @@ type CaptureMutationArgs = {
 function createBackgroundClerkClient() {
   const config = readExtensionConfig()
 
-  // `background: true` is the supported service-worker form; the
-  // `@clerk/chrome-extension/background` entry point is deprecated. `syncHost`
-  // points at the host holding the sign-in cookie, so a capture started from
-  // the context menu works without opening the popup first.
+  // `background: true` is the supported service-worker form. `syncHost` points
+  // at the host holding the sign-in cookie, so a capture started from the
+  // context menu works without opening the popup first.
   return createClerkClient({
     publishableKey: config.clerkPublishableKey,
     syncHost: config.syncHost,
@@ -105,16 +103,25 @@ const captureMutation = "captures:capture" as unknown as FunctionReference<
   CaptureResult
 >
 
+const managedCaptureAction =
+  "captures:captureManaged" as unknown as FunctionReference<
+    "action",
+    "public",
+    CaptureMutationArgs,
+    CaptureResult
+  >
+
 /**
  * The popup edits tags / remark after a capture. `updateDetails` only owns
  * those two fields and reports `NOT_FOUND` / `INVALID_INPUT` like `capture`.
  */
-const updateDetailsMutation = "captures:updateDetails" as unknown as FunctionReference<
-  "mutation",
-  "public",
-  { id: string; tags?: string[]; note?: string },
-  string
->
+const updateDetailsMutation =
+  "captures:updateDetails" as unknown as FunctionReference<
+    "mutation",
+    "public",
+    { id: string; tags?: string[]; note?: string },
+    string
+  >
 
 function isCaptureErrorCode(value: string): value is CaptureErrorCode {
   return (CAPTURE_ERROR_CODES as readonly string[]).includes(value)
@@ -125,9 +132,7 @@ function toCaptureFailure(error: unknown): {
   message: string
 } {
   if (error instanceof ConvexError) {
-    const data = error.data as
-      | { code?: unknown; message?: unknown }
-      | undefined
+    const data = error.data as { code?: unknown; message?: unknown } | undefined
 
     if (typeof data?.code === "string" && isCaptureErrorCode(data.code)) {
       return {
@@ -169,7 +174,10 @@ export async function saveCapture(
   client.setAuth(token)
 
   try {
-    const result = await client.mutation(captureMutation, input)
+    const result =
+      input.kind === "page" || input.kind === "image"
+        ? await client.action(managedCaptureAction, input)
+        : await client.mutation(captureMutation, input)
 
     return {
       status: "saved",
@@ -207,7 +215,11 @@ export async function updateCaptureDetails(
   client.setAuth(token)
 
   try {
-    await client.mutation(updateDetailsMutation, { id: inspirationId, tags, note })
+    await client.mutation(updateDetailsMutation, {
+      id: inspirationId,
+      tags,
+      note
+    })
 
     return true
   } catch {

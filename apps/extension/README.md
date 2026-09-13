@@ -67,7 +67,7 @@
 | `UNAUTHENTICATED`       | 未登录态，给登录链接             |
 | `INVALID_INPUT`         | 失败态，不自动重试               |
 | `WORKSPACE_UNAVAILABLE` | 失败态，不泄露其他账户信息       |
-| `SOURCE_UNAVAILABLE`    | 失败态，是否外链降级按 D04       |
+| `SOURCE_UNAVAILABLE`    | 失败态，不外链降级               |
 | `REQUEST_CONFLICT`      | 失败态，不重试，需修正客户端逻辑 |
 | `TEMPORARY_FAILURE`     | 失败态，可用同一 ID 重试         |
 
@@ -211,7 +211,6 @@ npx convex env set CLERK_JWT_ISSUER_DOMAIN https://<slug>.clerk.accounts.dev
 
 | 项  | 内容                                                                                                          | 影响             |
 | --- | ------------------------------------------------------------------------------------------------------------- | ---------------- |
-| D04 | 右键图片是否转存优先、失败后是否外链降级                                                                      | image 采集       |
 | D05 | 已定登录方式：在 Web 应用登录，扩展用 `syncHost` 同步会话；是否自动恢复待保存请求仍未定，当前需要用户重新保存 | 未登录流程       |
 | T01 | Service Worker 内能否获取 Clerk token 并调用 Convex                                                           | 登录与保存链路   |
 | T02 | 同请求重试、主动再次保存、Worker 重启                                                                         | 幂等与状态持久化 |

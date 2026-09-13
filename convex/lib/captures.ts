@@ -24,6 +24,7 @@ export const captureArgs = {
   description: v.optional(v.string()),
   selectedText: v.optional(v.string()),
   imageUrl: v.optional(v.string()),
+  snapshotHtml: v.optional(v.string()),
   note: v.optional(v.string()),
   workspaceId: v.optional(v.string()),
   tags: v.optional(v.array(v.string())),
@@ -59,6 +60,7 @@ export function buildCapturePayload(request: CaptureRequest) {
     description: request.description ?? null,
     selectedText: request.selectedText ?? null,
     imageUrl: request.imageUrl ?? null,
+    snapshotHtml: request.snapshotHtml ?? null,
     note: request.note ?? null,
     workspaceId: request.workspaceId ?? null,
     tags: request.tags
@@ -79,23 +81,21 @@ export async function hashCapturePayload(payload: string) {
 /**
  * Maps a validated request onto stored columns. Captures share one table with
  * notes, so `title` and `content` always carry something meaningful:
- * page keeps its URL as content, quote keeps the selected text, image keeps the
- * remote address until media transfer exists (D04).
+ * page keeps its summary/source as content, quote keeps the selected text, and
+ * image keeps the original remote image address as content.
  */
 export function buildCaptureColumns(request: CaptureRequest): {
   title: string
   content: string
   sourceUrl?: string
   selectedText?: string
-  imageUrl?: string
 } {
   switch (request.kind) {
     case "page":
       return {
         title: request.pageTitle ?? request.sourceUrl ?? "",
         content: request.description ?? request.sourceUrl ?? "",
-        sourceUrl: request.sourceUrl,
-        imageUrl: request.imageUrl
+        sourceUrl: request.sourceUrl
       }
     case "quote":
       return {
@@ -108,8 +108,7 @@ export function buildCaptureColumns(request: CaptureRequest): {
       return {
         title: request.pageTitle ?? request.imageUrl ?? "",
         content: request.imageUrl ?? "",
-        sourceUrl: request.sourceUrl,
-        imageUrl: request.imageUrl
+        sourceUrl: request.sourceUrl
       }
     default: {
       const unsupportedKind: never = request.kind

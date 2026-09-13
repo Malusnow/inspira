@@ -81,7 +81,7 @@ export async function captureActivePage(): Promise<CaptureOutcome> {
     sourceUrl: tab.url,
     pageTitle: snapshot.title,
     description: snapshot.description,
-    imageUrl: toCapturableUrl(snapshot.imageUrl, tab.url),
+    snapshotHtml: snapshot.html,
     capturedAt: Date.now()
   })
 }
@@ -109,7 +109,7 @@ async function captureSelectionIntent(
   })
 }
 
-/** Context menu on an image; the remote address is stored until S7 (D04). */
+/** Context menu on an image; the backend transfers it into managed media. */
 async function captureImageIntent(
   intent: Extract<CaptureIntent, { kind: "image" }>
 ): Promise<CaptureOutcome> {

@@ -1,4 +1,4 @@
-import type { NoteInspiration, WorkspaceDetail } from "@inspira/contracts"
+import type { InspirationItem, WorkspaceDetail } from "@inspira/contracts"
 import { ArrowLeftIcon, DeleteIcon, RollbackIcon } from "tdesign-icons-react"
 
 import { ContextMenu } from "../../components/ContextMenu"
@@ -12,10 +12,10 @@ const WORKSPACE_COLUMN_COUNT = 4 as const
 export interface WorkspaceFlowProps {
   workspace: WorkspaceDetail | undefined
   onBack: () => void
-  onOpenNote: (note: NoteInspiration) => void
-  onEditNote: (note: NoteInspiration) => void
-  onRequestRemoveItem: (note: NoteInspiration) => void
-  onRequestDeleteItem: (note: NoteInspiration) => void
+  onOpenNote: (note: InspirationItem) => void
+  onEditNote: (note: InspirationItem) => void
+  onRequestRemoveItem: (note: InspirationItem) => void
+  onRequestDeleteItem: (note: InspirationItem) => void
 }
 
 export function WorkspaceFlow({

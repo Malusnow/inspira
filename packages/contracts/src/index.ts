@@ -6,6 +6,86 @@ export const NOTE_NOTES_MAX_LENGTH = 5000
 export const NOTE_TAG_MAX_COUNT = 12
 export const NOTE_TAG_MAX_LENGTH = 40
 export const WORKSPACE_NAME_MAX_LENGTH = 60
+export const MEDIA_IMAGE_MAX_BYTES = 20 * 1024 * 1024
+export const MEDIA_PAGE_HTML_MAX_BYTES = 2 * 1024 * 1024
+export const NOTE_MEDIA_REFERENCE_PREFIX = "inspira-media:"
+
+export const MEDIA_IMAGE_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif"
+] as const
+
+export const MEDIA_ASSET_KINDS = [
+  "image",
+  "pageHtml",
+  "pagePreview",
+  "noteImage"
+] as const
+
+export const MEDIA_ASSET_USAGES = [
+  "captureImage",
+  "pageSnapshotHtml",
+  "pageSnapshotPreview",
+  "noteEmbed"
+] as const
+
+export const MEDIA_ASSET_STATUSES = [
+  "uploading",
+  "available",
+  "failed",
+  "pendingCleanup",
+  "deleted"
+] as const
+
+export type MediaImageMimeType = (typeof MEDIA_IMAGE_MIME_TYPES)[number]
+export type MediaAssetKind = (typeof MEDIA_ASSET_KINDS)[number]
+export type MediaAssetUsage = (typeof MEDIA_ASSET_USAGES)[number]
+export type MediaAssetStatus = (typeof MEDIA_ASSET_STATUSES)[number]
+
+export interface MediaAssetView {
+  id: string
+  kind: MediaAssetKind
+  mimeType: string
+  byteSize: number
+  status: MediaAssetStatus
+  usage: MediaAssetUsage
+  sourceUrl?: string
+  url?: string
+  createdAt: number
+  updatedAt: number
+}
+
+export interface PageSnapshotView {
+  id: string
+  htmlAssetId: string
+  htmlUrl?: string
+  previewAssetId?: string
+  previewUrl?: string
+  originalUrl: string
+  capturedAt: number
+}
+
+export interface RequestMediaUploadInput {
+  usage: MediaAssetUsage
+  kind: MediaAssetKind
+  mimeType: string
+  byteSize: number
+  sourceUrl?: string
+}
+
+export interface RequestMediaUploadResult {
+  uploadUrl: string
+}
+
+export interface FinalizeMediaUploadInput extends RequestMediaUploadInput {
+  storageId: string
+}
+
+export interface FinalizeMediaUploadResult {
+  assetId: string
+}
 
 export interface CreateNoteInput {
   title?: string
@@ -34,8 +114,12 @@ export interface InspirationItem {
   workspaceId?: string
   /** Capture-only: source page of a page / quote / image item. */
   sourceUrl?: string
-  /** Capture-only: remote image address until media transfer exists (D04). */
-  imageUrl?: string
+  primaryAssetId?: string
+  primaryAssetUrl?: string
+  pageSnapshotId?: string
+  pageSnapshot?: PageSnapshotView
+  mediaStatus?: MediaAssetStatus
+  mediaAssets?: Record<string, MediaAssetView>
   /** Capture-only: the selected text behind a quote item. */
   selectedText?: string
   /** Capture-only: client clock, context only. */
@@ -43,12 +127,6 @@ export interface InspirationItem {
   createdAt: number
   updatedAt: number
 }
-
-/**
- * @deprecated Use `InspirationItem`. Kept as an alias because Note views and
- * capture items are read through the same queries.
- */
-export type NoteInspiration = InspirationItem
 
 /**
  * Plugin capture is limited to these three entry points. Web Note editing and
@@ -99,6 +177,8 @@ export interface CaptureRequestInput {
   selectedText?: string
   /** Required for image. */
   imageUrl?: string
+  /** Page capture: static sanitized HTML snapshot to store as managed media. */
+  snapshotHtml?: string
   /** User remark; stored on the content's `notes` field. */
   note?: string
   /** Must belong to the current owner; validated against the DB on write. */
@@ -121,6 +201,7 @@ export interface CaptureRequest {
   description?: string
   selectedText?: string
   imageUrl?: string
+  snapshotHtml?: string
   note?: string
   workspaceId?: string
   tags: string[]
@@ -144,6 +225,15 @@ export class CaptureValidationError extends Error {
   constructor(message: string) {
     super(message)
     this.name = "CaptureValidationError"
+  }
+}
+
+export class MediaValidationError extends Error {
+  readonly code: CaptureErrorCode = "INVALID_INPUT"
+
+  constructor(message: string) {
+    super(message)
+    this.name = "MediaValidationError"
   }
 }
 
@@ -287,6 +377,12 @@ export function normalizeCaptureRequest(
     )
   }
 
+  const snapshotHtml = cleanCaptureText(
+    input.snapshotHtml,
+    MEDIA_PAGE_HTML_MAX_BYTES,
+    "snapshotHtml"
+  )
+
   if (input.capturedAt !== undefined && !Number.isFinite(input.capturedAt)) {
     throw new CaptureValidationError("capturedAt must be a finite timestamp.")
   }
@@ -307,6 +403,7 @@ export function normalizeCaptureRequest(
     ),
     selectedText,
     imageUrl,
+    snapshotHtml,
     note: cleanCaptureText(input.note, CAPTURE_NOTE_MAX_LENGTH, "note"),
     // workspaceId is an opaque Convex id: never trim or limit it here. Existence
     // and ownership are validated against the DB in the backend handler.
@@ -316,12 +413,100 @@ export function normalizeCaptureRequest(
   }
 }
 
+export function isMediaImageMimeType(
+  value: string
+): value is MediaImageMimeType {
+  return (MEDIA_IMAGE_MIME_TYPES as readonly string[]).includes(value)
+}
+
+export function isMediaAssetKind(value: string): value is MediaAssetKind {
+  return (MEDIA_ASSET_KINDS as readonly string[]).includes(value)
+}
+
+export function isMediaAssetUsage(value: string): value is MediaAssetUsage {
+  return (MEDIA_ASSET_USAGES as readonly string[]).includes(value)
+}
+
+export function getMediaByteLimit(input: {
+  kind: MediaAssetKind
+  usage: MediaAssetUsage
+}) {
+  if (input.kind === "pageHtml" && input.usage === "pageSnapshotHtml") {
+    return MEDIA_PAGE_HTML_MAX_BYTES
+  }
+
+  return MEDIA_IMAGE_MAX_BYTES
+}
+
+export function validateMediaUploadIntent(input: RequestMediaUploadInput) {
+  if (!isMediaAssetKind(input.kind)) {
+    throw new MediaValidationError("Unsupported media kind.")
+  }
+
+  if (!isMediaAssetUsage(input.usage)) {
+    throw new MediaValidationError("Unsupported media usage.")
+  }
+
+  const isPageHtml =
+    input.kind === "pageHtml" && input.usage === "pageSnapshotHtml"
+  const isImage =
+    (input.kind === "image" && input.usage === "captureImage") ||
+    (input.kind === "noteImage" && input.usage === "noteEmbed") ||
+    (input.kind === "pagePreview" && input.usage === "pageSnapshotPreview")
+
+  if (!isPageHtml && !isImage) {
+    throw new MediaValidationError("Media kind and usage do not match.")
+  }
+
+  if (isPageHtml && input.mimeType !== "text/html") {
+    throw new MediaValidationError("Page snapshots must use text/html.")
+  }
+
+  if (isImage && !isMediaImageMimeType(input.mimeType)) {
+    throw new MediaValidationError("Unsupported image type.")
+  }
+
+  if (
+    !Number.isFinite(input.byteSize) ||
+    input.byteSize <= 0 ||
+    input.byteSize > getMediaByteLimit(input)
+  ) {
+    throw new MediaValidationError("Media file is too large or empty.")
+  }
+}
+
+export function createNoteMediaReference(
+  assetId: string,
+  alt = "Inspira media"
+) {
+  return `![${alt}](${NOTE_MEDIA_REFERENCE_PREFIX}${assetId})`
+}
+
+export function extractNoteMediaAssetIds(content: string) {
+  const ids = new Set<string>()
+  const escapedPrefix = NOTE_MEDIA_REFERENCE_PREFIX.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&"
+  )
+  const pattern = new RegExp(
+    `!\\[[^\\]]*\\]\\(${escapedPrefix}([^\\s)]+)\\)`,
+    "g"
+  )
+
+  for (const match of content.matchAll(pattern)) {
+    ids.add(match[1])
+  }
+
+  return Array.from(ids)
+}
+
 export interface WorkspacePreviewItem {
   id: string
   type: InspirationType
   title?: string
   text?: string
-  imageUrl?: string
+  primaryAssetUrl?: string
+  pageSnapshotUrl?: string
   createdAt: number
 }
 
@@ -342,7 +527,7 @@ export interface WorkspaceSummary {
 export interface WorkspaceDetail {
   id: string
   name: string
-  items: NoteInspiration[]
+  items: InspirationItem[]
   createdAt: number
   updatedAt: number
 }

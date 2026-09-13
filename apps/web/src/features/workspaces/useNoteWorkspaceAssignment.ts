@@ -1,4 +1,4 @@
-import type { NoteInspiration } from "@inspira/contracts"
+import type { InspirationItem } from "@inspira/contracts"
 import { useCallback, useState } from "react"
 import { MessagePlugin } from "tdesign-react"
 
@@ -9,7 +9,7 @@ import {
 } from "./useWorkspaces"
 
 export interface PendingWorkspaceAssignment {
-  note: NoteInspiration
+  note: InspirationItem
   /** Viewport coordinates the picker opens at. */
   anchor: ViewportPoint
 }
@@ -19,7 +19,7 @@ export interface UseNoteWorkspaceAssignmentResult {
   pending: PendingWorkspaceAssignment | null
   workspaces: ReturnType<typeof useWorkspaceOverviewData>
   isAssigning: boolean
-  requestAssignment: (note: NoteInspiration, anchor: ViewportPoint) => void
+  requestAssignment: (note: InspirationItem, anchor: ViewportPoint) => void
   closePicker: () => void
   assign: (workspaceId: string) => Promise<void>
 }
@@ -42,7 +42,7 @@ export function useNoteWorkspaceAssignment(): UseNoteWorkspaceAssignmentResult {
   const [isAssigning, setIsAssigning] = useState(false)
 
   const requestAssignment = useCallback(
-    (note: NoteInspiration, anchor: ViewportPoint) => {
+    (note: InspirationItem, anchor: ViewportPoint) => {
       setPending({ note, anchor })
     },
     []

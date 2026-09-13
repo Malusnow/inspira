@@ -1,7 +1,19 @@
+import type { FunctionReference } from "convex/server"
 import { ConvexError, v } from "convex/values"
 
-import { isCaptureKind } from "../packages/contracts/src/index"
-import { mutation } from "./_generated/server"
+import {
+  isCaptureKind,
+  MEDIA_IMAGE_MAX_BYTES,
+  MediaValidationError,
+  validateMediaUploadIntent
+} from "../packages/contracts/src/index"
+import type { Id } from "./_generated/dataModel"
+import {
+  action,
+  internalMutation,
+  internalQuery,
+  mutation
+} from "./_generated/server"
 import { requireOwner } from "./lib/auth"
 import {
   buildCaptureColumns,
@@ -13,6 +25,65 @@ import {
   resolveCaptureWorkspaceId
 } from "./lib/captures"
 import { touchWorkspace } from "./lib/workspaces"
+import { createAvailableMediaAsset } from "./media"
+
+const getCaptureAttemptResultRef =
+  "captures:getCaptureAttemptResult" as unknown as FunctionReference<
+    "query",
+    "internal",
+    { ownerId: string; clientRequestId: string },
+    {
+      payloadHash: string
+      inspirationId: Id<"inspirations">
+    } | null
+  >
+
+const createManagedCaptureRef =
+  "captures:createManagedCapture" as unknown as FunctionReference<
+    "mutation",
+    "internal",
+    {
+      clientRequestId: string
+      kind: string
+      sourceUrl?: string
+      pageTitle?: string
+      description?: string
+      selectedText?: string
+      imageUrl?: string
+      snapshotHtml?: string
+      note?: string
+      workspaceId?: string
+      tags?: string[]
+      capturedAt?: number
+      ownerId: string
+      payloadHash: string
+      storageId: Id<"_storage">
+      storedMimeType: string
+      storedByteSize: number
+    },
+    { inspirationId: Id<"inspirations">; created: boolean }
+  >
+
+function sourceUnavailable(message: string) {
+  return new ConvexError({
+    code: "SOURCE_UNAVAILABLE",
+    message
+  })
+}
+
+function validateManagedCaptureMedia(
+  input: Parameters<typeof validateMediaUploadIntent>[0]
+) {
+  try {
+    validateMediaUploadIntent(input)
+  } catch (error) {
+    if (error instanceof MediaValidationError) {
+      throw sourceUnavailable(error.message)
+    }
+
+    throw error
+  }
+}
 
 /**
  * Saves one capture (page / quote / image) for the signed-in owner.
@@ -28,6 +99,13 @@ export const capture = mutation({
   handler: async (ctx, args) => {
     const ownerId = await requireOwner(ctx)
     const request = cleanCapture(args)
+
+    if (request.kind !== "quote") {
+      throw sourceUnavailable(
+        "Page and image captures require the managed capture endpoint."
+      )
+    }
+
     const payloadHash = await hashCapturePayload(buildCapturePayload(request))
     const existingAttempt = await ctx.db
       .query("captureAttempts")
@@ -66,7 +144,6 @@ export const capture = mutation({
       tags: request.tags,
       workspaceId,
       sourceUrl: columns.sourceUrl,
-      imageUrl: columns.imageUrl,
       selectedText: columns.selectedText,
       capturedAt: request.capturedAt ?? now,
       createdAt: now,
@@ -80,6 +157,231 @@ export const capture = mutation({
       ownerId,
       clientRequestId: request.clientRequestId,
       payloadHash,
+      status: "succeeded",
+      inspirationId,
+      createdAt: now
+    })
+
+    await touchWorkspace(ctx, workspaceId)
+
+    return { inspirationId, created: true }
+  }
+})
+
+export const captureManaged = action({
+  args: captureArgs,
+  handler: async (ctx, args) => {
+    const ownerId = await requireOwner(ctx)
+    const request = cleanCapture(args)
+
+    if (request.kind !== "page" && request.kind !== "image") {
+      throw new ConvexError({
+        code: "INVALID_INPUT",
+        message: "Managed capture supports page and image only."
+      })
+    }
+
+    const payloadHash = await hashCapturePayload(buildCapturePayload(request))
+    const existing = await ctx.runQuery(getCaptureAttemptResultRef, {
+      ownerId,
+      clientRequestId: request.clientRequestId
+    })
+
+    if (existing) {
+      if (existing.payloadHash !== payloadHash) {
+        throw new ConvexError({
+          code: "REQUEST_CONFLICT",
+          message: "This request id was already used for different content."
+        })
+      }
+
+      return {
+        inspirationId: existing.inspirationId,
+        created: false
+      }
+    }
+
+    let stored: {
+      storageId: Id<"_storage">
+      mimeType: string
+      byteSize: number
+    }
+
+    if (request.kind === "page") {
+      if (!request.snapshotHtml) {
+        throw sourceUnavailable("Page snapshot is not available.")
+      }
+
+      const byteSize = new TextEncoder().encode(request.snapshotHtml).byteLength
+
+      validateManagedCaptureMedia({
+        kind: "pageHtml",
+        usage: "pageSnapshotHtml",
+        mimeType: "text/html",
+        byteSize,
+        sourceUrl: request.sourceUrl
+      })
+
+      const blob = new Blob([request.snapshotHtml], { type: "text/html" })
+      stored = {
+        storageId: await ctx.storage.store(blob),
+        mimeType: "text/html",
+        byteSize
+      }
+    } else {
+      if (!request.imageUrl) {
+        throw sourceUnavailable("Image URL is not available.")
+      }
+
+      let response: Response
+
+      try {
+        response = await fetch(request.imageUrl)
+      } catch {
+        throw sourceUnavailable("Image could not be fetched.")
+      }
+
+      if (!response.ok) {
+        throw sourceUnavailable("Image could not be fetched.")
+      }
+
+      const mimeType = response.headers.get("content-type")?.split(";")[0] ?? ""
+      const blob = await response.blob()
+
+      validateManagedCaptureMedia({
+        kind: "image",
+        usage: "captureImage",
+        mimeType,
+        byteSize: blob.size,
+        sourceUrl: request.imageUrl
+      })
+
+      if (blob.size > MEDIA_IMAGE_MAX_BYTES) {
+        throw sourceUnavailable("Image is too large.")
+      }
+
+      stored = {
+        storageId: await ctx.storage.store(blob),
+        mimeType,
+        byteSize: blob.size
+      }
+    }
+
+    return await ctx.runMutation(createManagedCaptureRef, {
+      ...args,
+      ownerId,
+      payloadHash,
+      storageId: stored.storageId,
+      storedMimeType: stored.mimeType,
+      storedByteSize: stored.byteSize
+    })
+  }
+})
+
+export const getCaptureAttemptResult = internalQuery({
+  args: {
+    ownerId: v.string(),
+    clientRequestId: v.string()
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("captureAttempts")
+      .withIndex("by_owner_clientRequestId", (q) =>
+        q
+          .eq("ownerId", args.ownerId)
+          .eq("clientRequestId", args.clientRequestId)
+      )
+      .first()
+  }
+})
+
+export const createManagedCapture = internalMutation({
+  args: {
+    ...captureArgs,
+    ownerId: v.string(),
+    payloadHash: v.string(),
+    storageId: v.id("_storage"),
+    storedMimeType: v.string(),
+    storedByteSize: v.number()
+  },
+  handler: async (ctx, args) => {
+    const request = cleanCapture(args)
+    const existingAttempt = await ctx.db
+      .query("captureAttempts")
+      .withIndex("by_owner_clientRequestId", (q) =>
+        q
+          .eq("ownerId", args.ownerId)
+          .eq("clientRequestId", request.clientRequestId)
+      )
+      .first()
+
+    if (existingAttempt) {
+      if (existingAttempt.payloadHash !== args.payloadHash) {
+        throw new ConvexError({
+          code: "REQUEST_CONFLICT",
+          message: "This request id was already used for different content."
+        })
+      }
+
+      return {
+        inspirationId: existingAttempt.inspirationId,
+        created: false
+      }
+    }
+
+    const workspaceId = await resolveCaptureWorkspaceId(
+      ctx,
+      args.ownerId,
+      request.workspaceId
+    )
+    const columns = buildCaptureColumns(request)
+    const now = Date.now()
+    const assetId = await createAvailableMediaAsset(ctx, {
+      ownerId: args.ownerId,
+      storageId: args.storageId,
+      kind: request.kind === "page" ? "pageHtml" : "image",
+      usage: request.kind === "page" ? "pageSnapshotHtml" : "captureImage",
+      mimeType: args.storedMimeType,
+      byteSize: args.storedByteSize,
+      sourceUrl: request.kind === "page" ? request.sourceUrl : request.imageUrl,
+      now
+    })
+    const inspirationId = await ctx.db.insert("inspirations", {
+      ownerId: args.ownerId,
+      type: request.kind,
+      title: columns.title,
+      content: columns.content,
+      notes: request.note,
+      tags: request.tags,
+      workspaceId,
+      sourceUrl: columns.sourceUrl,
+      primaryAssetId: request.kind === "image" ? assetId : undefined,
+      mediaStatus: "available",
+      selectedText: columns.selectedText,
+      capturedAt: request.capturedAt ?? now,
+      createdAt: now,
+      updatedAt: now
+    })
+
+    if (request.kind === "page") {
+      const snapshotId = await ctx.db.insert("pageSnapshots", {
+        ownerId: args.ownerId,
+        inspirationId,
+        htmlAssetId: assetId,
+        originalUrl: request.sourceUrl ?? "",
+        capturedAt: request.capturedAt ?? now,
+        createdAt: now
+      })
+
+      await ctx.db.patch(inspirationId, {
+        pageSnapshotId: snapshotId
+      })
+    }
+
+    await ctx.db.insert("captureAttempts", {
+      ownerId: args.ownerId,
+      clientRequestId: request.clientRequestId,
+      payloadHash: args.payloadHash,
       status: "succeeded",
       inspirationId,
       createdAt: now

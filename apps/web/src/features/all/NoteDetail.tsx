@@ -4,27 +4,28 @@ import {
   NOTE_TAG_MAX_COUNT,
   NOTE_TAG_MAX_LENGTH,
   NOTE_TITLE_MAX_LENGTH,
-  type NoteInspiration
+  type InspirationItem
 } from "@inspira/contracts"
 import { useMutation } from "convex/react"
 import { useMemo, useRef, useState } from "react"
-import { Drawer, Tag } from "tdesign-react"
 import { CloseIcon, DeleteIcon, FolderAddIcon } from "tdesign-icons-react"
+import { Drawer, Tag } from "tdesign-react"
 
 import { api } from "../../../../../convex/_generated/api"
 import { ConfirmDialog } from "../../components/ConfirmDialog"
 import { useEscapeKey } from "../../hooks/useEscapeKey"
 import { toInspirationId } from "../../lib/convexIds"
-import { WorkspacePickerPopover } from "../workspaces/WorkspacePickerPopover"
 import { useNoteWorkspaceAssignment } from "../workspaces/useNoteWorkspaceAssignment"
+import { WorkspacePickerPopover } from "../workspaces/WorkspacePickerPopover"
 import { formatDetailTimestamp } from "./noteFormat"
 import { NoteDetailBody } from "./NotePreview"
 import { buildNotePreview } from "./notePreview"
+import { PageSnapshotFrame } from "./PageSnapshotFrame"
 import { useNoteDeletion } from "./useNoteDeletion"
 
 export interface NoteDetailDialogProps {
   /** Selected Note to show, or null/undefined to keep the layer closed. */
-  note: NoteInspiration | null
+  note: InspirationItem | null
   /** Closes the detail floating layer; focus returns to the triggering card. */
   onClose: () => void
 }
@@ -43,8 +44,10 @@ export function NoteDetailDialog({ note, onClose }: NoteDetailDialogProps) {
       visible={Boolean(note)}
       header={false}
       footer={false}
-      size="min(1040px, 100vw)"
-      className="note-detail-drawer"
+      size={note?.type === "page" ? "min(1500px, 100vw)" : "min(1040px, 100vw)"}
+      className={`note-detail-drawer ${
+        note?.type === "page" ? "note-detail-drawer--page" : ""
+      }`}
       closeBtn={
         <button
           type="button"
@@ -147,10 +150,11 @@ function NoteDetailContent({
   note,
   onClose
 }: {
-  note: NoteInspiration
+  note: InspirationItem
   onClose: () => void
 }) {
   const updateNote = useMutation(api.notes.update)
+  const updateCaptureDetails = useMutation(api.captures.updateDetails)
   const [title, setTitle] = useState(note.title ?? "")
   const [mindNotes, setMindNotes] = useState(note.notes ?? "")
   const [tags, setTags] = useState<string[]>(note.tags)
@@ -176,9 +180,14 @@ function NoteDetailContent({
     confirm: confirmDelete
   } = useNoteDeletion({ onDeleted: onClose })
   const detailPreview = buildNotePreview(
-    { content: note.content, title: note.title },
+    {
+      content: note.content,
+      title: note.type === "quote" ? undefined : note.title,
+      mediaAssets: note.mediaAssets
+    },
     { includeAllBlocks: true }
   )
+  const isPlainNote = note.type === "note"
 
   const canAddTag = useMemo(() => {
     const nextTag = tagDraft.trim()
@@ -215,14 +224,22 @@ function NoteDetailContent({
     try {
       // The reactive query is the source of truth for the selected Note, so
       // there is no local copy to patch back into the parent here.
-      await updateNote({
-        id: toInspirationId(note.id),
-        title: nextTitle || undefined,
-        content: note.content.slice(0, NOTE_CONTENT_MAX_LENGTH),
-        notes: nextNotes || undefined,
-        tags: nextTags,
-        workspaceId: note.workspaceId
-      })
+      if (isPlainNote) {
+        await updateNote({
+          id: toInspirationId(note.id),
+          title: nextTitle || undefined,
+          content: note.content.slice(0, NOTE_CONTENT_MAX_LENGTH),
+          notes: nextNotes || undefined,
+          tags: nextTags,
+          workspaceId: note.workspaceId
+        })
+      } else {
+        await updateCaptureDetails({
+          id: toInspirationId(note.id),
+          note: nextNotes || undefined,
+          tags: nextTags
+        })
+      }
     } catch (error) {
       console.error("Failed to update note detail", error)
     } finally {
@@ -248,12 +265,19 @@ function NoteDetailContent({
   }
 
   return (
-    <div className="grid h-full min-h-svh gap-0 text-start lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div
+      className={`grid h-full min-h-svh gap-0 text-start ${
+        note.type === "page"
+          ? "lg:grid-cols-[minmax(0,1fr)_340px]"
+          : "lg:grid-cols-[minmax(0,1fr)_320px]"
+      }`}>
       <article
-        className="flex min-h-[420px] items-start justify-center overflow-y-auto bg-canvas px-6 py-20 sm:px-10 lg:px-14">
-        <div className="w-full max-w-130">
-          <NoteDetailBody preview={detailPreview} />
-        </div>
+        className={`flex min-h-[420px] items-start justify-center bg-canvas ${
+          note.type === "page"
+            ? "overflow-hidden px-3 py-16 sm:px-5 lg:px-8"
+            : "overflow-y-auto px-6 py-20 sm:px-10 lg:px-14"
+        }`}>
+        <DetailPrimary note={note} preview={detailPreview} />
       </article>
 
       <aside className="flex min-h-105 flex-col border-t border-line bg-surface px-6 py-8 lg:border-l lg:border-t-0">
@@ -266,13 +290,24 @@ function NoteDetailContent({
           maxLength={NOTE_TITLE_MAX_LENGTH}
           rows={2}
           placeholder="Title"
+          readOnly={!isPlainNote}
           onChange={(event) => setTitle(event.target.value)}
           onBlur={() => void handleSave()}
-          className="min-h-20 resize-none rounded-md border-0 bg-transparent p-0 text-3xl font-light leading-tight text-ink-strong outline-none placeholder:text-ink-muted/60 focus-visible:ring-0"
+          className="min-h-20 resize-none rounded-md border-0 bg-transparent p-0 text-3xl font-light leading-tight text-ink-strong outline-none placeholder:text-ink-muted/60 read-only:cursor-default focus-visible:ring-0"
         />
         <p className="text-sm text-ink-muted">
           {formatDetailTimestamp(note.createdAt)}
         </p>
+
+        {note.sourceUrl ? (
+          <a
+            href={note.sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex w-fit rounded-full bg-brand-soft px-3 py-1.5 text-sm font-medium text-brand-ink-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
+            打开原网页
+          </a>
+        ) : null}
 
         <DetailTags
           canAddTag={canAddTag}
@@ -355,6 +390,45 @@ function NoteDetailContent({
           />
         ) : null}
       </aside>
+    </div>
+  )
+}
+
+function DetailPrimary({
+  note,
+  preview
+}: {
+  note: InspirationItem
+  preview: ReturnType<typeof buildNotePreview>
+}) {
+  if (note.type === "page") {
+    return (
+      <PageSnapshotFrame
+        title={note.title || "Saved page snapshot"}
+        url={note.pageSnapshot?.htmlUrl}
+        interactive
+        className="h-[calc(100svh-8rem)] min-h-[620px] w-full max-w-[1180px] shadow-sm"
+      />
+    )
+  }
+
+  if (note.type === "image") {
+    return note.primaryAssetUrl ? (
+      <img
+        src={note.primaryAssetUrl}
+        alt={note.title || "Saved image"}
+        className="max-h-[calc(100svh-10rem)] max-w-full rounded-lg object-contain"
+      />
+    ) : (
+      <div className="grid min-h-80 w-full max-w-130 place-items-center rounded-lg border border-dashed border-line bg-surface px-6 text-center text-sm text-ink-muted">
+        图片暂不可用
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full max-w-130">
+      <NoteDetailBody preview={preview} />
     </div>
   )
 }
