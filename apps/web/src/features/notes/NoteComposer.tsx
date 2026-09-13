@@ -15,13 +15,17 @@ import {
   NOTE_CONTENT_MAX_LENGTH,
   type InspirationItem
 } from "@inspira/contracts"
-import { useConvexAuth, useMutation } from "convex/react"
+import { useConvex, useConvexAuth, useMutation } from "convex/react"
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react"
 import { createPortal } from "react-dom"
 import { CloseIcon } from "tdesign-icons-react"
 
 import { api } from "../../../../../convex/_generated/api"
-import { toInspirationId, toStorageId } from "../../lib/convexIds"
+import {
+  toInspirationId,
+  toMediaAssetId,
+  toStorageId
+} from "../../lib/convexIds"
 
 type Editor = ReturnType<typeof useCreateBlockNote>
 
@@ -52,7 +56,10 @@ function matchSlashItems(
     if (!allowedSlashItems.has(item.title)) return false
     if (!normalizedQuery) return true
 
-    return item.title.toLowerCase().includes(normalizedQuery)
+    const aliases =
+      item.title === "Image" ? " addimage add image picture photo 图片" : ""
+
+    return `${item.title}${aliases}`.toLowerCase().includes(normalizedQuery)
   })
 }
 
@@ -72,6 +79,15 @@ function serializeDocumentToMarkdown(editor: Editor) {
         : editor.blocksToMarkdownLossy([block]).replace(/\n+$/g, "")
     )
     .join("\n\n")
+}
+
+function replaceMarkdownImageUrls(
+  markdown: string,
+  getReplacement: (url: string, alt: string) => string | undefined
+) {
+  return markdown.replace(/!\[([^\]]*)]\(([^)]+)\)/g, (match, alt, url) => {
+    return getReplacement(url, alt) ?? match
+  })
 }
 
 function parseMarkdownPreservingBlankParagraphs(
@@ -147,33 +163,54 @@ export function NoteComposer({
   const updateNoteMutation = useMutation(api.notes.update)
   const requestMediaUpload = useMutation(api.media.requestUpload)
   const finalizeMediaUpload = useMutation(api.media.finalizeUpload)
+  const convex = useConvex()
   const { isAuthenticated, isLoading } = useConvexAuth()
   const editor = useCreateBlockNote()
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
+  const displayUrlAssetIdsRef = useRef(new Map<string, string>())
 
   useEffect(() => {
-    if (!note?.content) return
+    if (!note?.content) {
+      displayUrlAssetIdsRef.current.clear()
+      return
+    }
 
     try {
+      displayUrlAssetIdsRef.current.clear()
+      const editorContent = replaceMarkdownImageUrls(
+        note.content,
+        (url, alt) => {
+          if (!url.startsWith("inspira-media:")) return undefined
+
+          const assetId = url.slice("inspira-media:".length)
+          const displayUrl = note.mediaAssets?.[assetId]?.url
+
+          if (!displayUrl) return undefined
+
+          displayUrlAssetIdsRef.current.set(displayUrl, assetId)
+
+          return `![${alt}](${displayUrl})`
+        }
+      )
       const blocks = parseMarkdownPreservingBlankParagraphs(
         editor,
-        note.content
+        editorContent
       )
       editor.replaceBlocks(
         editor.document,
         blocks.length > 0
           ? blocks
-          : [{ type: "paragraph", content: note.content }]
+          : [{ type: "paragraph", content: editorContent }]
       )
     } catch {
       editor.replaceBlocks(editor.document, [
         { type: "paragraph", content: note.content }
       ])
     }
-  }, [editor, note?.content])
+  }, [editor, note?.content, note?.mediaAssets])
 
   async function handleSave() {
     if (isSaving) return
@@ -186,7 +223,14 @@ export function NoteComposer({
       return
     }
 
-    const content = serializeDocumentToMarkdown(editor)
+    const content = replaceMarkdownImageUrls(
+      serializeDocumentToMarkdown(editor),
+      (url, alt) => {
+        const assetId = displayUrlAssetIdsRef.current.get(url)
+
+        return assetId ? createNoteMediaReference(assetId, alt) : undefined
+      }
+    )
     if (!content.trim()) {
       setSaveError("先写一点内容再保存。")
       return
@@ -271,8 +315,20 @@ export function NoteComposer({
         mimeType: file.type,
         byteSize: file.size
       })
-      const nextContent =
-        `${serializeDocumentToMarkdown(editor).trim()}\n\n${createNoteMediaReference(assetId, file.name || "Inspira image")}`.trim()
+      const assetView = await convex.query(api.media.getAssetUrl, {
+        assetId: toMediaAssetId(assetId)
+      })
+      const displayUrl = assetView?.url
+      const nextContent = `${serializeDocumentToMarkdown(editor).trim()}\n\n${
+        displayUrl
+          ? `![${file.name || "Inspira image"}](${displayUrl})`
+          : createNoteMediaReference(assetId, file.name || "Inspira image")
+      }`.trim()
+
+      if (displayUrl) {
+        displayUrlAssetIdsRef.current.set(displayUrl, assetId)
+      }
+
       const blocks = parseMarkdownPreservingBlankParagraphs(editor, nextContent)
 
       editor.replaceBlocks(
@@ -289,6 +345,22 @@ export function NoteComposer({
       setIsUploadingImage(false)
       if (imageInputRef.current) imageInputRef.current.value = ""
     }
+  }
+
+  function requestImageUpload() {
+    if (isUploadingImage) return
+
+    if (isLoading) {
+      setSaveError("登录状态还在同步，稍后再试一次。")
+      return
+    }
+
+    if (!isAuthenticated) {
+      setSaveError("需要登录后才能上传图片。")
+      return
+    }
+
+    imageInputRef.current?.click()
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLFormElement>) {
@@ -338,15 +410,6 @@ export function NoteComposer({
                 }
               />
               <button
-                type="button"
-                disabled={isSaving || isLoading || isUploadingImage}
-                onClick={() => imageInputRef.current?.click()}
-                className={`inspiration-control pointer-events-auto rounded-full border border-line bg-surface/88 px-5 py-3 text-xs font-semibold uppercase text-ink-muted shadow-[0_18px_42px_rgb(37_43_53_/_0.16)] backdrop-blur focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-default disabled:opacity-60 ${
-                  controlsVisible ? "" : "inspiration-control--hidden-down"
-                }`}>
-                {isUploadingImage ? "Uploading" : "Image"}
-              </button>
-              <button
                 form={formId}
                 type="submit"
                 disabled={isSaving || isLoading || isUploadingImage}
@@ -384,7 +447,17 @@ export function NoteComposer({
               <SuggestionMenuController
                 triggerCharacter="/"
                 getItems={async (query) =>
-                  matchSlashItems(getDefaultReactSlashMenuItems(editor), query)
+                  matchSlashItems(
+                    getDefaultReactSlashMenuItems(editor).map((item) =>
+                      item.title === "Image"
+                        ? {
+                            ...item,
+                            onItemClick: () => requestImageUpload()
+                          }
+                        : item
+                    ),
+                    query
+                  )
                 }
               />
             </BlockNoteView>
