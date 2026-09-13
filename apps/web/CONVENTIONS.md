@@ -1,13 +1,10 @@
 # apps/web 代码组织与规范
 
-> 规则落地目标：分层清晰、组件化、低耦合、可预测的命名。`web/AGENTS.md` 负责告诉开发者先读什么、改哪里；本文负责目录归属、命名、依赖方向和 Tailwind/CSS 细则。
-> 现状备注：早期演示期单体会按本文档增量拆分到对应目录；新 UI 默认使用 Tailwind 工具类，不新增页面级 CSS 单体。
-
 ## 1. 目录职责与改动归属
 
 ```
 apps/web/src/
-  app/        # 应用骨架：入口 App.tsx、路由表（react-router）、全局布局与 Sidebar、整体 Provider 装配
+  app/        # 应用骨架：路由表（react-router）、全局布局、整体 Provider 装配
   assets/     # 图片、SVG、字体等静态资源（不是 CSS）
   components/ # 无业务语义、可跨模块复用的展示组件；只依赖 TDesign/Tailwind/自身样式，不 import features/*
   features/   # 按产品模块垂直组织（目录一一对应产品模块）
@@ -16,26 +13,26 @@ apps/web/src/
                 workspaces/   工作区总览与单区专题流
                 insights/     统计（ECharts）、趋势（依 PRODUCT/Insights）
                 explore/      标签词云与点击钻取等再发现体验
+                landing/      产品介绍页与采集演示
+                preferences/  主题偏好 Provider 与 context
                 settings/     主题/主色/默认视图/账户与插件状态
-  hooks/      # 跨模块复用的自定义 hooks（数据查询、认证护栏、媒体地址申请等）
-  lib/        # 纯函数/数据访问层：Convex 客户端 api、格式化、运行时复用、路由辅助（无 JSX 或仅极薄封装）
-  styles/     # 全局与主题：index.css 入口、Tailwind import、语义 Token、reset；不放页面级样式
+  hooks/      # 跨模块复用的自定义 hooks（弹层关闭、视口定位、响应式列数等 UI 行为）
+  lib/        # 纯函数与常量：Convex id 判定、布局计算、主题算法（无 JSX）
+  styles/     # 全局与主题：index.css 入口、Tailwind import、语义 Token、reset、跨页共享样式
 ```
 
 哪些改动进哪里：
 
-| 改动对象                                   | 位置                                        |
-| ------------------------------------------ | ------------------------------------------- |
+| 改动对象                                   | 位置                                      |
+| ------------------------------------------ | ----------------------------------------- |
 | 路由、Layout、全局 Provider 装配           | `src/app/`                                |
 | 通用可复用小组件（标题、卡片骨架、图标位） | `src/components/`                         |
 | 某产品模块的页面/表单/卡片及其状态         | `src/features/<模块>/`                    |
 | 在两个以上模块复用的查询/逻辑 hook         | `src/hooks/`                              |
-| 纯逻辑、数据请求封装、格式函数、常量       | `src/lib/`                                |
+| 纯逻辑、格式函数、常量                     | `src/lib/`                                |
 | 全局样式、Tailwind import、Token、reset    | `src/styles/`                             |
 | 图片/SVG/字体                              | `src/assets/`                             |
 | 内容分片数据契约、跨端校验                 | `packages/contracts`（参考 ARCHITECTURE） |
-
-示例：新增"卡片视图切换"改动 → 页面逻辑与视图组件入 `features/all`；若其中某个无业务语义的小组件被多个模块复用 → 提炼到 `components/`。
 
 ## 2. 组件化与低耦合
 
@@ -59,7 +56,7 @@ apps/web/src/
 - 纯函数与工具：`camelCase`，动词起头（`get`/`build`/`format`/`parse`/`normalize`）。
 - React 自定义 hook：小写 `use` 前缀（`useNotes`、`useSelectedTags`）。
 - 事件回调/处理：以 `handle` 前缀命名（`handleSubmit`、`handleOpen`）。
-- 逻辑谓词用 `is` 前缀表达布尔（`isLoading` 用 query 状态返回变量，命名仍清晰）。
+- 逻辑谓词用 `is` 前缀表达布尔。
 
 ### 状态/变量
 

@@ -1,6 +1,6 @@
 # Inspira
 
-Inspira 是一个私人灵感收集与探索工具。首版目标是让用户保存 Note、网页、图片、选中文字和视频，并通过 All、Workspaces、Tags、Search、Insights 和 Explore 找回自己的内容。
+Inspira 是一个私人灵感收集与再发现工具，用于保存 Note、网页、图片、选中文字和视频，并通过 All、Workspaces、Tags、Search、Insights 和 Explore 找回自己的内容。
 
 ## 技术栈
 
@@ -12,14 +12,13 @@ Inspira 是一个私人灵感收集与探索工具。首版目标是让用户保
 
 ## 目录
 
-| 路径                   | 说明                              |
-| ---------------------- | --------------------------------- |
+| 路径                 | 说明                              |
+| -------------------- | --------------------------------- |
 | `apps/web`           | Web 应用                          |
 | `apps/extension`     | Chrome 插件                       |
 | `convex`             | Convex schema、鉴权配置和后端函数 |
 | `packages/contracts` | Web、插件、后端共享契约           |
 | `docs`               | 产品、架构、接口、开发和设计文档  |
-| `openspec`           | OpenSpec 变更规划与规格           |
 
 ## 本地开发
 
@@ -70,7 +69,7 @@ Convex 验证 Clerk JWT 需要在后端环境设置：
 CLERK_JWT_ISSUER_DOMAIN=https://placeholder.clerk.accounts.dev
 ```
 
-不要提交真实 Token、密钥、完整用户内容或敏感网页数据。Clerk secret key 只在服务端主动调用 Clerk Backend API 时需要；当前 Convex 鉴权流程只验证 Clerk JWT，不需要放 secret key。
+不要提交真实 Token、密钥、完整用户内容或敏感网页数据。
 
 ## 更多文档
 

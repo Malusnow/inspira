@@ -2,7 +2,7 @@
 
 把正在浏览的网页、图片和选中文字保存进 Inspira 的 Chrome 扩展。
 
-技术栈：Plasmo + React 18 + TypeScript + Chrome MV3，登录用 `@clerk/chrome-extension`，数据走 Convex。**采集闭环代码已实现，等待真实 Clerk + Convex 环境的人工验收（见「待确认与待验证」）。**
+技术栈：Plasmo + React 18 + TypeScript + Chrome MV3，登录用 `@clerk/chrome-extension`，数据走 Convex。
 
 ## 范围
 
@@ -14,7 +14,7 @@
 - 保存成功后补充 tags / notes
 - 未登录、失败、受限来源的诚实反馈
 
-本阶段不做：媒体上传与图片转存（S7）、视频、工作区选择与整理、搜索、内容去重提示、深色主题、Firefox/Safari、AI 字段。
+本阶段不做：媒体上传与图片转存、视频、工作区选择与整理、搜索、内容去重提示、深色主题、Firefox/Safari、AI 字段。
 
 ## 现状
 
@@ -27,7 +27,7 @@
 | 数据访问    | Convex 客户端已接入（`lib/backend.ts`）                        |
 | 采集契约    | `packages/contracts` 已落地采集类型、字段与错误码              |
 | 权限        | 只申请采集与登录必需项；两个 host 来自构建环境变量，无全量域名 |
-| 人工验收    | 未执行（T01/T02/T03 与 6.2 冒烟均待真实环境）                  |
+| 人工验收    | 未执行（T01/T02/T03 与人工冒烟均待真实环境）                   |
 
 ## 分层职责
 
@@ -37,8 +37,6 @@
 | Service Worker | 右键菜单、采集编排、`clientRequestId` 生成、保存                | 可随时被终止，跨重启状态不能只放内存          |
 | Content Script | 只读页面 title / og:image / description                         | 按需注入，非常驻；quote 与 image 不需要读页面 |
 | 浏览器适配层   | 封装 `chrome.storage` / `contextMenus` / `scripting` 与消息收发 | 业务代码不直接调用 chrome API，便于 mock      |
-
-编排放在 Service Worker 的原因：popup 在用户点击页面其它位置时会关闭，在 popup 内发起保存会被打断。
 
 登录不在 popup 内完成：登录链接打开 Web 应用，popup 与 Service Worker 都通过 Clerk 的 `syncHost` 读取登录主机上的会话 cookie。
 
@@ -107,7 +105,7 @@
 | `host_permissions: $CLERK_FRONTEND_API/*`            | Clerk Frontend API，扩展直接向它发请求                       |
 
 - 不预先申请 `tabs`，也不使用 `<all_urls>` / `https://*/*`：页面读取只依赖 `activeTab` 的临时授权。
-- 两个 host 都来自构建环境变量，不把域名写死在 `package.json`；生产同步域名随 D10 一起填进 `.env.production`。
+- 两个 host 都来自构建环境变量，不把域名写死在 `package.json`；生产同步域名随 D10 一起填进 `.env.local`。
 - 不加载远程托管代码，不把原型的 CDN 脚本复制进插件。
 
 ## 目录结构
@@ -160,9 +158,9 @@ VITE_CONVEX_URL=https://placeholder.convex.cloud
 npx convex env set CLERK_JWT_ISSUER_DOMAIN https://<slug>.clerk.accounts.dev
 ```
 
-### 4. 扩展：`apps/extension/.env.development`
+### 4. 扩展：`apps/extension/.env.local`
 
-`plasmo dev` 读 `.env.development`，`plasmo build` 读 `.env.production`。两者都要有各自的真实值。
+`plasmo dev` 与 `plasmo build` 都读取 `.env.local`。
 
 | 变量                                  | 说明                                                                                                            |
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -174,7 +172,7 @@ npx convex env set CLERK_JWT_ISSUER_DOMAIN https://<slug>.clerk.accounts.dev
 
 两个容易踩的点：
 
-- **变量缺失时 `$VAR` 不会被展开**，产物 `manifest` 会留下字面量 `$PLASMO_PUBLIC_CLERK_SYNC_HOST/*`，Chrome 会拒绝加载这种无效的 match pattern。先配好 env，再构建、再加载。构建日志里的 `Loaded environment variables from: [ '.env.production' ]` 可以确认读到了哪个文件。
+- **变量缺失时 `$VAR` 不会被展开**，产物 `manifest` 会留下字面量 `$PLASMO_PUBLIC_CLERK_SYNC_HOST/*`，Chrome 会拒绝加载这种无效的 match pattern。先配好 env，再构建、再加载。构建日志里的 `Loaded environment variables from: [ '.env.local' ]` 可以确认读到了哪个文件。
 - `PLASMO_PUBLIC_CLERK_SYNC_HOST` 在开发下是 `http://localhost`，不是 `http://localhost:5173`：Clerk 的 dev cookie 落在 `localhost` 域上，cookie 本身不区分端口，而 manifest 展开出的 `http://localhost/*` 覆盖该主机的所有端口。
 
 这些值都可进入客户端，不是服务端密钥；仓库只保留 `.env.example` 里的占位值，真实值由 `.gitignore` 拦在本地。`cookies` 权限只在扩展本地读取登录主机的 Clerk 会话 cookie。
@@ -204,8 +202,6 @@ npx convex env set CLERK_JWT_ISSUER_DOMAIN https://<slug>.clerk.accounts.dev
 - 保存后在 Web 端能看到同一条内容及其 tags / notes
 
 已知环境依赖：`chrome.action.openPopup()` 需要 Chrome 127+，更低版本右键结果退化为角标（`...` / `!`），需再点一次图标查看。
-
-未执行的项要明确标注为未执行。
 
 ## 待确认与待验证
 

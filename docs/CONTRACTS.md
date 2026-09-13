@@ -1,7 +1,5 @@
 # Inspira Contracts
 
-> 状态：接口和数据契约基线。本文描述目标行为；实际可执行契约以 `packages/contracts`、后端函数和测试为准。
-
 ## 共享原则
 
 - 客户端不提交可信 `userId` 或 `owner`；服务端从已验证会话确定用户。
@@ -14,16 +12,16 @@
 
 目标实体：
 
-| 实体           | 核心字段                                                            |
-| -------------- | ------------------------------------------------------------------- |
-| Inspiration    | owner、type、类型字段、tags、workspaceIds（0..N）、createdAt、updatedAt |
-| Workspace      | owner、name、createdAt、updatedAt                                   |
-| WorkspaceMembership | owner、inspirationId、workspaceId、createdAt、updatedAt        |
-| MediaAsset     | owner、存储标识、真实类型、大小、状态、createdAt                    |
-| CaptureAttempt | owner、clientRequestId、payload 指纹、结果 inspirationId、状态      |
-| Preferences    | owner、theme、primaryColor、默认视图等                              |
+| 实体                | 核心字段                                                                |
+| ------------------- | ----------------------------------------------------------------------- |
+| Inspiration         | owner、type、类型字段、tags、workspaceIds（0..N）、createdAt、updatedAt |
+| Workspace           | owner、name、createdAt、updatedAt                                       |
+| WorkspaceMembership | owner、inspirationId、workspaceId、createdAt、updatedAt                 |
+| MediaAsset          | owner、存储标识、真实类型、大小、状态、createdAt                        |
+| CaptureAttempt      | owner、clientRequestId、payload 指纹、结果 inspirationId、状态          |
+| Preferences         | owner、theme、primaryColor、默认视图等                                  |
 
-`type` 支持 `page`、`image`、`quote`、`note`、`video`。S1 已定稿 Note 最小字段；其他类型字段名、索引、分页和长度上限在对应实现 change 中定稿。
+`type` 支持 `page`、`image`、`quote`、`note`、`video`。Note 字段已在 `implement-note-core` 定稿；其他类型的字段名、索引、分页和长度上限在对应实现 change 中定稿。
 
 ## 工作区归属
 
@@ -40,13 +38,13 @@
 
 Web Note 不走插件采集请求。客户端提交：
 
-| 字段        | 条件          | 限制                                                       |
-| ----------- | ------------- | ---------------------------------------------------------- |
-| title       | 可选          | trim 后为空视为未提供；最多 120 字符                       |
-| content     | 必须          | trim 后必须非空；最多 10000 字符                           |
-| notes       | 可选          | 右侧详情备注；trim 后为空视为未提供；最多 5000 字符        |
-| tags        | 可选 string[] | trim、移除空字符串、同条去重；最多 12 个，每个最多 40 字符 |
-| workspaceIds | 可选 string[] | 去空、去重；最多 12 个；空数组表示不属于任何工作区；逐个校验本人工作区 |
+| 字段         | 条件          | 限制                                                                    |
+| ------------ | ------------- | ----------------------------------------------------------------------- |
+| title        | 可选          | trim 后为空视为未提供；最多 120 字符                                    |
+| content      | 必须          | trim 后必须非空；最多 10000 字符                                        |
+| notes        | 可选          | 右侧详情备注；trim 后为空视为未提供；最多 5000 字符                     |
+| tags         | 可选 string[] | trim、移除空字符串、同条去重；最多 12 个，每个最多 40 字符              |
+| workspaceIds | 可选 string[] | 去空、去重；最多 12 个；空数组表示不属于任何工作区；逐个校验本人工作区  |
 | workspaceId  | 可选（兼容）  | 旧单值入口；与 `workspaceIds` 合并后去重；新调用方只提交 `workspaceIds` |
 
 客户端不得提交可信 `owner` 或 `userId`。服务端从已验证会话获得 owner，并将 Note 保存为 `Inspiration` 的 `type: "note"`。成功创建返回新 Note 的 ID；无登录返回 `UNAUTHENTICATED`，字段不合法返回 `INVALID_INPUT`，均不得创建内容。
@@ -63,21 +61,21 @@ All 的 S1 查询只返回当前登录用户自己的 Note，按最新创建在�
 
 插件只采集 `page`、`image`、`quote`。Web Note 与 Video 上传不走采集请求。
 
-| 字段            | 条件                                | 含义                               | 限制                                               |
-| --------------- | ----------------------------------- | ---------------------------------- | -------------------------------------------------- |
-| clientRequestId | 必须                                | 一次主动操作生成一次；传输重试复用 | trim 后必须非空；最多 128 字符                     |
-| kind            | 必须，page/image/quote              | 采集类型                           | 只接受三种；其他值返回 INVALID_INPUT               |
-| sourceUrl       | page/quote 必须，image 建议带来源页 | 来源页面 URL                       | http/https 绝对地址；最多 2048 字符                |
-| pageTitle       | 可选                                | 页面标题                           | trim 后为空视为未提供；最多 300 字符               |
-| description     | 可选                                | 页面摘要，作为 page 的正文         | trim 后为空视为未提供；最多 1000 字符              |
-| selectedText    | quote 必须                          | 选中文字                           | trim 后必须非空；最多 10000 字符                   |
-| imageUrl        | image 必须                          | 原图片地址                         | http/https 绝对地址；最多 2048 字符                |
-| snapshotHtml    | page 建议由插件提供                 | 静态 HTML 网页快照                 | 不保存到 inspirations 行；作为受管媒体资产写入     |
-| note            | 可选                                | 用户备注                           | trim 后为空视为未提供；最多 5000 字符              |
-| workspaceIds    | 可选 string[]                       | 本人工作区集合                     | 去空、去重；最多 12 个；不裁剪不截断；逐个校验归属 |
+| 字段            | 条件                                | 含义                               | 限制                                                        |
+| --------------- | ----------------------------------- | ---------------------------------- | ----------------------------------------------------------- |
+| clientRequestId | 必须                                | 一次主动操作生成一次；传输重试复用 | trim 后必须非空；最多 128 字符                              |
+| kind            | 必须，page/image/quote              | 采集类型                           | 只接受三种；其他值返回 INVALID_INPUT                        |
+| sourceUrl       | page/quote 必须，image 建议带来源页 | 来源页面 URL                       | http/https 绝对地址；最多 2048 字符                         |
+| pageTitle       | 可选                                | 页面标题                           | trim 后为空视为未提供；最多 300 字符                        |
+| description     | 可选                                | 页面摘要，作为 page 的正文         | trim 后为空视为未提供；最多 1000 字符                       |
+| selectedText    | quote 必须                          | 选中文字                           | trim 后必须非空；最多 10000 字符                            |
+| imageUrl        | image 必须                          | 原图片地址                         | http/https 绝对地址；最多 2048 字符                         |
+| snapshotHtml    | page 建议由插件提供                 | 静态 HTML 网页快照                 | 不保存到 inspirations 行；作为受管媒体资产写入              |
+| note            | 可选                                | 用户备注                           | trim 后为空视为未提供；最多 5000 字符                       |
+| workspaceIds    | 可选 string[]                       | 本人工作区集合                     | 去空、去重；最多 12 个；不裁剪不截断；逐个校验归属          |
 | workspaceId     | 可选（兼容）                        | 旧单值入口                         | 合并进 `workspaceIds` 后去重；新调用方只提交 `workspaceIds` |
-| tags            | 可选 string[]                       | 用户输入标签                       | trim、去空、同条去重；最多 12 个，每个最多 40 字符 |
-| capturedAt      | 建议                                | 客户端时间，仅作上下文             | 有限数字时间戳；不参与排序                         |
+| tags            | 可选 string[]                       | 用户输入标签                       | trim、去空、同条去重；最多 12 个，每个最多 40 字符          |
+| capturedAt      | 建议                                | 客户端时间，仅作上下文             | 有限数字时间戳；不参与排序                                  |
 
 上表限制与 `packages/contracts/src/index.ts` 的采集契约常量逐项对应，由 `normalizeCaptureRequest` 在写入前统一执行。
 
@@ -202,10 +200,10 @@ popup 只呈现状态，采集编排在 Service Worker，两者按 `apps/extensi
 
 窗口与上限常量位于 `packages/contracts`：`INSIGHTS_HEATMAP_WINDOW_DAYS`、`INSIGHTS_ACTIVE_WINDOW_DAYS`、`INSIGHTS_TOP_TAG_LIMIT`、`INSIGHTS_WEEK_START_DAY`。聚合与日期分桶是纯函数，位于 `packages/contracts` 的 `buildInsightsSummary`，Web 与 Convex 共用同一实现。
 
-## 当前代码差异
+## 实现现状
 
 采集协议已在 `packages/contracts/src/index.ts` 落地：`CaptureKind`、`CaptureRequestInput`、`CaptureRequest`、`CaptureResult`、`CAPTURE_ERROR_CODES` 与 `normalizeCaptureRequest` 运行时校验，字段与限制见上一节。
 
 服务端与插件调用端已接通：`convex/captures.ts` 提供 `captures:capture`（按 `clientRequestId` 幂等）与 `captures:updateDetails`，`convex/schema.ts` 已放开五种 `inspirations.type` 并新增 `captureAttempts`；`apps/extension` 实现了三类采集编排（`lib/capture.ts`、`background.ts`）、五状态 popup 与 tags/notes 回写，消息协议见上一节。
 
-媒体底座已开始接入：`mediaAssets` / `pageSnapshots`、Web Note 图片 upload/finalize、媒体短时 URL 授权、page snapshot action 和 image transfer action 已纳入方案 A 实现范围。插件的 `manifest` 已声明 `contextMenus` / `storage` / `activeTab` / `scripting` / `cookies`，两个 host 为 `$PLASMO_PUBLIC_CLERK_SYNC_HOST/*` 与 `$CLERK_FRONTEND_API/*`（构建期插值，`cookies` 用于按 D05 从登录主机同步 Clerk 会话），不使用全量域名；生产同步域名随 D10 填入 `.env.production`。
+媒体底座已开始接入：`mediaAssets` / `pageSnapshots`、Web Note 图片 upload/finalize、媒体短时 URL 授权、page snapshot action 和 image transfer action 已纳入方案 A 实现范围。插件的 `manifest` 已声明 `contextMenus` / `storage` / `activeTab` / `scripting` / `cookies`，两个 host 为 `$PLASMO_PUBLIC_CLERK_SYNC_HOST/*` 与 `$CLERK_FRONTEND_API/*`（构建期插值，`cookies` 用于按 D05 从登录主机同步 Clerk 会话），不使用全量域名；生产同步域名随 D10 填入 `.env.local`。

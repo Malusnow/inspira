@@ -16,7 +16,7 @@
 
 ## 固定边界
 
-- pnpm monorepo：`apps/web`、`apps/extension`、`packages/contracts`，目标后端为 Convex。
+- 仓库结构：pnpm monorepo，`apps/web`、`apps/extension`、`packages/contracts`、`convex`。
 - Web 技术栈：React、TypeScript、Vite、TDesign、Clerk、Convex、ECharts、Tailwind CSS。
 - 插件技术栈：Plasmo、React、TypeScript、Chrome MV3、Clerk Extension SDK。
 - 共享只放数据契约、校验和消息类型；不共享页面组件。
@@ -51,6 +51,6 @@
 
 - Web 改动：运行 `pnpm --filter web lint` 和 `pnpm --filter web build`。
 - 插件改动：运行 `pnpm --filter apps-extension build`。
-- 共享契约/根脚本：按当前 change 接通后的入口运行。
-- 当前根 `test/typecheck/build` 尚未全部接通；不能用空测试或空 CI 当通过证据。
+- 共享契约/根脚本：运行根 `pnpm test`。
+- 根 `typecheck`、`build` 尚未接通；不能用空测试或空 CI 当通过证据。
 - 纯文档改动检查链接、状态和职责一致性即可。

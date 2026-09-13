@@ -1,9 +1,10 @@
 {
   "name": "apps-extension",
   "displayName": "Inspira",
-  "version": "0.0.1",
-  "description": "help add notes to inspira",
+  "version": "0.1.0",
+  "description": "把网页、图片和选中文字保存到 Inspira 的 Chrome 扩展",
   "author": "Malus",
+  "private": true,
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",

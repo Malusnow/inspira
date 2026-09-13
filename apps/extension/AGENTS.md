@@ -24,8 +24,8 @@
 
 ## 权限与隐私
 
-- 只申请实际用到的权限：`contextMenus`、`storage`、`activeTab`、`scripting` 及必需域名。
-- 不预先申请 `<all_urls>`、`tabs`、`cookies`；现有 `https://*/*` 是待收敛的脚手架配置。
+- 只申请实际用到的权限：`contextMenus`、`storage`、`activeTab`、`scripting`、`cookies` 及必需域名。
+- 不申请 `tabs`、`<all_urls>` 或 `https://*/*`；页面读取只依赖 `activeTab` 的临时授权。
 - 认证 Token 交由 SDK 管理，不自行记录。不记录或上报 Token、完整用户内容、敏感网页数据。
 - 不加载远程托管代码，不把原型的 CDN 执行脚本复制进插件。
 
@@ -38,4 +38,4 @@
 ## 验证
 
 - 代码变更完成运行 `pnpm --filter apps-extension build`；其他检查见 [Development](../../docs/DEVELOPMENT.md)。
-- 加载未打包扩展做 Chrome 人工冒烟（登录、三类采集、同请求重试、主动两次、Worker 重启、未登录、失败）；未执行要说明。
+- 加载未打包扩展做 Chrome 人工冒烟（登录、三类采集、同请求重试、主动两次、Worker 重启、未登录、失败）。

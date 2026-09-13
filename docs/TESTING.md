@@ -1,7 +1,5 @@
 # Inspira Testing
 
-> 状态：测试归纳方案。当前先定义目录、命名和运行边界；搬迁测试和接通根脚本应作为 `establish-engineering-checks` 的后续实现任务。
-
 ## 目标结构
 
 测试按“被测边界”归属，而不是按临时方便位置归属：
@@ -35,7 +33,7 @@
 
 ## 运行入口
 
-目标命令应收敛为：
+当前命令与规划命令：
 
 | 命令                                    | 作用                            |
 | --------------------------------------- | ------------------------------- |
@@ -45,7 +43,7 @@
 | `pnpm test:convex`                      | Convex 后端测试                 |
 | `pnpm test:e2e`                         | 跨应用 E2E，允许单独配置环境    |
 
-根 `vitest.config.ts` 当前为空，不应作为通过证据。接通根脚本时，需要明确包含 `packages/contracts/src/**/*.test.ts`、`apps/web/src/**/*.test.ts(x)` 和 `convex/**/*.test.ts`，并排除 `node_modules`、`dist`、`.plasmo` 等产物目录。
+根 `vitest.config.ts` 需要明确包含 `packages/contracts/src/**/*.test.ts`、`apps/web/src/**/*.test.ts(x)` 和 `convex/**/*.test.ts`，并排除 `node_modules`、`dist`、`.plasmo` 等产物目录。
 
 ## 开源项目级别约束
 

@@ -1,7 +1,5 @@
 # Inspira Development
 
-> 状态：开发入口和验证入口。
-
 ## 工作区
 
 仓库是 pnpm monorepo：
@@ -11,7 +9,7 @@
 | `apps/web`           | React / TypeScript / Vite / TDesign / Clerk / Convex / ECharts / Tailwind |
 | `apps/extension`     | Plasmo / React / TypeScript / Chrome MV3 / Clerk Extension SDK            |
 | `packages/contracts` | Web、插件、后端共享类型与校验                                             |
-| `convex`             | Convex 后端最小 S1 Note Schema、鉴权配置和函数                            |
+| `convex`             | Convex 后端 Schema、鉴权配置和函数                                        |
 
 安装依赖：
 
@@ -21,18 +19,19 @@ pnpm install --frozen-lockfile
 
 ## 当前命令
 
-| 用途     | 命令                                   | 当前限制                                                 |
-| -------- | -------------------------------------- | -------------------------------------------------------- |
-| Web 开发 | `pnpm --filter web dev`                | 需要 Web Clerk/Convex 环境变量才可使用登录后的 Note 流程 |
-| Web lint | `pnpm --filter web lint`               | 当前可用                                                 |
-| Web 构建 | `pnpm --filter web build`              | 当前可用，但不代表业务验收                               |
-| Web 测试 | `pnpm --filter web test`               | 当前用于纯函数/组件单元测试                              |
-| Web 预览 | `pnpm --filter web preview`            | 需先构建                                                 |
-| 插件开发 | `pnpm --filter apps-extension dev`     | 当前可用，业务采集未接通                                 |
-| 插件构建 | `pnpm --filter apps-extension build`   | 当前可用                                                 |
-| 插件打包 | `pnpm --filter apps-extension package` | 不代表商店发布                                           |
+| 用途     | 命令                                   | 当前限制                                           |
+| -------- | -------------------------------------- | -------------------------------------------------- |
+| Web 开发 | `pnpm --filter web dev`                | 需要 Web Clerk/Convex 环境变量才可使用登录后的功能 |
+| Web lint | `pnpm --filter web lint`               | 当前可用                                           |
+| Web 构建 | `pnpm --filter web build`              | 当前可用，但不代表业务验收                         |
+| Web 测试 | `pnpm --filter web test`               | 当前用于纯函数/组件单元测试                        |
+| Web 预览 | `pnpm --filter web preview`            | 需先构建                                           |
+| 插件开发 | `pnpm --filter apps-extension dev`     | 当前可用                                           |
+| 插件构建 | `pnpm --filter apps-extension build`   | 当前可用                                           |
+| 插件打包 | `pnpm --filter apps-extension package` | 不代表商店发布                                     |
+| 根测试   | `pnpm test`                            | 覆盖共享契约、Web 单元和 Convex 后端测试           |
 
-尚未接通：根 `pnpm typecheck`、根 `pnpm build`、有效 `pnpm test`、contracts 测试、CI、Playwright、Convex 后端验证脚本。
+尚未接通：根 `pnpm typecheck`、根 `pnpm build`、CI 与 E2E。
 
 测试文件的归属、命名和后续收敛方案见 [Testing](TESTING.md)。
 
@@ -42,7 +41,7 @@ pnpm install --frozen-lockfile
 
 - Web：至少运行 `pnpm --filter web lint` 和 `pnpm --filter web build`，除非本次只改无关文档。
 - 插件：至少运行 `pnpm --filter apps-extension build`。
-- contracts 或共享逻辑：S0 接通后运行根 typecheck/test；接通前要明确报告缺口。
+- contracts 或共享逻辑：运行根 `pnpm test`；根 `pnpm typecheck` 未接通时要明确报告缺口。
 - 纯文档：检查链接、引用、状态和职责是否一致，不跑无关应用测试。
 
 不能把文档审阅、OpenSpec 校验、空测试或未运行 CI 写成业务通过。
@@ -70,11 +69,11 @@ pnpm install --frozen-lockfile
 | 插件 Clerk publishable key、Frontend API 地址、同步主机、Convex URL | `apps/extension` 构建环境 | 可进入客户端，不放秘密       |
 | Convex 部署和 Clerk issuer/audience                                 | 后端部署环境              | 地址与部署凭证分开           |
 | 存储密钥、视频服务凭证                                              | 后端秘密环境              | 不能进入 Vite/Plasmo 或仓库  |
-| 生产域名、CRX ID、隐私地址                                          | 发布配置                  | D05/D10/T01 完成后确定       |
+| 生产域名、CRX ID、隐私地址                                          | 发布配置                  | D10 完成后确定               |
 
 .env 示例只能放安全占位值。不要提交 Token、真实用户内容、完整私密网页数据或存储密钥。
 
-Web S1 Note 本地运行需要：
+Web 本地运行需要：
 
 ```bash
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_placeholder
@@ -89,7 +88,7 @@ CLERK_JWT_ISSUER_DOMAIN=https://placeholder.clerk.accounts.dev
 
 这些值必须替换为本地/测试项目的真实配置后才能做 A/B 账户人工验收；真实值不得提交。
 
-Chrome 插件本地运行需要 `apps/extension/.env.development`（`plasmo dev` 读它；`plasmo build` 读 `.env.production`）：
+Chrome 插件本地运行需要 `apps/extension/.env.local`：
 
 ```bash
 PLASMO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_placeholder
@@ -104,7 +103,7 @@ PLASMO_PUBLIC_LANDING_URL=http://localhost:5173
 - Plasmo 只在构建期读取这些文件：变量缺失时 manifest 里的 `$VAR` 不会被展开，产物装不进 Chrome。改完要重新构建或重启 dev。
 - Clerk 实例还需启用 Native API，并把扩展来源 `chrome-extension://<ID>` 加入 allowed origins，否则扩展的请求会被 CORS 拒绝。完整步骤见 [插件 README](../apps/extension/README.md#配置)。
 
-插件与 Web 的环境变量模板分别是 `apps/extension/.env.example`，占位值不可直接使用。
+环境变量模板：`.env.example`、`apps/web/.env.example`、`apps/extension/.env.example`；占位值不可直接使用。
 
 ## OpenSpec
 

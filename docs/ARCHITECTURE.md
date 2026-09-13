@@ -2,13 +2,13 @@
 
 ## 结构
 
-| 位置               | 当前事实                                                          | 目标职责                                        |
-| ------------------ | ----------------------------------------------------------------- | ----------------------------------------------- |
-| apps/web           | React/Vite 示例，依赖含 TDesign、Clerk、Convex、ECharts、Tailwind | 页面路由、交互状态、本人内容实时视图            |
-| apps/extension     | Plasmo Popup 示例，依赖 Clerk 扩展 SDK                            | Chrome MV3 保存入口、认证衔接、后台消息         |
-| packages/contracts | 五种类型和 CreateInspirationInput；没有运行时校验                 | 两端类型、校验、消息与采集协议                  |
-| convex/            | 尚未建立                                                          | 身份鉴权、Schema、Query/Mutation、必要的 Action |
-| 媒体存储           | 尚未选择/接入                                                     | 文件本体、受控上传与访问；Convex 管理关联元信息 |
+| 位置               | 当前事实                                                               |
+| ------------------ | ---------------------------------------------------------------------- |
+| apps/web           | React/Vite 应用：路由、交互状态、本人内容实时视图                      |
+| apps/extension     | Plasmo Chrome MV3 扩展：保存入口、认证衔接、后台消息                   |
+| packages/contracts | 内容类型、运行时校验、消息与采集协议                                   |
+| convex/            | 身份鉴权、Schema、Query/Mutation、必要的 Action                        |
+| 媒体存储           | Convex File Storage 存文件本体；`mediaAssets` 管理关联元信息与短时访问 |
 
 只保留 `packages/contracts` 作为共享包；出现真实重复后再评估新增包。
 
@@ -25,7 +25,7 @@
 | CaptureAttempt      | owner + clientRequestId 关联操作结果，区别新的主动操作与重试；生命周期需 T02   |
 | Preferences         | 模式、主色、视图等；跨设备/插件同步范围 D10                                    |
 
-Note 不依赖媒体。Image/Video 的外部来源和受管文件必须分开建模。字段和索引在对应 change 定稿。
+Note 不依赖媒体。Image/Video 的外部来源和受管文件必须分开建模。
 
 `inspirations` 不保存 `workspaceId`；归属只在 `workspaceMemberships`（ownerId / inspirationId / workspaceId / createdAt / updatedAt）里，按 owner + inspiration 和 owner + workspace 建索引，因此一条内容可出现在多个工作区，而 All 卡片流仍只按 `inspirations` 去重展示。
 
