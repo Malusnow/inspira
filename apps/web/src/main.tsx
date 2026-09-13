@@ -5,6 +5,7 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 
 import App from "./App.tsx"
+import { appAllPath, appBasePath } from "./lib/appPaths.ts"
 
 import "tdesign-react/es/style/index.css"
 import "./styles/index.css"
@@ -17,7 +18,11 @@ const app = (() => {
     const convex = new ConvexReactClient(convexUrl)
 
     return (
-      <ClerkProvider publishableKey={clerkPublishableKey}>
+      <ClerkProvider
+        publishableKey={clerkPublishableKey}
+        afterSignOutUrl={appBasePath}
+        signInForceRedirectUrl={appAllPath}
+        signUpForceRedirectUrl={appAllPath}>
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
           <App />
         </ConvexProviderWithClerk>
