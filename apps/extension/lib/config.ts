@@ -9,15 +9,6 @@ export type ExtensionConfig = {
   clerkPublishableKey: string
   convexUrl: string
   landingUrl: string
-  /**
-   * Host Clerk syncs the session from — that is, where the sign-in cookie
-   * lives. In development that is `http://localhost` (Clerk's dev browser
-   * writes its cookie on localhost regardless of the port the web app runs
-   * on); in production it is the Frontend API host. It must stay in step with
-   * `host_permissions` in package.json: the manifest is filled from this same
-   * variable, so changing it here alone leaves the extension without the host
-   * permission it needs to read the cookie.
-   */
   syncHost: string
 }
 

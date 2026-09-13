@@ -1,0 +1,111 @@
+name: Release Extension
+
+# 插件是手动安装的产物，走 GitHub Release 附件发布，不提交到仓库，也不发到 GitHub Packages。
+on:
+  push:
+    tags: ["ext-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # Plasmo 在构建期把 PLASMO_PUBLIC_* 与 CLERK_FRONTEND_API 内联进代码和 manifest，
+    # 缺变量会留下字面量 $VAR，Chrome 直接拒绝加载，所以必须在 CI 用 secrets 注入。
+    # 注意 NODE_ENV 不要放在这里：它会让 pnpm install 跳过 devDependencies。
+    env:
+      PLASMO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.PLASMO_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      CLERK_FRONTEND_API: ${{ secrets.CLERK_FRONTEND_API }}
+      PLASMO_PUBLIC_CLERK_SYNC_HOST: ${{ secrets.PLASMO_PUBLIC_CLERK_SYNC_HOST }}
+      PLASMO_PUBLIC_CONVEX_URL: ${{ secrets.PLASMO_PUBLIC_CONVEX_URL }}
+      PLASMO_PUBLIC_LANDING_URL: ${{ secrets.PLASMO_PUBLIC_LANDING_URL }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Read extension version
+        id: pkg
+        run: |
+          echo "version=$(node -p "require('./apps/extension/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Guard release config
+        env:
+          SYNC_HOST: ${{ secrets.PLASMO_PUBLIC_CLERK_SYNC_HOST }}
+          LANDING_URL: ${{ secrets.PLASMO_PUBLIC_LANDING_URL }}
+        run: |
+          set -euo pipefail
+          for name in SYNC_HOST LANDING_URL; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name secret 未配置"
+              exit 1
+            fi
+          done
+          case "$SYNC_HOST" in
+            *localhost*|*127.0.0.1*)
+              echo "::error::PLASMO_PUBLIC_CLERK_SYNC_HOST 仍是开发值（$SYNC_HOST），发布包会读不到用户浏览器里的登录 cookie"
+              exit 1 ;;
+          esac
+          case "$LANDING_URL" in
+            *localhost*|*127.0.0.1*)
+              echo "::error::PLASMO_PUBLIC_LANDING_URL 仍是开发值（$LANDING_URL），登录和「在 Inspira 中查看」会跳到用户本机"
+              exit 1 ;;
+          esac
+          
+      - name: Build extension
+        run: pnpm --filter apps-extension exec plasmo build --tag=prod
+        env:
+          NODE_ENV: production
+
+      - name: Package extension
+        run: pnpm --filter apps-extension package
+
+     
+      - name: Verify packaged manifest
+        run: |
+          set -euo pipefail
+          ZIP_PATH=$(ls -t apps/extension/build/*.zip | head -1)
+          echo "zip: $ZIP_PATH"
+          unzip -p "$ZIP_PATH" manifest.json > /tmp/manifest.json
+          cat /tmp/manifest.json
+          if grep -q '\$PLASMO_PUBLIC\|\$CLERK_FRONTEND_API' /tmp/manifest.json; then
+            echo "::error::manifest 中仍有未展开的 \$VAR 占位符，检查 Actions secrets 是否配置完整"
+            exit 1
+          fi
+          if grep -q 'localhost\|127\.0\.0\.1' /tmp/manifest.json; then
+            echo "::error::manifest 的 host_permissions 仍覆盖本机地址，用户浏览器上的登录 cookie 读不到"
+            exit 1
+          fi
+          if ! grep -q '"key"' /tmp/manifest.json; then
+            echo "::error::manifest 缺少 key，扩展 ID 不固定，用户装完的 ID 对不上 Clerk 的 allowed_origins"
+            exit 1
+          fi
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ZIP_PATH=$(ls -t apps/extension/build/*.zip | head -1)
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${{ github.ref_name }}"
+          else
+            TAG="ext-v${{ steps.pkg.outputs.version }}"
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP_PATH" --clobber
+          else
+            gh release create "$TAG" "$ZIP_PATH" \
+              --title "Inspira 插件 $TAG" \
+              --generate-notes \
+              --target "${{ github.sha }}"
+          fi

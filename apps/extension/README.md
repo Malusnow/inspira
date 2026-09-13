@@ -185,7 +185,7 @@ npx convex env set CLERK_JWT_ISSUER_DOMAIN https://<slug>.clerk.accounts.dev
 | 构建 | `pnpm --filter apps-extension build`                     |
 | 打包 | `pnpm --filter apps-extension package`（不代表商店发布） |
 
-开发构建产物在 `build/chrome-mv3-dev`，用 Chrome 的「加载已解压的扩展程序」载入。
+开发构建产物在 `build/chrome-mv3-dev`，用 Chrome 的「加载已解压的扩展程序」载入。`package` 产出 `build/chrome-mv3-prod.zip`，由 [Release 工作流](../../.github/workflows/release-extension.yml)上传为 GitHub Release 附件，不提交进仓库。
 
 ## 验证
 
