@@ -104,6 +104,24 @@ PLASMO_PUBLIC_LANDING_URL=http://localhost:5173
 
 环境变量模板：`.env.example`、`apps/web/.env.example`、`apps/extension/.env.example`；占位值不可直接使用。
 
+## 部署
+
+Web 前端通过 GitHub Actions 发布到 GitHub Pages：
+
+- 工作流：`.github/workflows/deploy-pages.yml`，`main` 推送或手动触发。
+- 地址：`https://malusnow.github.io/inspira/`（项目站点子路径）。
+- 只发布 `apps/web/dist` 静态产物；Convex 后端和 Clerk 认证仍在各自服务上，不受 Pages 影响。
+- 子路径相关配置：构建时 `VITE_BASE_PATH=/inspira/`，路由 basename 取 `import.meta.env.BASE_URL`，`404.html` 由工作流复制 `index.html` 生成以支持深层链接。
+- 仓库设置：Pages 来源选 `GitHub Actions`；Actions secrets 需配 `VITE_CLERK_PUBLISHABLE_KEY`、`VITE_CONVEX_URL`。
+- Clerk：需把 `malusnow.github.io` 加入实例允许的域名和回调来源，否则登录会被拒绝。
+- 换仓库名或改成自定义域名时，同步修改工作流的 `VITE_BASE_PATH`；根路径部署填 `/`。
+
+本地验证子路径构建：
+
+```bash
+VITE_BASE_PATH=/inspira/ pnpm --filter web build
+```
+
 ## OpenSpec
 
 - `openspec list --json` 查看当前 change。

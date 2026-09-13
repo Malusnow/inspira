@@ -7,9 +7,11 @@ import { SettingsPage } from "../features/settings/SettingsPage"
 import { WorkspacePage } from "../features/workspaces/WorkspacePage"
 import { AppShell } from "./AppShell"
 
+const basename = import.meta.env.BASE_URL.replace(/\/$/, "")
+
 export function AppRoutes() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <Routes>
         <Route path="/" element={<Navigate to="/all" replace />} />
         <Route
