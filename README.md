@@ -1,6 +1,6 @@
 # Inspira
 
-Inspira 是一个私人灵感收集与再发现工具，用于保存 Note、网页、图片、选中文字和视频，并通过 All、Workspaces、Tags、Search、Insights 和 Explore 找回自己的内容。
+Inspira 是一个私人灵感收集与再发现工具，用于保存 Note、网页、图片、选中文字和视频，并通过 All、Workspaces、Tags、Search 和 Insights 找回自己的内容。
 
 ## 技术栈
 

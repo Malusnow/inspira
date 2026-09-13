@@ -36,7 +36,6 @@ Web / Extension -> Clerk session token
 Web / Extension -> authenticated backend -> owner-scoped Query / Mutation
 Mutation -> private content -> Web reactive query -> cards
 Client -> upload authorization -> storage -> finalize validation -> MediaAsset
-Selected tag -> owner-scoped frequency/content query -> Explore
 ```
 
 Web 创建与插件采集进入同一内容域。插件 Popup 负责反馈和补充；Service Worker 负责右键菜单、路由和后台保存；Content Script 只读取必要页面信息。
@@ -47,7 +46,7 @@ Web 创建与插件采集进入同一内容域。插件 Popup 负责反馈和补
 
 - 每次读写验证用户身份。
 - 内容、工作区、工作区归属、文件关联必须同 owner。
-- 搜索、统计、标签聚合和词云只使用当前用户数据。
+- 搜索、统计和标签聚合只使用当前用户数据。
 - 上传 URL 签发和文件访问独立鉴权。
 - 完成媒体绑定时不能只信任客户端提供的存储 ID。
 - 日志和错误不泄露其他用户数据或 Token。

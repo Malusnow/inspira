@@ -9,14 +9,13 @@
 | [Workspaces](prototypes/inspira-workspaces.html)                 | 工作区总览、进入专题卡片流、创建空工作区                               | 本页示例数据仅在当前页面有效                                   |
 | [卡片详情](prototypes/inspira-detail.html)                       | 直接打开 All 卡片详情浮层                                              | 共用 All 的详情状态，右侧仅 Tags / Notes；编辑仅在当前页面有效 |
 | [Insights / Settings](prototypes/inspira-insights-settings.html) | 热力图、构成、趋势、外观设置                                           | 通过 #insights / #settings 独立展示                            |
-| [Explore](prototypes/inspira-explore.html)                       | 标签星群 → 内容浮现 → 详情                                             | 标签字号/坐标是静态演示，必须由频度驱动；动画参数只是参考      |
 | [Plugin](prototypes/inspira-plugin.html)                         | Popup 五态、右上角位置、统一 tag/notes 补充、右键入口 `Add to Inspira` | 登录按 D05 在 Web 应用完成并由扩展同步会话                     |
 
 ## 导航与详情
 
 All 使用固定左侧窄栏，Inspira 作为侧栏品牌入口并返回 All，包含 Insights、浅/深切换和 Settings。搜索下方保留视图切换。Insights / Settings 从侧栏进入后独立占满页面，左上提供返回。
 
-All / Workspace / Explore 从右上角栏目进入，保留窄侧栏。Workspace / Explore 隐藏 All 的搜索与视图切换。
+All / Workspace 从右上角栏目进入，保留窄侧栏。Workspace 隐藏 All 的搜索与视图切换。
 
 点击卡片在当前流上打开详情浮层。左侧展示媒体或内容主体；右侧展示标题、时间、Tags、Notes。无 TLDR、AI 摘要、色板、分享或收藏工具。
 
@@ -26,12 +25,6 @@ All 卡片右键与详情里的「加入工作区」是多选：勾选表示加�
 
 静态原型共用 `prototype-shell.css` / `prototype-shell.js`。主题选择只存浏览器本地；正式同步范围见 `PRODUCT.md` 的 D10。
 
-## Explore 的目标与参考限制
-
-C06 已确认频度越高越大、颜色越强调、越靠近中心。浅色下更深，深色下更亮以维持明显程度。颜色与字号只是两个维度，不能用字号变化替代中心位置要求。
-
-建议：标签水平显示、碰撞避让、疏朗留白、轻微漂浮、返回后布局稳定；均非已确认算法。频度定义 D06，数量截断/卡片排序 D07。T05 验证长中文、同频、极端频差、小视口和键盘点击。
-
 ## 各流程需要补齐的状态
 
 | 流程               | loading       | empty                 | error                       | success               |
@@ -40,7 +33,6 @@ C06 已确认频度越高越大、颜色越强调、越靠近中心。浅色下�
 | 创建/编辑          | 提交反馈      | 必填为空时提示        | 校验/保存失败保留可编辑信息 | 结果可见              |
 | 媒体详情/上传      | 加载/上传进度 | 没有媒体时不造假预览  | 不可读/不支持/上传失败      | 看图、点击播放        |
 | Insights           | 统计加载      | 无统计内容            | 请求失败                    | 按确认口径显示        |
-| Explore            | 频度/内容加载 | 无标签/该标签无内容   | 查询失败                    | 词云与选中内容        |
 | 插件               | 保存中        | 受限页面不伪装成功    | 未登录与失败共用统一 UI     | 成功后可补 tags/notes |
 
 删除确认已确认，确认后的直接删除不提供恢复入口。
@@ -49,4 +41,4 @@ C06 已确认频度越高越大、颜色越强调、越靠近中心。浅色下�
 
 颜色、字体、间距来源见 [Token 参考](tokens.md)。截图视口尺寸、移动端布局、键盘焦点和减少动画设置属于需验证设计。
 
-原型引用外部字体/图标脚本只是演示资产；生产插件不得复制远程执行脚本。TDesign 用于正式交互组件，ECharts 用于统计图表，词云库尚未选定。
+原型引用外部字体/图标脚本只是演示资产；生产插件不得复制远程执行脚本。TDesign 用于正式交互组件，ECharts 用于统计图表。

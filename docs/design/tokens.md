@@ -10,14 +10,11 @@
 | 弱化文字          | #A09B94                       | All .search-trigger                                               |
 | 浅色输入背景      | #EDECE8                       | [Insights](prototypes/inspira-insights-settings.html) .search-box |
 | 强调主色          | #6C63FF                       | Insights .btn-add                                                 |
-| 深色背景/正文     | #0E0E0E / #E5E4E0             | [Explore](prototypes/inspira-explore.html) body                   |
-| 字体栈            | Inter，系统 sans-serif 回退   | All / Explore body                                                |
+| 深色页面背景/正文 | #171818 / #EEEAE3             | prototype-shell.css `:root[data-theme="dark"]` --canvas / --ink   |
+| 字体栈            | Inter，系统 sans-serif 回退   | All body                                                          |
 | 顶栏高度          | 64px                          | All .top-nav                                                      |
 | 页面横向间距      | 36px（All），40px（Insights） | 两原型 .top-nav；存在差异，不能宣称统一值                         |
 | 按钮圆角/搜索圆角 | 10px / 14px                   | All .nav-menu-btn / .search-trigger                               |
-| 标签字号          | 22px / 16px / 13px            | Explore .tag-node.size-l/m/s，静态演示                            |
-| 标签间距          | padding 8px 16px              | Explore .tag-node                                                 |
-| 标签明度          | 浅文字 alpha .5/.4/.25        | Explore 大/中/小词；低对比需重新验证                              |
 
 ## 建议映射
 
@@ -25,10 +22,8 @@
 
 `themeTokens.ts` 把品牌色拆成两个角色——填充用原始主色 `--color-brand`，文字用 `--color-brand-ink`（悬停 `--color-brand-ink-hover`）。文字主色以当前模式表面色为基准，必要时把主色朝该模式墨色调制，直到满足 WCAG AA 4.5:1；组件文字统一走 `text-brand-ink`，TDesign 的 `--td-text-color-brand` / `--td-text-color-link` 也指向同一取值。
 
-状态色不应仅靠主色深浅表达成功/错误。词云按频度分别映射字号、颜色强调和空间优先级；最低频仍应可读、可点击。高频在浅色主题更深，深色主题更亮；不机械地在深色背景上继续加深。
-
-布局稳定、水平排版、漂浮强度和颜色对比阈值为建议；最终参数以视觉验收记录为准。
+状态色不应仅靠主色深浅表达成功/错误。
 
 ## 后续验证
 
-需要技术验证 T05：两主题、长标签、极端频差、空/单标签、窄屏、减少动画及焦点可见性。主题变化应同时影响组件与图表，不能只修改页面背景。
+主题变化应同时影响组件与图表，不能只修改页面背景。

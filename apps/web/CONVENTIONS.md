@@ -12,7 +12,6 @@ apps/web/src/
                 notes/        Web Note 写作层、基础创建体验
                 workspaces/   工作区总览与单区专题流
                 insights/     统计（ECharts）、趋势（依 PRODUCT/Insights）
-                explore/      标签词云与点击钻取等再发现体验
                 landing/      产品介绍页与采集演示
                 preferences/  主题偏好 Provider 与 context
                 settings/     主题/主色/默认视图/账户与插件状态

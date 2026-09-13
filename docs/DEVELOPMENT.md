@@ -58,7 +58,6 @@ pnpm install --frozen-lockfile
 | Media     | 允许文件上传、超限拒绝、取消/失败、短时地址、跨用户拒绝、视频播放   |
 | Search    | 标题/正文/标签命中、无结果、分页或筛选边界                          |
 | Insights  | 固定测试数据下统计口径正确，无收藏统计                              |
-| Explore   | 频度影响字号、颜色和中心位置；长标签、小屏、键盘可用                |
 | Theme     | TDesign、ECharts 和自定义界面主题一致                               |
 
 ## 环境配置

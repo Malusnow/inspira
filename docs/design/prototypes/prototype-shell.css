@@ -294,8 +294,7 @@ body[data-page="standalone"] .page-header {
   border-bottom: 1px solid var(--line);
   padding-bottom: 28px;
 }
-.workspace-heading h1,
-.explore-title {
+.workspace-heading h1 {
   font-family: Georgia, serif;
   font-size: 48px;
   font-weight: 400;

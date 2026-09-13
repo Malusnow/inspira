@@ -18,7 +18,7 @@
     window.addEventListener("hashchange", route)
     route()
   } else {
-    shell.innerHTML = `<aside class="prototype-rail" aria-label="主导航"><a class="prototype-brand" href="inspira-all.html">Inspira</a><a class="rail-action rail-home" href="inspira-all.html" title="All" ${page === "all" ? 'aria-current="page"' : ""}>${icon("layout-grid")}<span>All</span></a><div class="rail-bottom"><a class="rail-action" href="inspira-insights-settings.html#insights" title="Insights">${icon("chart-no-axes-combined")}<span>Insights</span></a><button class="rail-action" id="themeToggle" title="切换深浅主题">${icon("sun-moon")}<span>浅色 / 深色</span></button><a class="rail-action" href="inspira-insights-settings.html#settings" title="Settings">${icon("settings")}<span>Settings</span></a></div></aside><nav class="prototype-actions" aria-label="内容导航">${link("inspira-all.html", "layout-grid", "All", page === "all")}${link("inspira-workspaces.html", "panels-top-left", "Workspaces", page === "workspaces")}${link("inspira-explore.html", "sparkles", "Explore", page === "explore")}<button class="prototype-add" title="添加灵感" aria-label="添加灵感">${icon("plus")}</button><span class="prototype-avatar" title="示例账户">L</span></nav>`
+    shell.innerHTML = `<aside class="prototype-rail" aria-label="主导航"><a class="prototype-brand" href="inspira-all.html">Inspira</a><a class="rail-action rail-home" href="inspira-all.html" title="All" ${page === "all" ? 'aria-current="page"' : ""}>${icon("layout-grid")}<span>All</span></a><div class="rail-bottom"><a class="rail-action" href="inspira-insights-settings.html#insights" title="Insights">${icon("chart-no-axes-combined")}<span>Insights</span></a><button class="rail-action" id="themeToggle" title="切换深浅主题">${icon("sun-moon")}<span>浅色 / 深色</span></button><a class="rail-action" href="inspira-insights-settings.html#settings" title="Settings">${icon("settings")}<span>Settings</span></a></div></aside><nav class="prototype-actions" aria-label="内容导航">${link("inspira-all.html", "layout-grid", "All", page === "all")}${link("inspira-workspaces.html", "panels-top-left", "Workspaces", page === "workspaces")}<button class="prototype-add" title="添加灵感" aria-label="添加灵感">${icon("plus")}</button><span class="prototype-avatar" title="示例账户">L</span></nav>`
   }
   let mode = "light"
   try {
@@ -198,16 +198,6 @@
     document.body.append(modal)
     modal.addEventListener("close", () => modal.remove())
     modal.showModal()
-  })
-  document.querySelectorAll(".tag-node,.center-card").forEach((el) => {
-    el.tabIndex = 0
-    el.setAttribute("role", "button")
-    el.onkeydown = (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault()
-        el.click()
-      }
-    }
   })
   window.lucide?.createIcons()
 })()

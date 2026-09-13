@@ -84,8 +84,7 @@ function RailLink({ icon, label, to, active }: RailLinkProps) {
 
 const contentTabs = [
   { label: "All", path: "/all" },
-  { label: "Workspace", path: "/workspace" },
-  { label: "Explore", path: "/explore" }
+  { label: "Workspace", path: "/workspace" }
 ] as const
 
 const CONTENT_TAB_GAP = 38
