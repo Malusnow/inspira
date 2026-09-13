@@ -1,3 +1,23 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+packageExtensions:
+  react-router:
+    peerDependencies:
+      "@types/react": "*"
+    peerDependenciesMeta:
+      "@types/react":
+        optional: true
+  react-router-dom:
+    peerDependencies:
+      "@types/react": "*"
+    peerDependenciesMeta:
+      "@types/react":
+        optional: true
+  tdesign-react:
+    peerDependencies:
+      "@types/react": "*"
+    peerDependenciesMeta:
+      "@types/react":
+        optional: true

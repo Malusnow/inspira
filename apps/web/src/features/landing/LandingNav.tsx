@@ -19,12 +19,7 @@ export function LandingNav({ isScrolled }: { isScrolled: boolean }) {
         <a className="text-[#777570] no-underline hover:text-[#20201e]" href="#features">
           产品介绍
         </a>
-        <a className="text-[#777570] no-underline hover:text-[#20201e]" href="#demo">
-          使用方式
-        </a>
-        <a className="text-[#777570] no-underline hover:text-[#20201e]" href="#download">
-          浏览器插件
-        </a>
+        <span className="text-[#777570]">浏览器插件</span>
         <a className="text-[#777570] no-underline hover:text-[#20201e]" href="#privacy">
           隐私
         </a>
@@ -38,9 +33,9 @@ export function LandingNav({ isScrolled }: { isScrolled: boolean }) {
             登录
           </button>
         </SignInButton>
-        <a className={`${primaryLinkClass} hidden sm:inline-flex`} href="#download">
+        <button className={`${primaryLinkClass} hidden sm:inline-flex`} type="button">
           获取浏览器插件
-        </a>
+        </button>
       </div>
     </nav>
   )

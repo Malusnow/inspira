@@ -1,16 +1,10 @@
-import {
-  AddIcon,
-  CopyIcon,
-  LogoChromeIcon,
-  PlayCircleIcon,
-  SearchIcon
-} from "tdesign-icons-react"
+import { AddIcon, CopyIcon, LogoChromeIcon, SearchIcon } from "tdesign-icons-react"
 import type { ReactNode } from "react"
 
 import heroAsset from "../../assets/hero.png"
-import { eyebrowClass, primaryLinkClass, secondaryButtonClass } from "./landingStyles"
+import { eyebrowClass, primaryLinkClass } from "./landingStyles"
 
-export function LandingHero({ onOpenVideo }: { onOpenVideo: () => void }) {
+export function LandingHero() {
   return (
     <section
       className="relative mx-auto grid min-h-[760px] max-w-[1200px] grid-cols-1 items-center gap-14 px-5 pb-16 pt-28 sm:px-11 sm:pb-20 sm:pt-32 lg:grid-cols-[minmax(0,0.86fr)_minmax(460px,1.14fr)]"
@@ -26,12 +20,8 @@ export function LandingHero({ onOpenVideo }: { onOpenVideo: () => void }) {
           保存网页、图片、文字与稍纵即逝的想法。在需要的时候，再次找到它们。
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <a className={primaryLinkClass} href="#download">
+          <button className={primaryLinkClass} type="button">
             获取浏览器插件
-          </a>
-          <button className={secondaryButtonClass} type="button" onClick={onOpenVideo}>
-            <PlayCircleIcon className="h-[18px] w-[18px]" />
-            观看 60 秒演示
           </button>
         </div>
         <p className="mt-4 inline-flex items-center gap-1.5 text-xs text-[#a09b94]">

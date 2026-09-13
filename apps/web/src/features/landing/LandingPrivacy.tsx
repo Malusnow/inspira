@@ -10,7 +10,7 @@ export function LandingPrivacy() {
       </span>
       <h2 className={sectionTitleClass}>你的灵感，只属于你。</h2>
       <p className="mx-auto mt-4 text-[15px] leading-[1.65] text-[#777570]">
-        Inspira 是你的私人空间。你保存的网页、图片、笔记和工作区默认不会公开。我们不出售你的数据，也不用它训练模型。
+        Inspira 是你的私人空间。你保存的网页、图片、笔记和工作区默认不会公开。
       </p>
     </section>
   )
