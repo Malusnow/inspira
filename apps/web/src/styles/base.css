@@ -1,0 +1,53 @@
+:root {
+  color: var(--color-ink);
+  background: var(--color-canvas);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+@keyframes page-transition-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.page-transition-clip {
+  overflow: clip;
+}
+
+.page-transition {
+  animation: page-transition-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes note-card-fresh-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.note-card-fresh {
+  animation: note-card-fresh-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}

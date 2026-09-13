@@ -6,12 +6,12 @@
 
 仓库是 pnpm monorepo：
 
-| 路径                 | 作用                                                           |
-| -------------------- | -------------------------------------------------------------- |
+| 路径                 | 作用                                                                      |
+| -------------------- | ------------------------------------------------------------------------- |
 | `apps/web`           | React / TypeScript / Vite / TDesign / Clerk / Convex / ECharts / Tailwind |
-| `apps/extension`     | Plasmo / React / TypeScript / Chrome MV3 / Clerk Extension SDK |
-| `packages/contracts` | Web、插件、后端共享类型与校验                                  |
-| `convex`             | Convex 后端最小 S1 Note Schema、鉴权配置和函数                 |
+| `apps/extension`     | Plasmo / React / TypeScript / Chrome MV3 / Clerk Extension SDK            |
+| `packages/contracts` | Web、插件、后端共享类型与校验                                             |
+| `convex`             | Convex 后端最小 S1 Note Schema、鉴权配置和函数                            |
 
 安装依赖：
 
@@ -34,6 +34,8 @@ pnpm install --frozen-lockfile
 
 尚未接通：根 `pnpm typecheck`、根 `pnpm build`、有效 `pnpm test`、contracts 测试、CI、Playwright、Convex 后端验证脚本。
 
+测试文件的归属、命名和后续收敛方案见 [Testing](TESTING.md)。
+
 ## 验证规则
 
 代码变更完成前运行覆盖改动范围的真实检查：
@@ -49,26 +51,26 @@ pnpm install --frozen-lockfile
 
 核心流程完成后再做对应人工验证：
 
-| 范围        | 验证                                                                |
-| ----------- | ------------------------------------------------------------------- |
-| Identity    | 两个测试账户互不能读写内容、工作区、标签聚合和媒体                  |
-| All         | 创建、编辑、详情、删除确认、空/错/加载状态                          |
-| Extension   | 点击保存网页、右键图片、右键划词、未登录反馈、Worker 重启、Web 同步 |
-| Media       | 允许文件上传、超限拒绝、取消/失败、短时地址、跨用户拒绝、视频播放   |
-| Search      | 标题/正文/标签命中、无结果、分页或筛选边界                          |
-| Insights    | 固定测试数据下统计口径正确，无收藏统计                              |
-| Explore     | 频度影响字号、颜色和中心位置；长标签、小屏、键盘可用                |
-| Theme       | TDesign、ECharts 和自定义界面主题一致                               |
+| 范围      | 验证                                                                |
+| --------- | ------------------------------------------------------------------- |
+| Identity  | 两个测试账户互不能读写内容、工作区、标签聚合和媒体                  |
+| All       | 创建、编辑、详情、删除确认、空/错/加载状态                          |
+| Extension | 点击保存网页、右键图片、右键划词、未登录反馈、Worker 重启、Web 同步 |
+| Media     | 允许文件上传、超限拒绝、取消/失败、短时地址、跨用户拒绝、视频播放   |
+| Search    | 标题/正文/标签命中、无结果、分页或筛选边界                          |
+| Insights  | 固定测试数据下统计口径正确，无收藏统计                              |
+| Explore   | 频度影响字号、颜色和中心位置；长标签、小屏、键盘可用                |
+| Theme     | TDesign、ECharts 和自定义界面主题一致                               |
 
 ## 环境配置
 
-| 信息                                        | 建议位置                  | 说明                         |
-| ------------------------------------------- | ------------------------- | ---------------------------- |
-| Web Clerk publishable key、Convex URL       | `apps/web` 环境变量       | 可进入客户端，不是服务端密钥 |
-| 插件 Clerk publishable key、Frontend API 地址、同步主机、Convex URL | `apps/extension` 构建环境 | 可进入客户端，不放秘密 |
-| Convex 部署和 Clerk issuer/audience         | 后端部署环境              | 地址与部署凭证分开           |
-| 存储密钥、视频服务凭证                      | 后端秘密环境              | 不能进入 Vite/Plasmo 或仓库  |
-| 生产域名、CRX ID、隐私地址                  | 发布配置                  | D05/D10/T01 完成后确定       |
+| 信息                                                                | 建议位置                  | 说明                         |
+| ------------------------------------------------------------------- | ------------------------- | ---------------------------- |
+| Web Clerk publishable key、Convex URL                               | `apps/web` 环境变量       | 可进入客户端，不是服务端密钥 |
+| 插件 Clerk publishable key、Frontend API 地址、同步主机、Convex URL | `apps/extension` 构建环境 | 可进入客户端，不放秘密       |
+| Convex 部署和 Clerk issuer/audience                                 | 后端部署环境              | 地址与部署凭证分开           |
+| 存储密钥、视频服务凭证                                              | 后端秘密环境              | 不能进入 Vite/Plasmo 或仓库  |
+| 生产域名、CRX ID、隐私地址                                          | 发布配置                  | D05/D10/T01 完成后确定       |
 
 .env 示例只能放安全占位值。不要提交 Token、真实用户内容、完整私密网页数据或存储密钥。
 

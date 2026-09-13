@@ -1,0 +1,25 @@
+.t-loading__text {
+  margin-left: 8px;
+}
+
+.note-detail-drawer .t-drawer__content-wrapper {
+  border-radius: 14px 0 0 14px;
+  inset: 0 0 0 auto;
+  height: 100% !important;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.note-detail-drawer .t-drawer__body {
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+
+.note-detail-drawer .t-drawer__close-btn {
+  right: 18px;
+  top: 18px;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+}
