@@ -89,12 +89,18 @@ export function WorkspacePage() {
     [selectedNoteId, selectedWorkspace]
   )
 
+  function handleOpenCreateWorkspace() {
+    setCreateError(undefined)
+    setIsCreateDialogOpen(true)
+  }
+
   async function handleCreateWorkspace(name: string) {
     setPendingAction("create")
     setCreateError(undefined)
 
     try {
       const workspaceId = await createWorkspace(name)
+      setCreateError(undefined)
       setIsCreateDialogOpen(false)
       setSelectedWorkspaceId(workspaceId)
       void MessagePlugin.success({
@@ -143,7 +149,7 @@ export function WorkspacePage() {
       }
       setWorkspacePendingDelete(null)
       void MessagePlugin.success({
-        content: "工作区已删除，内容仍保留在 All",
+        content: "工作区已删除",
         placement: "bottom-right"
       })
     } catch (error) {
@@ -166,7 +172,7 @@ export function WorkspacePage() {
       await removeWorkspaceItem(selectedWorkspaceId, itemPendingRemove.id)
       setItemPendingRemove(null)
       void MessagePlugin.success({
-        content: "已从工作区移除，灵感仍保留在 All",
+        content: "已从工作区移除",
         placement: "bottom-right"
       })
     } catch (error) {
@@ -203,7 +209,7 @@ export function WorkspacePage() {
         ) : (
           <WorkspaceOverview
             workspaces={workspaces ?? []}
-            onCreate={() => setIsCreateDialogOpen(true)}
+            onCreate={handleOpenCreateWorkspace}
             onOpenWorkspace={setSelectedWorkspaceId}
             onRename={setWorkspacePendingRename}
             onRequestDelete={setWorkspacePendingDelete}
@@ -221,6 +227,7 @@ export function WorkspacePage() {
         existingNames={workspaceNames}
         error={createError}
         isLoading={pendingAction === "create"}
+        onChange={() => setCreateError(undefined)}
         onCancel={() => {
           setCreateError(undefined)
           setIsCreateDialogOpen(false)
@@ -239,6 +246,7 @@ export function WorkspacePage() {
         existingNames={renameSiblingNames}
         error={renameError}
         isLoading={pendingAction === "rename"}
+        onChange={() => setRenameError(undefined)}
         onCancel={() => {
           setRenameError(undefined)
           setWorkspacePendingRename(null)

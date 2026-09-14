@@ -21,6 +21,7 @@ export interface WorkspaceNameDialogProps {
   error?: string
   isLoading?: boolean
   onCancel: () => void
+  onChange?: () => void
   onSubmit: (name: string) => Promise<void> | void
 }
 
@@ -43,13 +44,19 @@ export function WorkspaceNameDialog({
       dismissible={!isLoading}
       width={460}
       onCancel={onCancel}>
-      <WorkspaceNameForm {...form} isLoading={isLoading} onCancel={onCancel} />
+      <WorkspaceNameForm
+        {...form}
+        visible={visible}
+        isLoading={isLoading}
+        onCancel={onCancel}
+      />
     </AppDialog>
   )
 }
 
 interface WorkspaceNameFormProps
   extends Omit<WorkspaceNameDialogProps, "visible" | "isLoading" | "onCancel"> {
+  visible: boolean
   isLoading: boolean
   onCancel: () => void
 }
@@ -60,6 +67,7 @@ interface WorkspaceNameFormProps
  * draft is discarded on close and re-seeded from whichever surface opened it.
  */
 function WorkspaceNameForm({
+  visible,
   title,
   description,
   placeholder,
@@ -71,10 +79,12 @@ function WorkspaceNameForm({
   error,
   isLoading,
   onCancel,
+  onChange,
   onSubmit
 }: WorkspaceNameFormProps) {
   const { name, setName, trimmedName, fieldErrors, canSubmit } =
     useWorkspaceNameField({ initialName, existingNames, currentName })
+  const shouldShowFeedback = visible && !isLoading
 
   function handleCancel() {
     if (isLoading) return
@@ -105,16 +115,23 @@ function WorkspaceNameForm({
         maxLength={WORKSPACE_NAME_MAX_LENGTH + 1}
         autoFocus
         placeholder={placeholder}
-        onChange={(event) => setName(event.target.value)}
+        onChange={(event) => {
+          setName(event.target.value)
+          onChange?.()
+        }}
         className="mt-6 h-12 w-full rounded-lg border border-line bg-canvas px-4 text-center text-sm text-ink-strong outline-none placeholder:text-ink-muted/70 focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand/30"
       />
 
-      {fieldErrors.map((fieldError) => (
-        <p key={fieldError} className="mt-2 text-xs text-danger">
-          {fieldError}
-        </p>
-      ))}
-      {error ? <p className="mt-2 text-xs text-danger">{error}</p> : null}
+      {shouldShowFeedback
+        ? fieldErrors.map((fieldError) => (
+            <p key={fieldError} className="mt-2 text-xs text-danger">
+              {fieldError}
+            </p>
+          ))
+        : null}
+      {shouldShowFeedback && error ? (
+        <p className="mt-2 text-xs text-danger">{error}</p>
+      ) : null}
 
       <button
         type="submit"
