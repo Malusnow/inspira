@@ -18,35 +18,35 @@
 
 ## 现状
 
-| 项          | 状态                                                           |
-| ----------- | -------------------------------------------------------------- |
-| `popup.tsx` | 五态 UI 编排与配置；展示组件在同级 `components/`               |
-| Background  | `background.ts` 实现右键菜单与采集编排，无常驻内容脚本         |
-| 消息协议    | 已定义（见 `docs/CONTRACTS.md`）                               |
-| 登录        | Clerk 扩展 SDK 已接入；在 Web 应用登录后同步会话（D05）        |
-| 数据访问    | Convex 客户端已接入（`lib/backend.ts`）                        |
-| 采集契约    | `packages/contracts` 已落地采集类型、字段与错误码              |
-| 权限        | 只申请采集与登录必需项；两个 host 来自构建环境变量，无全量域名 |
-| 人工验收    | 未执行（T01/T02/T03 与人工冒烟均待真实环境）                   |
+| 项            | 状态                                                           |
+| ------------- | -------------------------------------------------------------- |
+| `popup.tsx` | 五态 UI 编排与配置；展示组件在同级`components/`              |
+| Background    | `background.ts` 实现右键菜单与采集编排，无常驻内容脚本       |
+| 消息协议      | 已定义（见`docs/CONTRACTS.md`）                              |
+| 登录          | Clerk 扩展 SDK 已接入；在 Web 应用登录后同步会话（D05）        |
+| 数据访问      | Convex 客户端已接入（`lib/backend.ts`）                      |
+| 采集契约      | `packages/contracts` 已落地采集类型、字段与错误码            |
+| 权限          | 只申请采集与登录必需项；两个 host 来自构建环境变量，无全量域名 |
+| 人工验收      | 未执行（T01/T02/T03 与人工冒烟均待真实环境）                   |
 
 ## 分层职责
 
-| 层             | 职责                                                            | 约束                                          |
-| -------------- | --------------------------------------------------------------- | --------------------------------------------- |
-| Popup          | 呈现状态、补充 tags / notes                                     | 生命周期短，不承担编排，不直接调用后端        |
-| Service Worker | 右键菜单、采集编排、`clientRequestId` 生成、保存                | 可随时被终止，跨重启状态不能只放内存          |
-| Content Script | 只读页面 title / og:image / description                         | 按需注入，非常驻；quote 与 image 不需要读页面 |
-| 浏览器适配层   | 封装 `chrome.storage` / `contextMenus` / `scripting` 与消息收发 | 业务代码不直接调用 chrome API，便于 mock      |
+| 层             | 职责                                                                 | 约束                                          |
+| -------------- | -------------------------------------------------------------------- | --------------------------------------------- |
+| Popup          | 呈现状态、补充 tags / notes                                          | 生命周期短，不承担编排，不直接调用后端        |
+| Service Worker | 右键菜单、采集编排、`clientRequestId` 生成、保存                   | 可随时被终止，跨重启状态不能只放内存          |
+| Content Script | 只读页面 title / og:image / description                              | 按需注入，非常驻；quote 与 image 不需要读页面 |
+| 浏览器适配层   | 封装`chrome.storage` / `contextMenus` / `scripting` 与消息收发 | 业务代码不直接调用 chrome API，便于 mock      |
 
 登录不在 popup 内完成：登录链接打开 Web 应用，popup 与 Service Worker 都通过 Clerk 的 `syncHost` 读取登录主机上的会话 cookie。
 
 ## 采集流程
 
-| 入口         | kind    | 数据来源                                                   |
-| ------------ | ------- | ---------------------------------------------------------- |
-| 点击图标     | `page`  | 按需注入读取 title / og:image / description + 当前 URL     |
+| 入口         | kind      | 数据来源                                                       |
+| ------------ | --------- | -------------------------------------------------------------- |
+| 点击图标     | `page`  | 按需注入读取 title / og:image / description + 当前 URL         |
 | 右键选中文字 | `quote` | `chrome.contextMenus` 的 `info.selectionText` + 来源页 URL |
-| 右键图片     | `image` | `info.srcUrl` + 来源页 URL                                 |
+| 右键图片     | `image` | `info.srcUrl` + 来源页 URL                                   |
 
 三类共用同一个 capture Mutation 和同一套补充 UI，popup 不显示来源类型标题，也不显示缩略图。右键菜单文案统一为 `Add to Inspira`，由右键上下文区分选文与图片。
 
@@ -60,8 +60,8 @@
 
 错误码到界面的映射：
 
-| 错误                    | Popup 表现                       |
-| ----------------------- | -------------------------------- |
+| 错误                      | Popup 表现                       |
+| ------------------------- | -------------------------------- |
 | `UNAUTHENTICATED`       | 未登录态，给登录链接             |
 | `INVALID_INPUT`         | 失败态，不自动重试               |
 | `WORKSPACE_UNAVAILABLE` | 失败态，不泄露其他账户信息       |
@@ -80,13 +80,13 @@
 
 五态：
 
-| 状态     | 标题               | 内容                           | 操作               |
-| -------- | ------------------ | ------------------------------ | ------------------ |
-| 保存中   | —                  | spinner + 「正在保存…」        | 无输入控件         |
-| 保存成功 | 已保存到 Inspira   | tag 单行输入 + 备注            | 在 Inspira 中查看  |
-| 已填写   | 已保存到 Inspira   | 同上，回显已填 tags / notes    | 在 Inspira 中查看  |
+| 状态     | 标题               | 内容                           | 操作                |
+| -------- | ------------------ | ------------------------------ | ------------------- |
+| 保存中   | —                 | spinner + 「正在保存…」       | 无输入控件          |
+| 保存成功 | 已保存到 Inspira   | tag 单行输入 + 备注            | 在 Inspira 中查看   |
+| 已填写   | 已保存到 Inspira   | 同上，回显已填 tags / notes    | 在 Inspira 中查看   |
 | 未登录   | 无法保存到 Inspira | 「请先登录，再重新保存这一条」 | 登录链接 → landing |
-| 无法保存 | 无法保存到 Inspira | 受限页面或网络不可用           | 重试               |
+| 无法保存 | 无法保存到 Inspira | 受限页面或网络不可用           | 重试                |
 
 未登录与无法保存共用同一个消息组件，只有文案与操作不同。受限页面（`chrome://`、受保护图片等）一律走失败态，不伪装成功。
 
@@ -94,14 +94,14 @@
 
 目标是只申请实际用到的权限。当前 `manifest` 声明与用途：
 
-| 权限                                                 | 对应的流程                                                   |
-| ---------------------------------------------------- | ------------------------------------------------------------ |
-| `contextMenus`                                       | 右键 `Add to Inspira` 保存选中文字 / 图片                    |
-| `storage`                                            | 用 `chrome.storage.session` 跨 Worker 重启保留待反馈结果     |
+| 权限                                                   | 对应的流程                                                   |
+| ------------------------------------------------------ | ------------------------------------------------------------ |
+| `contextMenus`                                       | 右键`Add to Inspira` 保存选中文字 / 图片                   |
+| `storage`                                            | 用`chrome.storage.session` 跨 Worker 重启保留待反馈结果    |
 | `activeTab`                                          | 用户点击图标 / 右键后临时授权，读取当前页 URL 并注入读取脚本 |
 | `scripting`                                          | 点击时按需注入读取 title / og:image / description            |
 | `cookies`                                            | Clerk 从登录主机读取会话 cookie（D05 的会话同步）            |
-| `host_permissions: $PLASMO_PUBLIC_CLERK_SYNC_HOST/*` | 登录 cookie 所在主机，开发展开为 `http://localhost/*`        |
+| `host_permissions: $PLASMO_PUBLIC_CLERK_SYNC_HOST/*` | 登录 cookie 所在主机，开发展开为`http://localhost/*`       |
 | `host_permissions: $CLERK_FRONTEND_API/*`            | Clerk Frontend API，扩展直接向它发请求                       |
 
 - 不预先申请 `tabs`，也不使用 `<all_urls>` / `https://*/*`：页面读取只依赖 `activeTab` 的临时授权。
@@ -142,7 +142,6 @@ apps/extension/
    ```
 
    扩展 ID 在 `chrome://extensions` 可见。未打包扩展的 ID 由加载路径决定，换目录就会变；发布前按 Clerk 的 consistent CRX ID 指南固定 `manifest.key`。
-
 4. Dashboard → JWT Templates 建一个名为 `convex` 的模板，`lib/backend.ts` 用它换 Convex 令牌。
 
 ### 2. Web 应用：`apps/web/.env.local`
@@ -162,13 +161,13 @@ npx convex env set CLERK_JWT_ISSUER_DOMAIN https://<slug>.clerk.accounts.dev
 
 `plasmo dev` 与 `plasmo build` 都读取 `.env.local`。
 
-| 变量                                  | 说明                                                                                                            |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `PLASMO_PUBLIC_CLERK_PUBLISHABLE_KEY` | 与 Web 同一个 Clerk 实例的 publishable key，缺失时 popup 显示「插件尚未配置」                                   |
-| `CLERK_FRONTEND_API`                  | 同一实例的 Frontend API 地址，会被插进 `manifest` 的 `host_permissions`                                         |
-| `PLASMO_PUBLIC_CLERK_SYNC_HOST`       | 登录 cookie 所在主机：开发填 `http://localhost`，生产填 Frontend API 主机；同时决定 `host_permissions`          |
-| `PLASMO_PUBLIC_CONVEX_URL`            | 与 Web 同一个 Convex deployment                                                                                 |
-| `PLASMO_PUBLIC_LANDING_URL`           | Web 应用地址，默认 `https://inspira.app`；本地填 `http://localhost:5173`，只用于登录链接与「在 Inspira 中查看」 |
+| 变量                                    | 说明                                                                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `PLASMO_PUBLIC_CLERK_PUBLISHABLE_KEY` | 与 Web 同一个 Clerk 实例的 publishable key，缺失时 popup 显示「插件尚未配置」                                      |
+| `CLERK_FRONTEND_API`                  | 同一实例的 Frontend API 地址，会被插进`manifest` 的 `host_permissions`                                         |
+| `PLASMO_PUBLIC_CLERK_SYNC_HOST`       | 登录 cookie 所在主机：开发填`http://localhost`，生产填 Frontend API 主机；同时决定 `host_permissions`          |
+| `PLASMO_PUBLIC_CONVEX_URL`            | 与 Web 同一个 Convex deployment                                                                                    |
+| `PLASMO_PUBLIC_LANDING_URL`           | Web 应用地址，默认`https://inspira.app`；本地填 `http://localhost:5173`，只用于登录链接与「在 Inspira 中查看」 |
 
 两个容易踩的点：
 
@@ -179,8 +178,8 @@ npx convex env set CLERK_JWT_ISSUER_DOMAIN https://<slug>.clerk.accounts.dev
 
 ## 开发
 
-| 用途 | 命令                                                     |
-| ---- | -------------------------------------------------------- |
+| 用途 | 命令                                                       |
+| ---- | ---------------------------------------------------------- |
 | 开发 | `pnpm --filter apps-extension dev`                       |
 | 构建 | `pnpm --filter apps-extension build`                     |
 | 打包 | `pnpm --filter apps-extension package`（不代表商店发布） |
@@ -202,17 +201,6 @@ npx convex env set CLERK_JWT_ISSUER_DOMAIN https://<slug>.clerk.accounts.dev
 - 保存后在 Web 端能看到同一条内容及其 tags / notes
 
 已知环境依赖：`chrome.action.openPopup()` 需要 Chrome 127+，更低版本右键结果退化为角标（`...` / `!`），需再点一次图标查看。
-
-## 待确认与待验证
-
-| 项  | 内容                                                                                                          | 影响             |
-| --- | ------------------------------------------------------------------------------------------------------------- | ---------------- |
-| D05 | 已定登录方式：在 Web 应用登录，扩展用 `syncHost` 同步会话；是否自动恢复待保存请求仍未定，当前需要用户重新保存 | 未登录流程       |
-| T01 | Service Worker 内能否获取 Clerk token 并调用 Convex                                                           | 登录与保存链路   |
-| T02 | 同请求重试、主动再次保存、Worker 重启                                                                         | 幂等与状态持久化 |
-| T03 | 普通 / 受保护 / blob / data / 内网页面的图片采集                                                              | 权限与受限来源   |
-
-未定项只在其阻塞当前任务时才需要推动确认，不自行实现「登录后自动恢复草稿」这类未确认行为。
 
 ## 相关文档
 

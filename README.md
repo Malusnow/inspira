@@ -12,8 +12,8 @@ Inspira 是一个私人灵感收集与再发现工具，用于保存 Note、网�
 
 ## 目录
 
-| 路径                 | 说明                              |
-| -------------------- | --------------------------------- |
+| 路径                   | 说明                              |
+| ---------------------- | --------------------------------- |
 | `apps/web`           | Web 应用                          |
 | `apps/extension`     | Chrome 插件                       |
 | `convex`             | Convex schema、鉴权配置和后端函数 |
@@ -73,8 +73,8 @@ CLERK_JWT_ISSUER_DOMAIN=https://placeholder.clerk.accounts.dev
 
 Landing 页面上与插件发布相关的入口目前都是模板按钮，**仅用于呈现 UI 效果，并未发布也不知道发布地址**，点击不会有任何反应：
 
-| 位置    | 元素                   | 当前行为                                |
-| ------- | ---------------------- | --------------------------------------- |
+| 位置    | 元素                   | 当前行为                                  |
+| ------- | ---------------------- | ----------------------------------------- |
 | 导航栏  | 「获取浏览器插件」按钮 | 占位按钮（`type="button"`），点击无反应 |
 | 导航栏  | 「浏览器插件」         | 静态文字标签（`<span>`），不可点击      |
 | Hero 区 | 「获取浏览器插件」按钮 | 占位按钮（`type="button"`），点击无反应 |
@@ -88,34 +88,31 @@ Landing 页面上与插件发布相关的入口目前都是模板按钮，**仅�
 
 ### 浏览器与版本
 
-| 项         | 要求                                                                                                                |
-| ---------- | ------------------------------------------------------------------------------------------------------------------- |
-| 浏览器     | Google Chrome（Manifest V3）。不支持 Firefox 和 Safari，Edge 等 Chromium 浏览器未验证                               |
-| 浏览器版本 | Chrome 127 或更高。低于 127 时 `chrome.action.openPopup()` 不可用，右键保存的结果退化为图标角标，需再点一次图标查看 |
-| 插件版本   | `0.1.0`（取 `apps/extension/package.json` 的 `version`，构建时会写进 manifest）                                     |
-| 安装方式   | 未上架 Chrome 应用商店，只能手动加载「未打包扩展」                                                                  |
+| 项         | 要求                                                                                                                 |
+| ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| 浏览器     | Google Chrome（Manifest V3）。不支持 Firefox 和 Safari，Edge 等 Chromium 浏览器未验证                                |
+| 浏览器版本 | Chrome 127 或更高。低于 127 时`chrome.action.openPopup()` 不可用，右键保存的结果退化为图标角标，需再点一次图标查看 |
+| 插件版本   | `0.1.0`（取 `apps/extension/package.json` 的 `version`，构建时会写进 manifest）                                |
+| 安装方式   | 未上架 Chrome 应用商店，只能手动加载「未打包扩展」                                                                   |
 
 ### 安装步骤
 
 1. 安装依赖：`pnpm install --frozen-lockfile`
 2. 复制 `apps/extension/.env.example` 为 `apps/extension/.env.local` 并填入真实值（Clerk publishable key、Frontend API 地址、Convex URL、同步主机、Web 应用地址）。**变量缺失时 manifest 里的 `$VAR` 不会展开，Chrome 会直接拒绝加载**；细节见 [插件配置](apps/extension/README.md#配置)。
-3. 构建插件：
-
-   | 场景     | 命令                                 | 产物目录                               |
-   | -------- | ------------------------------------ | -------------------------------------- |
+3. 构建插件：| 场景     | 命令                                   | 产物目录                                 |
+   | -------- | -------------------------------------- | ---------------------------------------- |
    | 日常使用 | `pnpm --filter apps-extension build` | `apps/extension/build/chrome-mv3-prod` |
    | 开发调试 | `pnpm --filter apps-extension dev`   | `apps/extension/build/chrome-mv3-dev`  |
-
 4. 打开 Chrome，地址栏输入 `chrome://extensions`
 5. 打开右上角「开发者模式」
-6. 点「加载已解压的扩展程序」，选择上表中的产物目录（选到含 `manifest.json` 的那一层，不要选 `build` 或 `dist`）
+6. 点「加载已解压的扩展程序」，选择上表中的产物目录
 7. 确认出现名为 `Inspira` 的卡片且没有报错
 
 重新构建后，回到 `chrome://extensions` 点该卡片上的刷新按钮即可生效。
 
 ## 更多文档
 
-- 产品范围：[docs/PRODUCT.md](docs/PRODUCT.md)
+- 产品说明：[docs/PRODUCT.md](docs/PRODUCT.md)
 - 架构边界：[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - 接口契约：[docs/CONTRACTS.md](docs/CONTRACTS.md)
 - 开发与验收：[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)

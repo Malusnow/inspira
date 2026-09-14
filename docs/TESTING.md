@@ -4,14 +4,14 @@
 
 测试按“被测边界”归属，而不是按临时方便位置归属：
 
-| 层级        | 推荐位置                                     | 覆盖内容                                     | 当前对应文件                                      |
-| ----------- | -------------------------------------------- | -------------------------------------------- | ------------------------------------------------- |
-| 共享契约    | `packages/contracts/src/**/*.test.ts`        | 纯类型邻近的运行时校验、归一化、聚合纯函数   | `packages/contracts/src/index.test.ts`            |
-| Web 单元    | `apps/web/src/**/*.test.ts(x)`               | UI view model、hooks、主题算法、渲染无关工具 | `apps/web/src/features/**`、`apps/web/src/lib/**` |
-| Web 组件    | `apps/web/src/**/__tests__/*.test.tsx`       | 需要 DOM、交互、可访问性断言的 React 组件    | 后续新增                                          |
-| Convex 后端 | `convex/**/*.test.ts`                        | Convex function、权限、幂等、数据隔离        | `convex/*.test.ts`                                |
-| 集成/E2E    | `tests/e2e/**/*.spec.ts`                     | Web + Convex + Clerk 流程、插件关键路径      | 后续新增                                          |
-| 测试夹具    | `tests/fixtures/**` 或就近 `__fixtures__/**` | 可复用数据、HTML、媒体样本                   | 后续新增                                          |
+| 层级        | 推荐位置                                         | 覆盖内容                                     | 当前对应文件                                          |
+| ----------- | ------------------------------------------------ | -------------------------------------------- | ----------------------------------------------------- |
+| 共享契约    | `packages/contracts/src/**/*.test.ts`          | 纯类型邻近的运行时校验、归一化、聚合纯函数   | `packages/contracts/src/index.test.ts`              |
+| Web 单元    | `apps/web/src/**/*.test.ts(x)`                 | UI view model、hooks、主题算法、渲染无关工具 | `apps/web/src/features/**`、`apps/web/src/lib/**` |
+| Web 组件    | `apps/web/src/**/__tests__/*.test.tsx`         | 需要 DOM、交互、可访问性断言的 React 组件    | 后续新增                                              |
+| Convex 后端 | `convex/**/*.test.ts`                          | Convex function、权限、幂等、数据隔离        | `convex/*.test.ts`                                  |
+| 集成/E2E    | `tests/e2e/**/*.spec.ts`                       | Web + Convex + Clerk 流程、插件关键路径      | 后续新增                                              |
+| 测试夹具    | `tests/fixtures/**` 或就近 `__fixtures__/**` | 可复用数据、HTML、媒体样本                   | 后续新增                                              |
 
 ## 命名规则
 
@@ -35,8 +35,8 @@
 
 当前命令与规划命令：
 
-| 命令                                    | 作用                            |
-| --------------------------------------- | ------------------------------- |
+| 命令                                      | 作用                            |
+| ----------------------------------------- | ------------------------------- |
 | `pnpm test`                             | 全仓库非 E2E 测试，必须真实失败 |
 | `pnpm --filter web test`                | Web 单元/组件测试               |
 | `pnpm --filter @inspira/contracts test` | 契约测试                        |
@@ -45,7 +45,7 @@
 
 根 `vitest.config.ts` 需要明确包含 `packages/contracts/src/**/*.test.ts`、`apps/web/src/**/*.test.ts(x)` 和 `convex/**/*.test.ts`，并排除 `node_modules`、`dist`、`.plasmo` 等产物目录。
 
-## 开源项目级别约束
+## 约束
 
 - CI 至少分三段：lint/typecheck、unit/backend tests、build；E2E 可独立为需要环境的 job。
 - 每个 bug fix 至少补一条会在修复前失败的测试，除非是纯样式且有截图验收说明。

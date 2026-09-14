@@ -1,6 +1,5 @@
 import { SignInButton } from "@clerk/react"
 
-import { appAllPath } from "../../lib/appPaths"
 import { primaryLinkClass } from "./landingStyles"
 
 export function LandingNav({ isScrolled }: { isScrolled: boolean }) {
@@ -26,7 +25,7 @@ export function LandingNav({ isScrolled }: { isScrolled: boolean }) {
         </a>
       </div>
       <div className="flex items-center gap-1.5 sm:gap-3.5">
-        <SignInButton mode="modal" forceRedirectUrl={appAllPath}>
+        <SignInButton mode="modal">
           <button
             className="rounded-lg border-0 bg-transparent px-3.5 py-2 text-sm font-medium text-[#20201e] hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-brand-line"
             type="button"
