@@ -38,7 +38,12 @@ export function WorkspacePage() {
     "page-transition",
     selectedWorkspaceId ?? "overview"
   )
-  const selectedWorkspace = useWorkspaceDetailData(selectedWorkspaceId)
+  const {
+    workspace: selectedWorkspace,
+    canLoadMore,
+    isLoadingMore,
+    loadMore
+  } = useWorkspaceDetailData(selectedWorkspaceId)
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [createError, setCreateError] = useState<string | undefined>()
@@ -83,8 +88,9 @@ export function WorkspacePage() {
   const selectedNote = useMemo(
     () =>
       selectedNoteId
-        ? selectedWorkspace?.items.find((item) => item.id === selectedNoteId) ??
-          null
+        ? selectedWorkspace?.items?.find(
+            (item) => item.id === selectedNoteId
+          ) ?? null
         : null,
     [selectedNoteId, selectedWorkspace]
   )
@@ -205,6 +211,9 @@ export function WorkspacePage() {
             onEditNote={openNoteOverlay}
             onRequestRemoveItem={setItemPendingRemove}
             onRequestDeleteItem={requestDeleteItem}
+            canLoadMore={canLoadMore}
+            isLoadingMore={isLoadingMore}
+            onLoadMore={loadMore}
           />
         ) : (
           <WorkspaceOverview

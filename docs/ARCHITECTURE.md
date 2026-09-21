@@ -29,6 +29,10 @@ Note 不依赖媒体。Image/Video 的外部来源和受管文件必须分开建
 
 `inspirations` 不保存 `workspaceId`；归属只在 `workspaceMemberships`（ownerId / inspirationId / workspaceId / createdAt / updatedAt）里，按 owner + inspiration 和 owner + workspace 建索引，因此一条内容可出现在多个工作区，而 All 卡片流仍只按 `inspirations` 去重展示。
 
+All 卡片流按 `inspirations.by_owner_createdAt` 分页；Workspace 详情元数据与条目分开读取，条目按 `workspaceMemberships.by_owner_workspace_createdAt` 分页。两处每页只 hydration 当前 30 条，再由 Web 追加到 Masonry 数据源。Workspace overview 和选择器是独立读模型，不复用详情条目查询。
+
+搜索暂时是已加载分页结果上的客户端派生状态。它不等同于全库搜索；后续如需搜索未加载数据，应新增 owner-scoped 服务端搜索索引，而不是重新读取全部 Inspiration。
+
 ## 数据流
 
 ```text

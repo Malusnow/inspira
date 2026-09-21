@@ -1,5 +1,5 @@
 import type { InspirationItem } from "@inspira/contracts"
-import { useConvexAuth, useMutation, useQuery } from "convex/react"
+import { useMutation } from "convex/react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useOutletContext } from "react-router-dom"
 
@@ -12,6 +12,7 @@ import { AllErrorBoundary } from "./AllErrorBoundary"
 import { AllTopBar, type AllColumnCount } from "./AllTopBar"
 import { NoteDetailDialog } from "./NoteDetail"
 import { NoteList } from "./NoteList"
+import { useInspirationFeed } from "./useInspirationFeed"
 import { useNoteDeletion } from "./useNoteDeletion"
 
 /**
@@ -20,12 +21,14 @@ import { useNoteDeletion } from "./useNoteDeletion"
  * while data remains scoped to the authenticated owner's Notes.
  */
 export function AllPage() {
-  const { isAuthenticated, isLoading } = useConvexAuth()
-  // Queried here rather than inside `AllContent`: the selected Note is derived
-  // from this list, so deleting it closes the detail layer on its own.
-  const notes = useQuery(api.notes.listMine, isAuthenticated ? {} : "skip") as
-    | InspirationItem[]
-    | undefined
+  const {
+    notes,
+    isAuthenticated,
+    isLoading,
+    canLoadMore,
+    isLoadingMore,
+    loadMore
+  } = useInspirationFeed()
   const { openNoteOverlay, query, setQuery } =
     useOutletContext<AppShellOutletContext>()
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
@@ -61,12 +64,15 @@ export function AllPage() {
           notes={notes}
           isAuthenticated={isAuthenticated}
           isLoading={isLoading}
+          canLoadMore={canLoadMore}
+          isLoadingMore={isLoadingMore}
           query={query}
           onQueryChange={setQuery}
           onEditNote={openNoteOverlay}
           onOpenNote={(note) => setSelectedNoteId(note.id)}
           onRequestDeleteNote={requestDelete}
           onRequestWorkspaceChange={requestAssignment}
+          onLoadMore={loadMore}
         />
       </section>
       <NoteDetailDialog
@@ -104,16 +110,21 @@ function AllContent({
   notes,
   isAuthenticated,
   isLoading,
+  canLoadMore,
+  isLoadingMore,
   query,
   onQueryChange,
   onEditNote,
   onOpenNote,
   onRequestDeleteNote,
-  onRequestWorkspaceChange
+  onRequestWorkspaceChange,
+  onLoadMore
 }: {
   notes: InspirationItem[] | undefined
   isAuthenticated: boolean
   isLoading: boolean
+  canLoadMore: boolean
+  isLoadingMore: boolean
   query: string
   onQueryChange: (query: string) => void
   onEditNote: (note: InspirationItem) => void
@@ -123,6 +134,7 @@ function AllContent({
     note: InspirationItem,
     anchor: { x: number; y: number }
   ) => void
+  onLoadMore: () => void
 }) {
   const seedStarterNotes = useMutation(api.notes.seedStarterNotes)
   const [columnCount, setColumnCount] = useState<AllColumnCount>(4)
@@ -168,11 +180,20 @@ function AllContent({
       />
       <NoteList
         notes={visibleNotes}
+        allNotes={notes}
         columnCount={columnCount}
+        canLoadMore={canLoadMore}
+        isLoadingMore={isLoadingMore}
+        emptyMessage={
+          query.trim()
+            ? "当前已加载的内容中没有匹配结果"
+            : "还没有记录的灵感，快添加你的第一条灵感吧"
+        }
         onEditNote={onEditNote}
         onOpenNote={onOpenNote}
         onRequestDeleteNote={onRequestDeleteNote}
         onRequestWorkspaceChange={onRequestWorkspaceChange}
+        onLoadMore={onLoadMore}
       />
     </>
   )

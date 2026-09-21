@@ -14,7 +14,13 @@ const FRESH_NOTE_DURATION_MS = 900
 export interface NoteListProps {
   /** undefined → still loading; an array → loaded Note rows for the owner. */
   notes: InspirationItem[] | undefined
+  /** Unfiltered feed used to distinguish realtime inserts from search changes. */
+  allNotes: InspirationItem[] | undefined
   columnCount: AllColumnCount
+  canLoadMore: boolean
+  isLoadingMore: boolean
+  emptyMessage: string
+  onLoadMore: () => void
   onEditNote: (note: InspirationItem) => void
   /** Opens the detail floating layer for the selected Note card. */
   onOpenNote: (note: InspirationItem) => void
@@ -29,8 +35,13 @@ export interface NoteListProps {
 
 export function NoteList({
   notes,
+  allNotes,
   onEditNote,
   columnCount,
+  canLoadMore,
+  isLoadingMore,
+  emptyMessage,
+  onLoadMore,
   onOpenNote,
   onRequestDeleteNote,
   onRequestWorkspaceChange
@@ -41,18 +52,25 @@ export function NoteList({
   const effectiveColumnCount = useResponsiveColumnCount(columnCount)
 
   useEffect(() => {
-    if (!notes) return
+    if (!allNotes) return
 
     const previousIds = previousNoteIds.current
-    const nextIds = new Set(notes.map((note) => note.id))
+    const nextIds = new Set(allNotes.map((note) => note.id))
 
     previousNoteIds.current = nextIds
 
     if (!previousIds) return
 
-    const newIds = notes
-      .map((note) => note.id)
-      .filter((noteId) => !previousIds.has(noteId))
+    const firstExistingIndex = allNotes.findIndex((note) =>
+      previousIds.has(note.id)
+    )
+    const newIds =
+      firstExistingIndex > 0
+        ? allNotes
+            .slice(0, firstExistingIndex)
+            .map((note) => note.id)
+            .filter((noteId) => !previousIds.has(noteId))
+        : []
 
     if (newIds.length === 0) return
 
@@ -81,17 +99,20 @@ export function NoteList({
       window.clearTimeout(timeoutId)
       dropFreshIds()
     }
-  }, [notes])
+  }, [allNotes])
 
   return (
     <NoteMasonrySection
       notes={notes}
       columnCount={effectiveColumnCount}
+      canLoadMore={canLoadMore}
+      isLoadingMore={isLoadingMore}
+      onLoadMore={onLoadMore}
       className="px-5 pb-[60px] sm:px-8 lg:px-10"
       emptyState={
         <div className="mx-5 flex min-h-[320px] items-center justify-center p-6 text-center sm:mx-8 lg:mx-10">
           <p className="select-none text-sm font-normal text-ink-muted/60">
-            还没有记录的灵感，快添加你的第一条灵感吧
+            {emptyMessage}
           </p>
         </div>
       }

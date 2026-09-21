@@ -187,7 +187,7 @@ describe("captures.capture", () => {
 
     const view = await t
       .withIdentity(owner)
-      .query(api.notes.getMine, { id: result.inspirationId })
+      .query(api.inspirations.getMine, { id: result.inspirationId })
     const memberships = await t.run(async (ctx) =>
       ctx.db.query("workspaceMemberships").collect()
     )
@@ -211,7 +211,7 @@ describe("captures.capture", () => {
 
     const view = await t
       .withIdentity(owner)
-      .query(api.notes.getMine, { id: result.inspirationId })
+      .query(api.inspirations.getMine, { id: result.inspirationId })
 
     expect(view?.workspaceIds).toEqual([reading])
   })
@@ -229,8 +229,12 @@ describe("captures.capture", () => {
       workspaceIds: [reading, design]
     }
 
-    const first = await t.withIdentity(owner).mutation(api.captures.capture, request)
-    const retry = await t.withIdentity(owner).mutation(api.captures.capture, request)
+    const first = await t
+      .withIdentity(owner)
+      .mutation(api.captures.capture, request)
+    const retry = await t
+      .withIdentity(owner)
+      .mutation(api.captures.capture, request)
 
     expect(first.created).toBe(true)
     expect(retry.created).toBe(false)
@@ -250,10 +254,10 @@ describe("captures.capture", () => {
 
     const ownerView = await t
       .withIdentity(owner)
-      .query(api.notes.getMine, { id: result.inspirationId })
+      .query(api.inspirations.getMine, { id: result.inspirationId })
     const otherView = await t
       .withIdentity(otherOwner)
-      .query(api.notes.getMine, { id: result.inspirationId })
+      .query(api.inspirations.getMine, { id: result.inspirationId })
 
     expect(ownerView).not.toBeNull()
     expect(otherView).toBeNull()

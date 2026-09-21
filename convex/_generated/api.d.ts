@@ -10,8 +10,10 @@
 
 import type * as captures from "../captures.js";
 import type * as insights from "../insights.js";
+import type * as inspirations from "../inspirations.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_captures from "../lib/captures.js";
+import type * as lib_inspirations from "../lib/inspirations.js";
 import type * as lib_notes from "../lib/notes.js";
 import type * as lib_workspaces from "../lib/workspaces.js";
 import type * as media from "../media.js";
@@ -27,8 +29,10 @@ import type {
 declare const fullApi: ApiFromModules<{
   captures: typeof captures;
   insights: typeof insights;
+  inspirations: typeof inspirations;
   "lib/auth": typeof lib_auth;
   "lib/captures": typeof lib_captures;
+  "lib/inspirations": typeof lib_inspirations;
   "lib/notes": typeof lib_notes;
   "lib/workspaces": typeof lib_workspaces;
   media: typeof media;

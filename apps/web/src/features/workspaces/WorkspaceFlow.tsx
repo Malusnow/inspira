@@ -1,4 +1,4 @@
-import type { InspirationItem, WorkspaceDetail } from "@inspira/contracts"
+import type { InspirationItem } from "@inspira/contracts"
 import { ArrowLeftIcon, DeleteIcon, RollbackIcon } from "tdesign-icons-react"
 
 import { ContextMenu } from "../../components/ContextMenu"
@@ -10,7 +10,18 @@ import { NoteMasonrySection } from "../all/NoteMasonrySection"
 const WORKSPACE_COLUMN_COUNT = 4 as const
 
 export interface WorkspaceFlowProps {
-  workspace: WorkspaceDetail | undefined
+  workspace:
+    | {
+        id: string
+        name: string
+        items: InspirationItem[] | undefined
+        createdAt: number
+        updatedAt: number
+      }
+    | undefined
+  canLoadMore: boolean
+  isLoadingMore: boolean
+  onLoadMore: () => void
   onBack: () => void
   onOpenNote: (note: InspirationItem) => void
   onEditNote: (note: InspirationItem) => void
@@ -24,7 +35,10 @@ export function WorkspaceFlow({
   onOpenNote,
   onEditNote,
   onRequestRemoveItem,
-  onRequestDeleteItem
+  onRequestDeleteItem,
+  canLoadMore,
+  isLoadingMore,
+  onLoadMore
 }: WorkspaceFlowProps) {
   const columnCount = useResponsiveColumnCount(WORKSPACE_COLUMN_COUNT)
 
@@ -49,6 +63,9 @@ export function WorkspaceFlow({
       <NoteMasonrySection
         notes={workspace?.items}
         columnCount={columnCount}
+        canLoadMore={canLoadMore}
+        isLoadingMore={isLoadingMore}
+        onLoadMore={onLoadMore}
         className="mt-8 pb-[60px]"
         emptyState={
           <p className="mt-16 select-none text-center text-sm text-ink-muted/60">

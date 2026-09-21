@@ -1,7 +1,7 @@
-import { ConvexError, v } from "convex/values"
+import { ConvexError } from "convex/values"
 
-import type { Doc, Id } from "./_generated/dataModel"
-import { mutation, query } from "./_generated/server"
+import type { Id } from "./_generated/dataModel"
+import { mutation } from "./_generated/server"
 import type { MutationCtx, QueryCtx } from "./_generated/server"
 import { requireOwner } from "./lib/auth"
 import {
@@ -11,13 +11,11 @@ import {
   removeArgs,
   STARTER_NOTES_VERSION,
   starters,
-  toInspiration,
   updateArgs
 } from "./lib/notes"
 import {
   deleteWorkspaceMembershipsForInspiration,
   ensureWorkspaceMemberships,
-  listWorkspaceIdsForInspiration,
   resolveOwnedWorkspaceIds,
   syncWorkspaceMemberships,
   touchWorkspaces
@@ -44,91 +42,6 @@ async function assertOwnedAvailableAssets(
       })
     }
   }
-}
-
-async function mediaView(
-  ctx: QueryCtx | MutationCtx,
-  assetId: Id<"mediaAssets">
-) {
-  const asset = await ctx.db.get(assetId)
-
-  if (!asset || asset.status !== "available" || !asset.storageId) {
-    return null
-  }
-
-  const url = await ctx.storage.getUrl(asset.storageId)
-
-  return {
-    id: asset._id,
-    kind: asset.kind,
-    mimeType: asset.mimeType,
-    byteSize: asset.byteSize,
-    status: asset.status,
-    usage: asset.usage,
-    sourceUrl: asset.sourceUrl,
-    createdAt: asset.createdAt,
-    updatedAt: asset.updatedAt,
-    url: url ?? undefined
-  }
-}
-
-async function hydrateInspiration(
-  ctx: QueryCtx | MutationCtx,
-  doc: Doc<"inspirations">
-) {
-  const workspaceIds = await listWorkspaceIdsForInspiration(
-    ctx,
-    doc.ownerId,
-    doc._id
-  )
-  const item = toInspiration(doc, workspaceIds)
-  const mediaAssets: NonNullable<typeof item.mediaAssets> = {}
-  const embeddedIds = mediaAssetIdsFromContent(ctx, doc.content)
-
-  for (const assetId of embeddedIds) {
-    const view = await mediaView(ctx, assetId)
-    if (view) mediaAssets[assetId] = view
-  }
-
-  if (doc.primaryAssetId) {
-    const view = await mediaView(ctx, doc.primaryAssetId)
-    if (view) {
-      item.primaryAssetUrl = view.url
-      mediaAssets[doc.primaryAssetId] = view
-    }
-  }
-
-  if (doc.pageSnapshotId) {
-    const snapshot = await ctx.db.get(doc.pageSnapshotId)
-
-    if (snapshot && snapshot.ownerId === doc.ownerId) {
-      const htmlAsset = await mediaView(ctx, snapshot.htmlAssetId)
-      const previewAsset = snapshot.previewAssetId
-        ? await mediaView(ctx, snapshot.previewAssetId)
-        : null
-
-      if (htmlAsset) mediaAssets[snapshot.htmlAssetId] = htmlAsset
-      if (snapshot.previewAssetId && previewAsset) {
-        mediaAssets[snapshot.previewAssetId] = previewAsset
-      }
-
-      item.pageSnapshot = {
-        id: snapshot._id,
-        htmlAssetId: snapshot.htmlAssetId,
-        htmlUrl: htmlAsset?.url,
-        previewAssetId: snapshot.previewAssetId,
-        previewUrl: previewAsset?.url,
-        originalUrl: snapshot.originalUrl,
-        capturedAt: snapshot.capturedAt
-      }
-    }
-  }
-
-  if (Object.keys(mediaAssets).length > 0) {
-    item.mediaAssets = mediaAssets
-  }
-
-  return item
 }
 
 export const create = mutation({
@@ -323,35 +236,5 @@ export const seedStarterNotes = mutation({
     }
 
     return { created: true, count: starters.length }
-  }
-})
-
-export const listMine = query({
-  args: {},
-  handler: async (ctx) => {
-    const ownerId = await requireOwner(ctx)
-    const notes = await ctx.db
-      .query("inspirations")
-      .withIndex("by_owner_createdAt", (q) => q.eq("ownerId", ownerId))
-      .order("desc")
-      .take(100)
-
-    return await Promise.all(notes.map((note) => hydrateInspiration(ctx, note)))
-  }
-})
-
-export const getMine = query({
-  args: {
-    id: v.id("inspirations")
-  },
-  handler: async (ctx, args) => {
-    const ownerId = await requireOwner(ctx)
-    const note = await ctx.db.get(args.id)
-
-    if (!note || note.ownerId !== ownerId) {
-      return null
-    }
-
-    return await hydrateInspiration(ctx, note)
   }
 })

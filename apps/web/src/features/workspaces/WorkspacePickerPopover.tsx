@@ -1,7 +1,7 @@
-import type { WorkspaceSummary } from "@inspira/contracts"
-import { CheckIcon } from "tdesign-icons-react"
+import type { WorkspaceOption } from "@inspira/contracts"
 import { useRef, useState } from "react"
 import { createPortal } from "react-dom"
+import { CheckIcon } from "tdesign-icons-react"
 
 import { useDismissOnOutsidePointer } from "../../hooks/useDismissOnOutsidePointer"
 import {
@@ -12,8 +12,8 @@ import {
 export interface WorkspacePickerPopoverProps {
   /** Viewport coordinates of the trigger, in `clientX` / `clientY` space. */
   anchor: ViewportPoint
-  /** Undefined while the overview query is still loading. */
-  workspaces: WorkspaceSummary[] | undefined
+  /** Undefined while the lightweight workspace options query is loading. */
+  workspaces: WorkspaceOption[] | undefined
   /** Workspaces the note already belongs to; shown as selected. */
   currentWorkspaceIds?: string[]
   isSaving?: boolean

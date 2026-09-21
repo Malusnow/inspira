@@ -53,7 +53,11 @@ Web 编辑层可使用块编辑器提供基础排版体验；S1 提交给服务�
 
 更新 Web Note 时，客户端必须提交目标 `id` 与完整新内容。服务端必须重新读取目标 Note 并验证 owner；跨用户或不存在的 ID 不得修改内容。
 
-All 的 S1 查询只返回当前登录用户自己的 Note，按最新创建在前展示。详情查询必须再次验证 owner；跨用户 ID 返回空结果或授权错误，不能返回标题、正文或 tags。
+All 的查询 `inspirations.listMine` 只返回当前登录用户自己的 Inspiration，使用 `by_owner_createdAt` 索引按最新创建在前做 cursor pagination；Web 首屏和后续每页各请求 30 条。`inspirations.getMine` 详情查询必须再次验证 owner；跨用户 ID 返回空结果，不能返回标题、正文或 tags。
+
+Workspace 详情拆为 `workspaces.getMetadata` 与 `workspaces.listItems`。后者使用 `by_owner_workspace_createdAt` 索引按最新归属在前做 cursor pagination，Web 每页请求 30 条；工作区选择器只在打开时调用轻量的 `workspaces.listOptions`，不读取 preview、计数或 Inspiration 条目。
+
+All 的搜索目前是客户端筛选，只覆盖已经加载的分页结果，不承诺搜索未加载页；需要全量搜索时必须另建服务端搜索查询与索引，不能把分页结果误当作全集。
 
 首次进入 All 时，Web 可请求服务端为当前 owner 初始化一组默认 Note 卡片。初始化只在该 owner 没有现有 Note 且未记录过初始化标记时写入；服务端仍从已验证会话确定 owner，不接受客户端提交 owner。初始化内容写入后就是该用户自己的 Note 数据，后续按普通 Note 查询和展示。
 

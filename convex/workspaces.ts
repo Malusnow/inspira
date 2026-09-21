@@ -1,10 +1,11 @@
+import { paginationOptsValidator } from "convex/server"
 import { ConvexError } from "convex/values"
 
 import type { Doc, Id } from "./_generated/dataModel"
 import type { MutationCtx, QueryCtx } from "./_generated/server"
 import { mutation, query } from "./_generated/server"
 import { requireOwner } from "./lib/auth"
-import { toInspiration } from "./lib/notes"
+import { hydrateInspiration } from "./lib/inspirations"
 import {
   addWorkspaceItemArgs,
   cleanWorkspaceIds,
@@ -13,7 +14,6 @@ import {
   deleteWorkspaceMembership,
   deleteWorkspaceMembershipsForWorkspace,
   ensureWorkspaceMemberships,
-  listWorkspaceIdsForInspiration,
   listWorkspaceMembershipsByWorkspace,
   removeWorkspaceItemArgs,
   renameWorkspaceArgs,
@@ -26,13 +26,11 @@ import {
   workspaceItemUnavailableError,
   workspaceUnavailableError
 } from "./lib/workspaces"
-import { mediaAssetIdsFromContent } from "./media"
 
 const PREVIEW_ITEM_LIMIT = 3
 /**
- * Per-request item window, shared by the overview scan, the detail query and
- * workspace deletion so those surfaces agree on how much of a workspace is
- * visible. Anything beyond this window needs real pagination.
+ * Bounded window for workspace overview data and deletion cleanup. Detail
+ * items use cursor pagination and are not constrained by this limit.
  */
 const WORKSPACE_ITEM_LIMIT = 500
 
@@ -62,85 +60,6 @@ async function getAssetUrl(
   }
 
   return (await ctx.storage.getUrl(asset.storageId)) ?? undefined
-}
-
-async function hydrateWorkspaceItem(ctx: QueryCtx, doc: Doc<"inspirations">) {
-  const workspaceIds = await listWorkspaceIdsForInspiration(
-    ctx,
-    doc.ownerId,
-    doc._id
-  )
-  const item = toInspiration(doc, workspaceIds)
-  const mediaAssets: NonNullable<typeof item.mediaAssets> = {}
-
-  if (doc.primaryAssetId) {
-    const asset = await ctx.db.get(doc.primaryAssetId)
-    const url =
-      asset?.status === "available" && asset.storageId
-        ? await ctx.storage.getUrl(asset.storageId)
-        : undefined
-
-    if (asset) {
-      item.primaryAssetUrl = url ?? undefined
-      mediaAssets[asset._id] = {
-        id: asset._id,
-        kind: asset.kind,
-        mimeType: asset.mimeType,
-        byteSize: asset.byteSize,
-        status: asset.status,
-        usage: asset.usage,
-        sourceUrl: asset.sourceUrl,
-        createdAt: asset.createdAt,
-        updatedAt: asset.updatedAt,
-        url: url ?? undefined
-      }
-    }
-  }
-
-  for (const assetId of mediaAssetIdsFromContent(ctx, doc.content)) {
-    const asset = await ctx.db.get(assetId)
-    const url =
-      asset?.status === "available" && asset.storageId
-        ? await ctx.storage.getUrl(asset.storageId)
-        : undefined
-
-    if (asset) {
-      mediaAssets[asset._id] = {
-        id: asset._id,
-        kind: asset.kind,
-        mimeType: asset.mimeType,
-        byteSize: asset.byteSize,
-        status: asset.status,
-        usage: asset.usage,
-        sourceUrl: asset.sourceUrl,
-        createdAt: asset.createdAt,
-        updatedAt: asset.updatedAt,
-        url: url ?? undefined
-      }
-    }
-  }
-
-  if (doc.pageSnapshotId) {
-    const snapshot = await ctx.db.get(doc.pageSnapshotId)
-
-    if (snapshot && snapshot.ownerId === doc.ownerId) {
-      item.pageSnapshot = {
-        id: snapshot._id,
-        htmlAssetId: snapshot.htmlAssetId,
-        htmlUrl: await getAssetUrl(ctx, snapshot.htmlAssetId),
-        previewAssetId: snapshot.previewAssetId,
-        previewUrl: await getAssetUrl(ctx, snapshot.previewAssetId),
-        originalUrl: snapshot.originalUrl,
-        capturedAt: snapshot.capturedAt
-      }
-    }
-  }
-
-  if (Object.keys(mediaAssets).length > 0) {
-    item.mediaAssets = mediaAssets
-  }
-
-  return item
 }
 
 async function toPreviewItem(
@@ -216,6 +135,24 @@ export const listMine = query({
   }
 })
 
+/** Lightweight workspace names for assignment pickers; no counts or previews. */
+export const listOptions = query({
+  args: {},
+  handler: async (ctx) => {
+    const ownerId = await requireOwner(ctx)
+    const workspaces = await ctx.db
+      .query("workspaces")
+      .withIndex("by_owner_createdAt", (q) => q.eq("ownerId", ownerId))
+      .order("desc")
+      .take(WORKSPACE_ITEM_LIMIT)
+
+    return workspaces.map((workspace) => ({
+      id: workspace._id,
+      name: workspace.name
+    }))
+  }
+})
+
 export const create = mutation({
   args: createWorkspaceArgs,
   handler: async (ctx, args) => {
@@ -248,35 +185,50 @@ export const create = mutation({
   }
 })
 
-export const getDetail = query({
+export const getMetadata = query({
   args: workspaceIdArgs,
   handler: async (ctx, args) => {
     const ownerId = await requireOwner(ctx)
     const workspace = await getOwnedWorkspace(ctx, args.id, ownerId)
-    const memberships = await listWorkspaceMembershipsByWorkspace(
-      ctx,
-      ownerId,
-      workspace._id,
-      WORKSPACE_ITEM_LIMIT
-    )
+
+    return {
+      id: workspace._id,
+      name: workspace.name,
+      createdAt: workspace.createdAt,
+      updatedAt: workspace.updatedAt
+    }
+  }
+})
+
+/** Inspirations in one workspace, ordered by newest membership first. */
+export const listItems = query({
+  args: {
+    ...workspaceIdArgs,
+    paginationOpts: paginationOptsValidator
+  },
+  handler: async (ctx, args) => {
+    const ownerId = await requireOwner(ctx)
+    const workspace = await getOwnedWorkspace(ctx, args.id, ownerId)
+    const memberships = await ctx.db
+      .query("workspaceMemberships")
+      .withIndex("by_owner_workspace_createdAt", (q) =>
+        q.eq("ownerId", ownerId).eq("workspaceId", workspace._id)
+      )
+      .order("desc")
+      .paginate(args.paginationOpts)
     const docs = await Promise.all(
-      memberships.map((membership) => ctx.db.get(membership.inspirationId))
+      memberships.page.map((membership) => ctx.db.get(membership.inspirationId))
     )
-    // A single workspace stores one membership per item, so the hydrated list
-    // cannot contain the same inspiration twice.
     const items = docs.filter(
       (doc): doc is Doc<"inspirations"> =>
         doc !== null && doc.ownerId === ownerId
     )
 
     return {
-      id: workspace._id,
-      name: workspace.name,
-      items: await Promise.all(
-        items.map((item) => hydrateWorkspaceItem(ctx, item))
-      ),
-      createdAt: workspace.createdAt,
-      updatedAt: workspace.updatedAt
+      ...memberships,
+      page: await Promise.all(
+        items.map((item) => hydrateInspiration(ctx, item))
+      )
     }
   }
 })

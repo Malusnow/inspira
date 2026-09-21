@@ -16,7 +16,7 @@ import {
   SettingIcon,
   SunnyIcon
 } from "tdesign-icons-react"
-
+import { loadInsightsPage } from "./routeLoader"
 import { SearchField } from "../components/SearchField"
 import { useThemePreferences } from "../features/preferences/themePreferencesContext"
 import { useReplayEntryAnimation } from "../hooks/useReplayEntryAnimation"
@@ -46,6 +46,8 @@ interface RailLinkProps {
   label: string
   to: string
   active: boolean
+  onMouseEnter?: React.MouseEventHandler<HTMLAnchorElement>
+  onFocus?: React.FocusEventHandler<HTMLAnchorElement>
 }
 
 function RailAction({
@@ -69,14 +71,24 @@ function RailAction({
   )
 }
 
-function RailLink({ icon, label, to, active }: RailLinkProps) {
+function RailLink({
+  icon,
+  label,
+  to,
+  active,
+  onMouseEnter,
+  onFocus,
+}: RailLinkProps) {
   return (
     <NavLink
       to={to}
       title={label}
       aria-label={label}
       aria-current={active ? "page" : undefined}
-      className="grid size-12 place-items-center rounded-xl border-0 bg-transparent text-[22px] text-ink-muted no-underline transition hover:bg-surface-hover hover:text-brand-ink-hover aria-current:bg-brand-soft aria-current:text-brand-ink">
+      onMouseEnter={onMouseEnter}
+      onFocus={onFocus}
+      className="grid size-12 place-items-center rounded-xl border-0 bg-transparent text-[22px] text-ink-muted no-underline transition hover:bg-surface-hover hover:text-brand-ink-hover aria-current:bg-brand-soft aria-current:text-brand-ink"
+    >
       {icon}
     </NavLink>
   )
@@ -221,6 +233,12 @@ export function AppShell() {
             icon={<ChartIcon />}
             label="Insights"
             to="/insights"
+            onMouseEnter={() => {
+              void loadInsightsPage()
+            }}
+            onFocus={() => {
+              void loadInsightsPage()
+            }}
             active={isInsightsPage}
           />
           <RailAction

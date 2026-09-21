@@ -22,7 +22,9 @@ async function countMemberships(t: TestConvex) {
 }
 
 async function createWorkspace(t: TestConvex, name: string, identity = owner) {
-  return await t.withIdentity(identity).mutation(api.workspaces.create, { name })
+  return await t
+    .withIdentity(identity)
+    .mutation(api.workspaces.create, { name })
 }
 
 async function createNote(
@@ -38,7 +40,7 @@ async function createNote(
 }
 
 async function readWorkspaceIds(t: TestConvex, noteId: Id<"inspirations">) {
-  const note = await t.withIdentity(owner).query(api.notes.getMine, {
+  const note = await t.withIdentity(owner).query(api.inspirations.getMine, {
     id: noteId
   })
 
@@ -116,8 +118,10 @@ describe("workspaces.setItemWorkspaces", () => {
     expect(await readWorkspaceIds(t, noteId)).toEqual([])
     expect(await countMemberships(t)).toBe(0)
 
-    const list = await t.withIdentity(owner).query(api.notes.listMine, {})
-    expect(list.map((note) => note.id)).toContain(noteId)
+    const list = await t.withIdentity(owner).query(api.inspirations.listMine, {
+      paginationOpts: { numItems: 100, cursor: null }
+    })
+    expect(list.page.map((note) => note.id)).toContain(noteId)
   })
 
   test("重复提交同一集合不产生重复成员行", async () => {
@@ -225,8 +229,10 @@ describe("workspaces.addItem / removeItem", () => {
     expect(await readWorkspaceIds(t, noteId)).toEqual([design])
     expect((await findWorkspace(t, "阅读"))?.itemCount).toBe(0)
 
-    const list = await t.withIdentity(owner).query(api.notes.listMine, {})
-    expect(list.map((note) => note.id)).toContain(noteId)
+    const list = await t.withIdentity(owner).query(api.inspirations.listMine, {
+      paginationOpts: { numItems: 100, cursor: null }
+    })
+    expect(list.page.map((note) => note.id)).toContain(noteId)
   })
 
   test("移除不存在的成员关系抛 NOT_FOUND", async () => {
@@ -274,7 +280,7 @@ describe("workspaces.addItem / removeItem", () => {
   })
 })
 
-describe("workspaces.remove / getDetail", () => {
+describe("workspaces.remove / detail reads", () => {
   test("删除工作区只删成员关系，内容留在 All 与其他工作区", async () => {
     const t = convexTest(schema, modules)
     const reading = await createWorkspace(t, "阅读")
@@ -286,24 +292,73 @@ describe("workspaces.remove / getDetail", () => {
     expect(await readWorkspaceIds(t, noteId)).toEqual([design])
     expect(await findWorkspace(t, "阅读")).toBeUndefined()
 
-    const list = await t.withIdentity(owner).query(api.notes.listMine, {})
-    expect(list.map((note) => note.id)).toContain(noteId)
+    const list = await t.withIdentity(owner).query(api.inspirations.listMine, {
+      paginationOpts: { numItems: 100, cursor: null }
+    })
+    expect(list.page.map((note) => note.id)).toContain(noteId)
   })
 
-  test("getDetail 返回工作区条目，一条内容只出现一次", async () => {
+  test("listItems 返回工作区条目，一条内容只出现一次", async () => {
     const t = convexTest(schema, modules)
     const reading = await createWorkspace(t, "阅读")
     const design = await createWorkspace(t, "设计")
     await createNote(t, "两个工作区都有的内容", [reading, design])
     await createNote(t, "只在阅读", [reading])
 
-    const detail = await t.withIdentity(owner).query(api.workspaces.getDetail, {
-      id: reading
+    const metadata = await t
+      .withIdentity(owner)
+      .query(api.workspaces.getMetadata, { id: reading })
+    const items = await t.withIdentity(owner).query(api.workspaces.listItems, {
+      id: reading,
+      paginationOpts: { numItems: 20, cursor: null }
     })
 
-    expect(detail.name).toBe("阅读")
-    expect(detail.items).toHaveLength(2)
-    expect(new Set(detail.items.map((item) => item.id)).size).toBe(2)
+    expect(metadata.name).toBe("阅读")
+    expect(items.page).toHaveLength(2)
+    expect(new Set(items.page.map((item) => item.id)).size).toBe(2)
+  })
+
+  test("listItems 使用游标连续读取全部条目并保持归属时间倒序", async () => {
+    const t = convexTest(schema, modules)
+    const reading = await createWorkspace(t, "阅读")
+
+    await t.run(async (ctx) => {
+      for (let index = 0; index < 35; index += 1) {
+        const inspirationId = await ctx.db.insert("inspirations", {
+          ownerId: owner.subject,
+          type: "note",
+          content: `workspace item ${index}`,
+          tags: [],
+          createdAt: 100 - index,
+          updatedAt: 100 - index
+        })
+
+        await ctx.db.insert("workspaceMemberships", {
+          ownerId: owner.subject,
+          inspirationId,
+          workspaceId: reading,
+          createdAt: index,
+          updatedAt: index
+        })
+      }
+    })
+
+    const first = await t.withIdentity(owner).query(api.workspaces.listItems, {
+      id: reading,
+      paginationOpts: { numItems: 20, cursor: null }
+    })
+    const second = await t.withIdentity(owner).query(api.workspaces.listItems, {
+      id: reading,
+      paginationOpts: { numItems: 20, cursor: first.continueCursor }
+    })
+    const contents = [...first.page, ...second.page].map((item) => item.content)
+
+    expect(first.isDone).toBe(false)
+    expect(second.isDone).toBe(true)
+    expect(contents).toHaveLength(35)
+    expect(new Set(contents).size).toBe(35)
+    expect(contents[0]).toBe("workspace item 34")
+    expect(contents.at(-1)).toBe("workspace item 0")
   })
 
   test("他人的工作区不可读也不可写", async () => {
@@ -311,7 +366,7 @@ describe("workspaces.remove / getDetail", () => {
     const reading = await createWorkspace(t, "阅读")
 
     await expect(
-      t.withIdentity(other).query(api.workspaces.getDetail, { id: reading })
+      t.withIdentity(other).query(api.workspaces.getMetadata, { id: reading })
     ).rejects.toThrow("Workspace is not available.")
 
     await expect(

@@ -14,6 +14,9 @@ export interface NoteMasonrySectionProps {
   /** Rendered instead of the grid when there is nothing to show yet. */
   emptyState: ReactNode
   renderCard: (note: InspirationItem) => ReactNode
+  canLoadMore?: boolean
+  isLoadingMore?: boolean
+  onLoadMore?: () => void
 }
 
 function getNoteKey(note: InspirationItem) {
@@ -30,24 +33,40 @@ export function NoteMasonrySection({
   columnCount,
   className,
   emptyState,
-  renderCard
+  renderCard,
+  canLoadMore = false,
+  isLoadingMore = false,
+  onLoadMore
 }: NoteMasonrySectionProps) {
   if (notes === undefined) {
     return <div className="min-h-[320px]" />
   }
 
-  if (notes.length === 0) {
-    return <>{emptyState}</>
-  }
-
   return (
-    <MasonryGrid
-      items={notes}
-      columnCount={columnCount}
-      estimateHeight={estimateNoteCardHeight}
-      getItemKey={getNoteKey}
-      className={className}
-      renderItem={renderCard}
-    />
+    <>
+      {notes.length === 0 ? (
+        emptyState
+      ) : (
+        <MasonryGrid
+          items={notes}
+          columnCount={columnCount}
+          estimateHeight={estimateNoteCardHeight}
+          getItemKey={getNoteKey}
+          className={className}
+          renderItem={renderCard}
+        />
+      )}
+      {canLoadMore || isLoadingMore ? (
+        <div className="flex justify-center px-5 pb-16 pt-4">
+          <button
+            type="button"
+            disabled={isLoadingMore}
+            onClick={onLoadMore}
+            className="min-h-10 rounded-full border border-line bg-surface px-5 text-sm font-medium text-ink-muted transition hover:border-brand-line hover:bg-brand-soft hover:text-brand-ink-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:cursor-wait disabled:opacity-60">
+            {isLoadingMore ? "加载中…" : "加载更多"}
+          </button>
+        </div>
+      ) : null}
+    </>
   )
 }

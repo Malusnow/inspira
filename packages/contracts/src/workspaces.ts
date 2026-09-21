@@ -32,6 +32,11 @@ export interface WorkspaceSummary {
   updatedAt: number
 }
 
+export interface WorkspaceOption {
+  id: string
+  name: string
+}
+
 export interface WorkspaceDetail {
   id: string
   name: string

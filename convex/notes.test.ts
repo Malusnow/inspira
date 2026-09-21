@@ -15,16 +15,23 @@ type TestConvex = ReturnType<typeof convexTest>
 
 const sorted = (ids: readonly string[]) => [...ids].sort()
 
-async function countRows(t: TestConvex, table: "inspirations" | "workspaceMemberships") {
-  return await t.run(async (ctx) => (await ctx.db.query(table).collect()).length)
+async function countRows(
+  t: TestConvex,
+  table: "inspirations" | "workspaceMemberships"
+) {
+  return await t.run(
+    async (ctx) => (await ctx.db.query(table).collect()).length
+  )
 }
 
 async function createWorkspace(t: TestConvex, name: string, identity = owner) {
-  return await t.withIdentity(identity).mutation(api.workspaces.create, { name })
+  return await t
+    .withIdentity(identity)
+    .mutation(api.workspaces.create, { name })
 }
 
 async function readWorkspaceIds(t: TestConvex, noteId: Id<"inspirations">) {
-  const note = await t.withIdentity(owner).query(api.notes.getMine, {
+  const note = await t.withIdentity(owner).query(api.inspirations.getMine, {
     id: noteId
   })
 
@@ -46,8 +53,10 @@ describe("notes.create 的工作区归属", () => {
       sorted([reading, design])
     )
 
-    const list = await t.withIdentity(owner).query(api.notes.listMine, {})
-    expect(sorted(list[0].workspaceIds)).toEqual(sorted([reading, design]))
+    const list = await t.withIdentity(owner).query(api.inspirations.listMine, {
+      paginationOpts: { numItems: 100, cursor: null }
+    })
+    expect(sorted(list.page[0].workspaceIds)).toEqual(sorted([reading, design]))
     expect(await countRows(t, "workspaceMemberships")).toBe(2)
   })
 
@@ -186,8 +195,10 @@ describe("notes.update 的工作区归属", () => {
     expect(await readWorkspaceIds(t, noteId)).toEqual([])
     expect(await countRows(t, "workspaceMemberships")).toBe(0)
 
-    const list = await t.withIdentity(owner).query(api.notes.listMine, {})
-    expect(list.map((note) => note.id)).toContain(noteId)
+    const list = await t.withIdentity(owner).query(api.inspirations.listMine, {
+      paginationOpts: { numItems: 100, cursor: null }
+    })
+    expect(list.page.map((note) => note.id)).toContain(noteId)
   })
 
   test("重复提交同一集合不产生重复成员行", async () => {
@@ -229,7 +240,7 @@ describe("notes.update 的工作区归属", () => {
 
     expect(await readWorkspaceIds(t, noteId)).toEqual([reading])
 
-    const note = await t.withIdentity(owner).query(api.notes.getMine, {
+    const note = await t.withIdentity(owner).query(api.inspirations.getMine, {
       id: noteId
     })
     expect(note?.content).toBe("原始内容")

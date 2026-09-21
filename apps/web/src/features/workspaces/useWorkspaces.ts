@@ -1,5 +1,14 @@
-import type { WorkspaceDetail, WorkspaceSummary } from "@inspira/contracts"
-import { useConvexAuth, useMutation, useQuery } from "convex/react"
+import type {
+  InspirationItem,
+  WorkspaceOption,
+  WorkspaceSummary
+} from "@inspira/contracts"
+import {
+  useConvexAuth,
+  useMutation,
+  usePaginatedQuery,
+  useQuery
+} from "convex/react"
 import { useMemo } from "react"
 
 import { api } from "../../../../../convex/_generated/api"
@@ -17,6 +26,8 @@ export type WorkspacePendingAction =
   | "remove-item"
   | "delete-item"
 
+export const WORKSPACE_ITEM_PAGE_SIZE = 30
+
 export function useWorkspaceOverviewData() {
   const { isAuthenticated, isLoading } = useConvexAuth()
   const workspaces = useQuery(
@@ -31,11 +42,35 @@ export function useWorkspaceOverviewData() {
   return workspaces
 }
 
-export function useWorkspaceDetailData(workspaceId: string | null) {
+export function useWorkspaceOptions(enabled: boolean) {
+  const { isAuthenticated } = useConvexAuth()
+
   return useQuery(
-    api.workspaces.getDetail,
-    workspaceId ? { id: toWorkspaceId(workspaceId) } : "skip"
-  ) as WorkspaceDetail | undefined
+    api.workspaces.listOptions,
+    enabled && isAuthenticated ? {} : "skip"
+  ) as WorkspaceOption[] | undefined
+}
+
+export function useWorkspaceDetailData(workspaceId: string | null) {
+  const id = workspaceId ? toWorkspaceId(workspaceId) : null
+  const metadata = useQuery(api.workspaces.getMetadata, id ? { id } : "skip")
+  const { results, status, loadMore } = usePaginatedQuery(
+    api.workspaces.listItems,
+    id ? { id } : "skip",
+    { initialNumItems: WORKSPACE_ITEM_PAGE_SIZE }
+  )
+  const items = (status === "LoadingFirstPage" ? undefined : results) as
+    | InspirationItem[]
+    | undefined
+
+  return {
+    workspace: metadata ? { ...metadata, items } : undefined,
+    canLoadMore: status === "CanLoadMore",
+    isLoadingMore: status === "LoadingMore",
+    loadMore() {
+      loadMore(WORKSPACE_ITEM_PAGE_SIZE)
+    }
+  }
 }
 
 export function useWorkspaceMutations() {
@@ -44,7 +79,9 @@ export function useWorkspaceMutations() {
   const removeWorkspaceMutation = useMutation(api.workspaces.remove)
   const removeItemMutation = useMutation(api.workspaces.removeItem)
   const addItemMutation = useMutation(api.workspaces.addItem)
-  const setItemWorkspacesMutation = useMutation(api.workspaces.setItemWorkspaces)
+  const setItemWorkspacesMutation = useMutation(
+    api.workspaces.setItemWorkspaces
+  )
 
   // Memoised, so callers can safely list these in effect dependencies.
   return useMemo(

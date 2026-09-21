@@ -112,7 +112,7 @@ Landing 页面上与插件发布相关的入口目前都是模板按钮，**仅�
 
 ## 更多文档
 
-- 产品说明：[docs/PRODUCT.md](docs/PRODUCT.md)
+- 产品范围：[docs/PRODUCT.md](docs/PRODUCT.md)
 - 架构边界：[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - 接口契约：[docs/CONTRACTS.md](docs/CONTRACTS.md)
 - 开发与验收：[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)

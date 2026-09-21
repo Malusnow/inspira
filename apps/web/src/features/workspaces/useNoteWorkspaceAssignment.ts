@@ -3,10 +3,7 @@ import { useCallback, useState } from "react"
 import { MessagePlugin } from "tdesign-react"
 
 import type { ViewportPoint } from "../../hooks/useViewportClampedPosition"
-import {
-  useWorkspaceMutations,
-  useWorkspaceOverviewData
-} from "./useWorkspaces"
+import { useWorkspaceMutations, useWorkspaceOptions } from "./useWorkspaces"
 
 export interface PendingWorkspaceAssignment {
   note: InspirationItem
@@ -17,7 +14,7 @@ export interface PendingWorkspaceAssignment {
 export interface UseNoteWorkspaceAssignmentResult {
   /** Note + anchor of the open picker, or null while it stays closed. */
   pending: PendingWorkspaceAssignment | null
-  workspaces: ReturnType<typeof useWorkspaceOverviewData>
+  workspaces: ReturnType<typeof useWorkspaceOptions>
   isSaving: boolean
   requestAssignment: (note: InspirationItem, anchor: ViewportPoint) => void
   closePicker: () => void
@@ -55,18 +52,18 @@ function describeSave(
 /**
  * "Manage this note's workspaces" flow shared by the All page (anchored at the
  * right-click menu) and the note detail (anchored at the button). Owns the
- * picker anchor, the overview query and the in-flight guard, so neither surface
- * re-implements them — and the anchor can never get out of sync with the note.
+ * picker anchor, the lightweight options query and the in-flight guard, so
+ * neither surface re-implements them — and the anchor stays tied to the note.
  *
  * The picker submits the complete selection, so this is `setItemWorkspaces`:
  * checked workspaces are added, unchecked ones are the only memberships removed.
  */
 export function useNoteWorkspaceAssignment(): UseNoteWorkspaceAssignmentResult {
-  const workspaces = useWorkspaceOverviewData()
-  const { setItemWorkspaces } = useWorkspaceMutations()
   const [pending, setPending] = useState<PendingWorkspaceAssignment | null>(
     null
   )
+  const workspaces = useWorkspaceOptions(pending !== null)
+  const { setItemWorkspaces } = useWorkspaceMutations()
   const [isSaving, setIsSaving] = useState(false)
 
   const requestAssignment = useCallback(
@@ -100,7 +97,7 @@ export function useNoteWorkspaceAssignment(): UseNoteWorkspaceAssignmentResult {
       const names = (workspaces ?? [])
         .filter((workspace) => nextIds.has(workspace.id))
         .map((workspace) => workspace.name)
-      // An id the overview query has not caught up with yet still counts as
+      // An id the options query has not caught up with yet still counts as
       // added; the message only needs the names it can resolve.
       const addedCount = workspaceIds.filter(
         (workspaceId) => !currentIdSet.has(workspaceId)
